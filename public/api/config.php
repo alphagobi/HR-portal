@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 // UPDATE THESE WITH YOUR CPANEL DATABASE DETAILS
 $host = 'localhost';
 $db_name = 'alphagnn_hr_portal';
-$username = 'alphagnn_hrportalacess';
+$username = 'alphagnn_hrportalaccess';
 $password = '7hL3M4nBcUhumj@';
 
 try {
