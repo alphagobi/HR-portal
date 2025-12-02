@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAllClaims, updateClaimStatus } from '../../services/reimbursementService';
+import { getClaims, updateClaimStatus } from '../../services/reimbursementService';
 import { CheckCircle, XCircle, DollarSign, FileText, Search, Filter, Download } from 'lucide-react';
 
 const AdminReimbursements = () => {
@@ -12,7 +12,7 @@ const AdminReimbursements = () => {
     }, []);
 
     const fetchClaims = async () => {
-        const data = await getAllClaims();
+        const data = await getClaims();
         // Sort by pending first, then date
         const sorted = (data || []).sort((a, b) => {
             if (a.status === 'Pending' && b.status !== 'Pending') return -1;

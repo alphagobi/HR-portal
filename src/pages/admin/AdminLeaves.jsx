@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAllLeaves, updateLeaveStatus } from '../../services/leaveService';
+import { getLeaves, updateLeaveStatus } from '../../services/leaveService';
 import { CheckCircle, XCircle, Clock, Calendar, Search, Filter } from 'lucide-react';
 
 const AdminLeaves = () => {
@@ -12,7 +12,7 @@ const AdminLeaves = () => {
     }, []);
 
     const fetchLeaves = async () => {
-        const data = await getAllLeaves();
+        const data = await getLeaves();
         // Sort by pending first, then date
         const sorted = (data || []).sort((a, b) => {
             if (a.status === 'Pending' && b.status !== 'Pending') return -1;
