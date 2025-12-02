@@ -24,6 +24,12 @@ const Leaves = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        const user = JSON.parse(localStorage.getItem('hr_current_user'));
+        if (!user) {
+            alert("Please log in to submit a leave request.");
+            return;
+        }
+
         // Guard Rail: Check for Emergency Leave
         const start = new Date(newRequest.startDate);
         const today = new Date();
@@ -36,28 +42,41 @@ const Leaves = () => {
         if (diffDays < 7) {
             finalType = 'Emergency Leave';
             isEmergency = true;
-        } else if (newRequest.type === 'Emergency Leave') {
-            // If user selected Emergency but it's > 7 days, maybe warn? 
-            // Or just let it be. But usually Emergency implies short notice.
-            // For now, we only enforce the "If < 7 days -> Emergency" rule.
         }
 
-        const request = {
-            ...newRequest,
+        // Prepare payload for API (snake_case)
+        const apiPayload = {
+            employee_id: user.id,
             type: finalType,
-            id: Date.now(),
-            status: 'Pending',
-            days: 1 // Mock calculation
+            start_date: newRequest.startDate,
+            end_date: newRequest.endDate,
+            reason: newRequest.reason
         };
 
-        setLeaves([request, ...leaves]);
-        await submitLeaveRequest(request);
+        // Optimistic UI update (camelCase for frontend)
+        const uiRequest = {
+            ...newRequest,
+            type: finalType,
+            id: Date.now(), // Temporary ID
+            status: 'Pending',
+            days: 1, // Mock calculation
+            startDate: newRequest.startDate,
+            endDate: newRequest.endDate
+        };
 
-        if (isEmergency) {
-            alert("Notice: Since this leave is within 7 days, it has been classified as 'Emergency Leave'.");
+        setLeaves([uiRequest, ...leaves]);
+
+        try {
+            await submitLeaveRequest(apiPayload);
+            if (isEmergency) {
+                alert("Notice: Since this leave is within 7 days, it has been classified as 'Emergency Leave'.");
+            }
+            setNewRequest({ type: 'Informed Leave', startDate: '', endDate: '', reason: '' });
+        } catch (error) {
+            console.error("Failed to submit leave", error);
+            alert("Failed to submit leave request.");
+            // Revert optimistic update if needed, or just let the user know
         }
-
-        setNewRequest({ type: 'Informed Leave', startDate: '', endDate: '', reason: '' });
     };
 
     const getStatusColor = (status) => {
