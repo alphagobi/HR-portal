@@ -13,7 +13,7 @@ export const getAnnouncements = async () => {
     }
 };
 
-export const postAnnouncement = async (announcementData) => {
+export const createAnnouncement = async (announcementData) => {
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
@@ -27,3 +27,19 @@ export const postAnnouncement = async (announcementData) => {
         throw error;
     }
 };
+
+export const deleteAnnouncement = async (id) => {
+    try {
+        const response = await fetch(`${API_URL}?id=${id}`, {
+            method: 'DELETE'
+        });
+        if (!response.ok) throw new Error('Failed to delete announcement');
+        return await response.json();
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+};
+
+// Alias for backward compatibility if needed
+export const postAnnouncement = createAnnouncement;

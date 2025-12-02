@@ -25,4 +25,10 @@ elseif ($method === 'POST') {
         echo json_encode(["error" => $e->getMessage()]);
     }
 }
+elseif ($method === 'DELETE') {
+    $id = $_GET['id'];
+    $stmt = $pdo->prepare("DELETE FROM announcements WHERE id = ?");
+    $stmt->execute([$id]);
+    echo json_encode(["message" => "Announcement deleted"]);
+}
 ?>
