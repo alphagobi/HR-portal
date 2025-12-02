@@ -4,7 +4,9 @@ const API_URL = '/api/leaves.php';
 
 export const getLeaves = async (employeeId = null) => {
     try {
-        const url = employeeId ? `${API_URL}?employee_id=${employeeId}` : API_URL;
+        const url = employeeId
+            ? `${API_URL}?employee_id=${employeeId}&_t=${new Date().getTime()}`
+            : `${API_URL}?_t=${new Date().getTime()}`;
         const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to fetch leaves');
         return await response.json();
