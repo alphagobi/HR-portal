@@ -156,6 +156,7 @@ const Timesheet = () => {
     };
 
     const totalHours = entries.reduce((acc, curr) => {
+        if (!curr.startTime || !curr.endTime) return acc;
         const start = parseInt(curr.startTime.split(':')[0]);
         const end = parseInt(curr.endTime.split(':')[0]);
         return acc + (end - start);
