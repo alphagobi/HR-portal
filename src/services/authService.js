@@ -74,7 +74,7 @@ export const updateUser = async (id, userData) => {
 // Admin: Get all users (Using employees.php)
 export const getAllUsers = async () => {
     try {
-        const response = await fetch('/api/employees.php');
+        const response = await fetch(`/api/employees.php?_t=${new Date().getTime()}`);
         if (!response.ok) throw new Error('Failed to fetch users');
         return await response.json();
     } catch (error) {

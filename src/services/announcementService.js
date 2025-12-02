@@ -4,7 +4,7 @@ const API_URL = '/api/announcements.php';
 
 export const getAnnouncements = async () => {
     try {
-        const response = await fetch(API_URL);
+        const response = await fetch(`${API_URL}?_t=${new Date().getTime()}`);
         if (!response.ok) throw new Error('Failed to fetch announcements');
         return await response.json();
     } catch (error) {

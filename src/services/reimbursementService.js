@@ -16,7 +16,7 @@ export const getClaims = async (employeeId = null) => {
 
 export const submitClaim = async (claimData) => {
     try {
-        const response = await fetch(API_URL, {
+        const response = await fetch(`${API_URL}?_t=${new Date().getTime()}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(claimData)

@@ -5,7 +5,9 @@ const API_URL = '/api/timesheets.php';
 
 export const getTimesheets = async (employeeId = null) => {
     try {
-        const url = employeeId ? `${API_URL}?employee_id=${employeeId}` : API_URL;
+        const url = employeeId
+            ? `${API_URL}?employee_id=${employeeId}&_t=${new Date().getTime()}`
+            : `${API_URL}?_t=${new Date().getTime()}`;
         const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to fetch timesheets');
         return await response.json();
