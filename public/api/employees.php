@@ -29,6 +29,49 @@ elseif ($method === 'POST') {
         echo json_encode(["error" => $e->getMessage()]);
     }
 }
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => $e->getMessage()]);
+    }
+}
+elseif ($method === 'PUT') {
+    $data = json_decode(file_get_contents("php://input"), true);
+    $id = $_GET['id'];
+
+    $sql = "UPDATE users SET name=?, email=?, role=?, department=?, designation=? WHERE id=?";
+    $params = [
+        $data['name'],
+        $data['email'],
+        $data['role'],
+        $data['department'],
+        $data['designation'],
+        $id
+    ];
+
+    // Only update password if provided
+    if (!empty($data['password'])) {
+        $sql = "UPDATE users SET name=?, email=?, password=?, role=?, department=?, designation=? WHERE id=?";
+        $params = [
+            $data['name'],
+            $data['email'],
+            $data['password'],
+            $data['role'],
+            $data['department'],
+            $data['designation'],
+            $id
+        ];
+    }
+
+    $stmt = $pdo->prepare($sql);
+    
+    try {
+        $stmt->execute($params);
+        echo json_encode(["message" => "User updated successfully"]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => $e->getMessage()]);
+    }
+}
 elseif ($method === 'DELETE') {
     $id = $_GET['id'];
     $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");

@@ -54,6 +54,23 @@ export const createUser = async (userData) => {
     }
 };
 
+// Admin: Update user
+export const updateUser = async (id, userData) => {
+    try {
+        const response = await fetch(`/api/employees.php?id=${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData)
+        });
+
+        if (!response.ok) throw new Error('Failed to update user');
+        return await response.json();
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+};
+
 // Admin: Get all users (Using employees.php)
 export const getAllUsers = async () => {
     try {
