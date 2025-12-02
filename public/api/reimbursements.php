@@ -32,6 +32,11 @@ elseif ($method === 'POST') {
             $data['date'],
             $data['description']
         ]);
+        
+        // Log Activity
+        $log = $pdo->prepare("INSERT INTO activities (text, type, created_at) VALUES (?, 'reimbursement', NOW())");
+        $log->execute(["New reimbursement claim: $" . $data['amount'] . " for " . $data['category']]);
+
         echo json_encode(["message" => "Claim submitted successfully", "id" => $pdo->lastInsertId()]);
     } catch (PDOException $e) {
         http_response_code(500);

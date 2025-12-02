@@ -34,6 +34,11 @@ elseif ($method === 'POST') {
             $data['end_date'],
             $data['reason']
         ]);
+        
+        // Log Activity
+        $log = $pdo->prepare("INSERT INTO activities (text, type, created_at) VALUES (?, 'leave', NOW())");
+        $log->execute(["New leave request: " . $data['type']]);
+
         echo json_encode(["message" => "Leave requested successfully", "id" => $pdo->lastInsertId()]);
     } catch (PDOException $e) {
         http_response_code(500);
