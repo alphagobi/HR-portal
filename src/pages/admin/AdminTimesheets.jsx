@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAllTimesheets, saveDailySummary } from '../../services/timesheetService';
+import { getTimesheets, saveTimesheet } from '../../services/timesheetService';
 import { Calendar, Clock, User, Search, ChevronRight, ChevronLeft, MessageSquare, Save } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -16,7 +16,7 @@ const AdminTimesheets = () => {
     }, []);
 
     const fetchTimesheets = async () => {
-        const data = await getAllTimesheets();
+        const data = await getTimesheets();
         setTimesheets(data);
 
         // Group by employee
@@ -42,8 +42,11 @@ const AdminTimesheets = () => {
         setLoading(false);
     };
 
-    const handleSaveRemark = async (date, currentRemark) => {
-        await saveDailySummary(date, { adminRemarks: currentRemark });
+    const handleSaveRemark = async (sheet, currentRemark) => {
+        await saveTimesheet({
+            ...sheet,
+            adminRemarks: currentRemark
+        });
         // Refresh data to ensure sync
         fetchTimesheets();
         alert('Remarks saved successfully');
@@ -139,7 +142,7 @@ const AdminTimesheets = () => {
                                             className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
                                             placeholder="Add remarks for this day..."
                                             defaultValue={sheet.adminRemarks || ''}
-                                            onBlur={(e) => handleSaveRemark(sheet.date, e.target.value)}
+                                            onBlur={(e) => handleSaveRemark(sheet, e.target.value)}
                                         />
                                     </div>
                                     <p className="text-xs text-gray-400 mt-1">Click outside to save automatically.</p>
