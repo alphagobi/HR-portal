@@ -3,6 +3,9 @@ header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Content-Type: application/json");
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit(0);
@@ -13,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 $host = 'localhost';
 $db_name = 'alphagnn_hr_portal';
 $username = 'alphagnn_hrpacc';
-$password = '7hL3M4nBcUhumj@';
+$password = 'Premkum!1';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$db_name;charset=utf8", $username, $password);
