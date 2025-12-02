@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS announcements (
     title VARCHAR(255) NOT NULL,
     content TEXT NOT NULL,
     type ENUM('info', 'alert', 'success', 'warning') DEFAULT 'info',
-    created_by INT NOT NULL,
+    created_by INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 );
