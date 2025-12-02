@@ -23,15 +23,29 @@ const Reimbursements = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const user = JSON.parse(localStorage.getItem('hr_current_user'));
+        if (!user) {
+            alert("Please log in to submit a claim.");
+            return;
+        }
+
         const claim = {
             ...newClaim,
+            employee_id: user.id,
             id: Date.now(),
             status: 'Pending',
             amount: parseFloat(newClaim.amount) || 0
         };
         setClaims([claim, ...claims]);
-        await submitClaim(claim);
-        setNewClaim({ category: 'Travel', amount: '', description: '', date: '' });
+
+        try {
+            await submitClaim(claim);
+            setNewClaim({ category: 'Travel', amount: '', description: '', date: '' });
+        } catch (error) {
+            console.error("Failed to submit claim", error);
+            alert("Failed to submit claim.");
+        }
     };
 
     const getStatusColor = (status) => {
