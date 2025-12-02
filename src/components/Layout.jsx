@@ -38,10 +38,10 @@ const Layout = () => {
                     isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
                 )}
             >
-                <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200">
-                    <span className="text-xl font-bold text-indigo-600">HR Portal</span>
+                <div className="h-16 flex items-center justify-center px-6 border-b border-gray-200">
+                    <img src="/logo-wide.png" alt="AlphaGobi" className="h-10 w-auto" />
                     <button
-                        className="lg:hidden text-gray-500 hover:text-gray-700"
+                        className="lg:hidden text-gray-500 hover:text-gray-700 absolute right-4"
                         onClick={() => setIsSidebarOpen(false)}
                     >
                         <X size={24} />
@@ -85,14 +85,15 @@ const Layout = () => {
             {/* Main Content */}
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Top Header (Mobile only) */}
-                <header className="h-16 bg-white border-b border-gray-200 flex items-center px-4 lg:hidden">
+                <header className="h-16 bg-white border-b border-gray-200 flex items-center px-4 lg:hidden gap-3">
                     <button
                         className="text-gray-500 hover:text-gray-700"
                         onClick={() => setIsSidebarOpen(true)}
                     >
                         <Menu size={24} />
                     </button>
-                    <span className="ml-4 text-lg font-semibold text-gray-900">HR Portal</span>
+                    <img src="/logo-round.png" alt="Logo" className="h-8 w-8" />
+                    <span className="text-lg font-semibold text-gray-900">Internal Portal</span>
                 </header>
 
                 <main className="flex-1 overflow-auto">

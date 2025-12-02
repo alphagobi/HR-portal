@@ -52,14 +52,11 @@ const AdminLayout = () => {
                     isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
                 )}
             >
-                <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800">
-                    <div className="flex items-center gap-2 font-bold text-xl">
-                        <ShieldCheck className="text-indigo-400" />
-                        <span>Admin Portal</span>
-                    </div>
+                <div className="h-16 flex items-center justify-center px-6 border-b border-slate-800 relative">
+                    <img src="/logo-wide.png" alt="AlphaGobi" className="h-10 w-auto bg-white rounded px-2 py-1" />
                     <button
                         onClick={() => setIsSidebarOpen(false)}
-                        className="lg:hidden text-gray-400 hover:text-white"
+                        className="lg:hidden text-gray-400 hover:text-white absolute right-4"
                     >
                         <X size={24} />
                     </button>
@@ -100,12 +97,16 @@ const AdminLayout = () => {
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Top Header */}
                 <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 lg:px-8">
-                    <button
-                        onClick={() => setIsSidebarOpen(true)}
-                        className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-                    >
-                        <Menu size={24} />
-                    </button>
+                    <div className="flex items-center gap-3 lg:hidden">
+                        <button
+                            onClick={() => setIsSidebarOpen(true)}
+                            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                        >
+                            <Menu size={24} />
+                        </button>
+                        <img src="/logo-round.png" alt="Logo" className="h-8 w-8" />
+                        <span className="text-lg font-semibold text-gray-900">Admin Portal</span>
+                    </div>
 
                     <div className="flex items-center gap-4 ml-auto">
                         <div className="text-right hidden sm:block">
