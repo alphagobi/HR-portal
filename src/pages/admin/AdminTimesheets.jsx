@@ -107,7 +107,6 @@ const AdminTimesheets = () => {
                                                 <tr>
                                                     <th className="px-4 py-2 w-32">Time</th>
                                                     <th className="px-4 py-2">Description</th>
-                                                    <th className="px-4 py-2 w-32">Project</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100">
@@ -118,7 +117,6 @@ const AdminTimesheets = () => {
                                                                 {entry.startTime} - {entry.endTime}
                                                             </td>
                                                             <td className="px-4 py-3 text-gray-600">{entry.description}</td>
-                                                            <td className="px-4 py-3 text-gray-500">{entry.project || 'General'}</td>
                                                         </tr>
                                                     ))
                                                 ) : (
