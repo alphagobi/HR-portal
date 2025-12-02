@@ -18,7 +18,7 @@ if ($method === 'GET') {
     // 2. Get Entries for each timesheet
     // Optimization: Get all entries for these timesheets in one query if possible, but loop is simpler for now
     foreach ($timesheets as &$sheet) {
-        $stmtEntries = $pdo->prepare("SELECT * FROM timesheet_entries WHERE timesheet_id = ?");
+        $stmtEntries = $pdo->prepare("SELECT id, timesheet_id, start_time as startTime, end_time as endTime, description, project, duration FROM timesheet_entries WHERE timesheet_id = ?");
         $stmtEntries->execute([$sheet['id']]);
         $sheet['entries'] = $stmtEntries->fetchAll();
     }
