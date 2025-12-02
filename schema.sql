@@ -1,7 +1,7 @@
 -- Database Schema for HR Portal
 
-CREATE DATABASE IF NOT EXISTS hr_portal;
-USE hr_portal;
+CREATE DATABASE IF NOT EXISTS alphagnn_hr_portal;
+USE alphagnn_hr_portal;
 
 -- Users Table
 CREATE TABLE IF NOT EXISTS users (
@@ -86,4 +86,12 @@ CREATE TABLE IF NOT EXISTS announcements (
     created_by INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- Activities Log
+CREATE TABLE IF NOT EXISTS activities (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    text VARCHAR(255) NOT NULL,
+    type VARCHAR(50) DEFAULT 'info',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

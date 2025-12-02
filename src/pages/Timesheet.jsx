@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { getTimesheets, saveTimesheetEntry, deleteTimesheetEntry, saveDailySummary } from '../services/timesheetService';
+import { getTimesheets, saveTimesheet } from '../services/timesheetService';
+import { getCurrentUser } from '../services/authService';
 import { Calendar, Clock, Plus, ChevronLeft, ChevronRight, Table as TableIcon, LayoutList, Pencil, X, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -65,7 +66,20 @@ const Timesheet = () => {
             setEntries([...entries, entry]);
         }
 
-        await saveTimesheetEntry(entry);
+        // Prepare full timesheet data
+        const currentTimesheet = timesheetMap[selectedDate] || {};
+        const updatedEntries = editingId
+            ? entries.map(e => e.id === editingId ? entry : e)
+            : [...entries, entry];
+
+        await saveTimesheet({
+            date: selectedDate,
+            entries: updatedEntries,
+            milestone: currentTimesheet.milestone || '',
+            taskDescription: currentTimesheet.taskDescription || '',
+            comments: currentTimesheet.comments || '',
+            status: currentTimesheet.status || 'draft'
+        });
 
         setNewEntry(prev => ({ ...prev, description: '', endTime: '' }));
         setEditingId(null);
@@ -89,7 +103,18 @@ const Timesheet = () => {
     const handleDeleteEntry = async (entryId) => {
         if (window.confirm('Are you sure you want to delete this entry?')) {
             setEntries(entries.filter(e => e.id !== entryId));
-            await deleteTimesheetEntry(selectedDate, entryId);
+            const updatedEntries = entries.filter(e => e.id !== entryId);
+            setEntries(updatedEntries);
+
+            const currentTimesheet = timesheetMap[selectedDate] || {};
+            await saveTimesheet({
+                date: selectedDate,
+                entries: updatedEntries,
+                milestone: currentTimesheet.milestone || '',
+                taskDescription: currentTimesheet.taskDescription || '',
+                comments: currentTimesheet.comments || '',
+                status: currentTimesheet.status || 'draft'
+            });
             if (editingId === entryId) {
                 handleCancelEdit();
             }
@@ -119,10 +144,13 @@ const Timesheet = () => {
     const handleSummarySave = async (date) => {
         const data = timesheetMap[date];
         if (data) {
-            await saveDailySummary(date, {
+            await saveTimesheet({
+                date: date,
+                entries: data.entries || [], // Preserve entries
                 milestone: data.milestone,
                 taskDescription: data.taskDescription,
-                comments: data.comments
+                comments: data.comments,
+                status: data.status || 'draft'
             });
         }
     };

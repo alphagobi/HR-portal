@@ -1,46 +1,30 @@
-// Mock activity log service
-const MOCK_ACTIVITIES = [
-    { id: 1, text: 'System initialized', time: '2023-11-20T10:00:00.000Z', type: 'system' }
-];
+// Activity Service - API Version
 
-const getStoredActivities = () => {
-    const stored = localStorage.getItem('hr_activities');
-    if (stored) {
-        try {
-            return JSON.parse(stored);
-        } catch (e) {
-            console.error("Failed to parse stored activities", e);
-            localStorage.removeItem('hr_activities');
-        }
-    }
-    localStorage.setItem('hr_activities', JSON.stringify(MOCK_ACTIVITIES));
-    return MOCK_ACTIVITIES;
-};
+const API_URL = '/api/activities.php';
 
 export const getRecentActivities = async () => {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            const activities = getStoredActivities();
-            // Sort by time descending and take top 10
-            const sorted = activities.sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 10);
-            resolve(sorted);
-        }, 300);
-    });
+    try {
+        const response = await fetch(API_URL);
+        if (!response.ok) throw new Error('Failed to fetch activities');
+        return await response.json();
+    } catch (error) {
+        console.error(error);
+        return [];
+    }
 };
 
 export const logActivity = async (text, type = 'info') => {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            const activities = getStoredActivities();
-            const newActivity = {
-                id: Date.now(),
-                text,
-                time: new Date().toISOString(),
-                type
-            };
-            activities.unshift(newActivity);
-            localStorage.setItem('hr_activities', JSON.stringify(activities));
-            resolve(newActivity);
-        }, 100);
-    });
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text, type })
+        });
+        if (!response.ok) throw new Error('Failed to log activity');
+        return await response.json();
+    } catch (error) {
+        console.error(error);
+        // Fallback to console if logging fails
+        console.log(`[Activity Log] ${type}: ${text}`);
+    }
 };
