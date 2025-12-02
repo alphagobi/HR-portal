@@ -89,11 +89,11 @@ const AdminReimbursements = () => {
                                     <td className="p-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-xs">
-                                                {claim.employeeName.charAt(0)}
+                                                {(claim.employee_name || '?').charAt(0)}
                                             </div>
                                             <div>
-                                                <p className="font-medium text-gray-900">{claim.employeeName}</p>
-                                                <p className="text-xs text-gray-500">ID: {claim.employeeId}</p>
+                                                <p className="font-medium text-gray-900">{claim.employee_name || 'Unknown'}</p>
+                                                <p className="text-xs text-gray-500">ID: {claim.employee_id}</p>
                                             </div>
                                         </div>
                                     </td>
