@@ -5,6 +5,8 @@ import { getLeaves } from '../../services/leaveService';
 import { getClaims } from '../../services/reimbursementService';
 
 import { getRecentActivities } from '../../services/activityService';
+import { getAllUsers } from '../../services/authService';
+import { getAnnouncements } from '../../services/announcementService';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -20,13 +22,16 @@ const AdminDashboard = () => {
         const fetchStats = async () => {
             const leaves = await getLeaves();
             const claims = await getClaims();
+            const users = await getAllUsers();
+            const announcements = await getAnnouncements();
             const activities = await getRecentActivities();
 
-            setStats(prev => ({
-                ...prev,
+            setStats({
                 pendingLeaves: (leaves || []).filter(l => l.status === 'Pending').length,
-                pendingClaims: (claims || []).filter(c => c.status === 'Pending').length
-            }));
+                pendingClaims: (claims || []).filter(c => c.status === 'Pending').length,
+                totalEmployees: (users || []).length,
+                activeAnnouncements: (announcements || []).length
+            });
             setRecentActivities(activities || []);
         };
         fetchStats();
