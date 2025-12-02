@@ -29,7 +29,15 @@ const AdminTimesheets = () => {
                     sheets: []
                 };
             }
-            acc[empId].sheets.push(sheet);
+            acc[empId].sheets.push({
+                ...sheet,
+                totalHours: (sheet.entries || []).reduce((sum, entry) => {
+                    if (!entry.startTime || !entry.endTime) return sum;
+                    const start = parseInt(entry.startTime.split(':')[0]);
+                    const end = parseInt(entry.endTime.split(':')[0]);
+                    return sum + (end - start);
+                }, 0)
+            });
             return acc;
         }, {});
 
