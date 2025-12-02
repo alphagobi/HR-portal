@@ -29,11 +29,7 @@ elseif ($method === 'POST') {
         echo json_encode(["error" => $e->getMessage()]);
     }
 }
-    } catch (PDOException $e) {
-        http_response_code(500);
-        echo json_encode(["error" => $e->getMessage()]);
-    }
-}
+
 elseif ($method === 'PUT') {
     $data = json_decode(file_get_contents("php://input"), true);
     $id = $_GET['id'];
