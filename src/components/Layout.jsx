@@ -9,6 +9,10 @@ const Layout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const location = useLocation();
 
+    React.useEffect(() => {
+        document.title = 'Internal Portal - AlphaGobi';
+    }, []);
+
     const navItems = [
         { name: 'Dashboard', path: '/', icon: LayoutDashboard },
         { name: 'Policies', path: '/policies', icon: FileText },

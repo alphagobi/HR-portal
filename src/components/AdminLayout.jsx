@@ -22,6 +22,10 @@ const AdminLayout = () => {
     const navigate = useNavigate();
     const user = getCurrentUser();
 
+    React.useEffect(() => {
+        document.title = 'Admin Portal - AlphaGobi';
+    }, []);
+
     const navItems = [
         { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
         { path: '/admin/users', icon: Users, label: 'Users' },
