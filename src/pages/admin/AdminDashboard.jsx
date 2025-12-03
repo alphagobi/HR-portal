@@ -82,10 +82,15 @@ const AdminDashboard = () => {
 
                                 return (
                                     <div key={activity.id} className="flex items-center gap-3 text-sm text-gray-600">
-                                        <div className={`w-2 h-2 ${color} rounded-full`}></div>
-                                        <p>{activity.text}</p>
-                                        <span className="text-xs text-gray-400 ml-auto">
-                                            {new Date(activity.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        <div className={`w-2 h-2 ${color} rounded-full flex-shrink-0`}></div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="truncate">
+                                                <span className="font-semibold text-gray-900">{activity.user_name || 'System'}: </span>
+                                                {activity.text}
+                                            </p>
+                                        </div>
+                                        <span className="text-xs text-gray-400 whitespace-nowrap ml-2">
+                                            {new Date(activity.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </span>
                                     </div>
                                 );

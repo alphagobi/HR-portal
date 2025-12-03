@@ -17,7 +17,7 @@ const AdminLeaves = () => {
         const sorted = (data || []).sort((a, b) => {
             if (a.status === 'Pending' && b.status !== 'Pending') return -1;
             if (a.status !== 'Pending' && b.status === 'Pending') return 1;
-            return new Date(b.startDate) - new Date(a.startDate);
+            return new Date(b.start_date) - new Date(a.start_date);
         });
         setLeaves(sorted);
         setLoading(false);
@@ -101,8 +101,10 @@ const AdminLeaves = () => {
                                     <td className="p-4">
                                         <div className="flex items-center gap-2 text-sm text-gray-600">
                                             <Calendar size={14} />
-                                            <span>{leave.startDate} to {leave.endDate}</span>
-                                            <span className="text-gray-400">({leave.days} days)</span>
+                                            <span>{leave.start_date} to {leave.end_date}</span>
+                                            <span className="text-gray-400">
+                                                ({Math.ceil((new Date(leave.end_date) - new Date(leave.start_date)) / (1000 * 60 * 60 * 24)) + 1} days)
+                                            </span>
                                         </div>
                                     </td>
                                     <td className="p-4">

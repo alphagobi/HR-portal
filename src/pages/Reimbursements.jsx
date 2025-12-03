@@ -95,6 +95,7 @@ const Reimbursements = () => {
                                     className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                                     value={newClaim.date}
                                     onChange={(e) => setNewClaim({ ...newClaim, date: e.target.value })}
+                                    max={new Date().toISOString().split('T')[0]}
                                     required
                                 />
                             </div>

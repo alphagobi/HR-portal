@@ -5,7 +5,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
     // Get all users but hide passwords
-    $stmt = $pdo->query("SELECT id, name, email, role, department, designation, created_at FROM users ORDER BY name ASC");
+    $stmt = $pdo->query("SELECT id, name, email, role, department, designation, informed_leave_limit, emergency_leave_limit, created_at FROM users ORDER BY name ASC");
     echo json_encode($stmt->fetchAll());
 } 
 elseif ($method === 'POST') {
@@ -34,19 +34,21 @@ elseif ($method === 'PUT') {
     $data = json_decode(file_get_contents("php://input"), true);
     $id = $_GET['id'];
 
-    $sql = "UPDATE users SET name=?, email=?, role=?, department=?, designation=? WHERE id=?";
+    $sql = "UPDATE users SET name=?, email=?, role=?, department=?, designation=?, informed_leave_limit=?, emergency_leave_limit=? WHERE id=?";
     $params = [
         $data['name'],
         $data['email'],
         $data['role'],
         $data['department'],
         $data['designation'],
+        $data['informed_leave_limit'] ?? 6,
+        $data['emergency_leave_limit'] ?? 6,
         $id
     ];
 
     // Only update password if provided
     if (!empty($data['password'])) {
-        $sql = "UPDATE users SET name=?, email=?, password=?, role=?, department=?, designation=? WHERE id=?";
+        $sql = "UPDATE users SET name=?, email=?, password=?, role=?, department=?, designation=?, informed_leave_limit=?, emergency_leave_limit=? WHERE id=?";
         $params = [
             $data['name'],
             $data['email'],
@@ -54,6 +56,8 @@ elseif ($method === 'PUT') {
             $data['role'],
             $data['department'],
             $data['designation'],
+            $data['informed_leave_limit'] ?? 6,
+            $data['emergency_leave_limit'] ?? 6,
             $id
         ];
     }

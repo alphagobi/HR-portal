@@ -5,13 +5,22 @@ import { Calendar, CheckCircle, XCircle, Clock, Plus } from 'lucide-react';
 const Leaves = () => {
     const [leaves, setLeaves] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [limits, setLimits] = useState({ 'Informed Leave': 6, 'Emergency Leave': 6 });
+    const [usage, setUsage] = useState({ 'Informed Leave': 0, 'Emergency Leave': 0 });
     const [newRequest, setNewRequest] = useState({ type: 'Informed Leave', startDate: '', endDate: '', reason: '' });
 
     useEffect(() => {
         const fetchLeaves = async () => {
             try {
                 const data = await getLeaves();
-                setLeaves(data);
+                // Handle both old (array) and new (object) API responses for backward compatibility
+                if (Array.isArray(data)) {
+                    setLeaves(data);
+                } else {
+                    setLeaves(data.leaves || []);
+                    setLimits(data.limits || { 'Informed Leave': 6, 'Emergency Leave': 6 });
+                    setUsage(data.usage || { 'Informed Leave': 0, 'Emergency Leave': 0 });
+                }
             } catch (error) {
                 console.error("Failed to fetch leaves", error);
             } finally {
@@ -174,11 +183,17 @@ const Leaves = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-4 rounded-xl text-white shadow-sm">
                             <p className="text-emerald-100 text-sm font-medium mb-1">Informed Leave</p>
-                            <h3 className="text-2xl font-bold">12 <span className="text-sm font-normal text-emerald-100">/ 20</span></h3>
+                            <h3 className="text-2xl font-bold">
+                                {limits['Informed Leave'] - usage['Informed Leave']}
+                                <span className="text-sm font-normal text-emerald-100"> / {limits['Informed Leave']}</span>
+                            </h3>
                         </div>
                         <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-4 rounded-xl text-white shadow-sm">
                             <p className="text-amber-100 text-sm font-medium mb-1">Emergency Leave</p>
-                            <h3 className="text-2xl font-bold">2 <span className="text-sm font-normal text-amber-100">/ 5</span></h3>
+                            <h3 className="text-2xl font-bold">
+                                {limits['Emergency Leave'] - usage['Emergency Leave']}
+                                <span className="text-sm font-normal text-amber-100"> / {limits['Emergency Leave']}</span>
+                            </h3>
                         </div>
                     </div>
 

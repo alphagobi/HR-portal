@@ -13,7 +13,9 @@ const AdminUsers = () => {
         password: '',
         role: 'employee',
         department: '',
-        designation: ''
+        designation: '',
+        informed_leave_limit: 6,
+        emergency_leave_limit: 6
     });
 
     useEffect(() => {
@@ -48,7 +50,9 @@ const AdminUsers = () => {
             password: '', // Don't populate password
             role: user.role,
             department: user.department || '',
-            designation: user.designation || ''
+            designation: user.designation || '',
+            informed_leave_limit: user.informed_leave_limit || 6,
+            emergency_leave_limit: user.emergency_leave_limit || 6
         });
         setEditingId(user.id);
         setShowModal(true);
@@ -66,7 +70,7 @@ const AdminUsers = () => {
     const closeModal = () => {
         setShowModal(false);
         setEditingId(null);
-        setNewUser({ name: '', email: '', password: '', role: 'employee', department: '', designation: '' });
+        setNewUser({ name: '', email: '', password: '', role: 'employee', department: '', designation: '', informed_leave_limit: 6, emergency_leave_limit: 6 });
     };
 
     return (
@@ -115,8 +119,8 @@ const AdminUsers = () => {
                                     </td>
                                     <td className="p-4">
                                         <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === 'admin'
-                                                ? 'bg-purple-100 text-purple-700'
-                                                : 'bg-blue-100 text-blue-700'
+                                            ? 'bg-purple-100 text-purple-700'
+                                            : 'bg-blue-100 text-blue-700'
                                             }`}>
                                             <Shield size={12} />
                                             {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
@@ -220,6 +224,28 @@ const AdminUsers = () => {
                                         className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                                         value={newUser.designation}
                                         onChange={(e) => setNewUser({ ...newUser, designation: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Informed Leave Limit</label>
+                                    <input
+                                        type="number"
+                                        className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        value={newUser.informed_leave_limit}
+                                        onChange={(e) => setNewUser({ ...newUser, informed_leave_limit: parseInt(e.target.value) })}
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Emergency Leave Limit</label>
+                                    <input
+                                        type="number"
+                                        className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        value={newUser.emergency_leave_limit}
+                                        onChange={(e) => setNewUser({ ...newUser, emergency_leave_limit: parseInt(e.target.value) })}
                                         required
                                     />
                                 </div>
