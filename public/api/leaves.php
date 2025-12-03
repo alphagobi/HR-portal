@@ -28,6 +28,7 @@ if ($method === 'GET') {
                 // Calculate days
                 $start = new DateTime($leave['start_date']);
                 $end = new DateTime($leave['end_date']);
+                // inclusive difference
                 $days = $end->diff($start)->days + 1;
                 
                 if (isset($usage[$leave['type']])) {
@@ -46,7 +47,7 @@ if ($method === 'GET') {
         ]);
     } else {
         // Get all leaves (Admin) - Join with users to get names
-        $sql = "SELECT l.*, u.name as employee_name, u.department 
+        $sql = "SELECT l.*, u.name as employee_name, u.department, u.informed_leave_limit, u.emergency_leave_limit 
                 FROM leaves l 
                 JOIN users u ON l.employee_id = u.id 
                 ORDER BY l.created_at DESC";
@@ -69,8 +70,9 @@ elseif ($method === 'POST') {
         ]);
         
         // Log Activity
-        $log = $pdo->prepare("INSERT INTO activities (text, type, created_at) VALUES (?, 'leave', NOW())");
-        $log->execute(["New leave request: " . $data['type']]);
+        $user_id = $data['employee_id']; // Use employee_id as user_id
+        $log = $pdo->prepare("INSERT INTO activities (user_id, text, type, created_at) VALUES (?, ?, 'leave', NOW())");
+        $log->execute([$user_id, "New leave request: " . $data['type']]);
 
         echo json_encode(["message" => "Leave requested successfully", "id" => $pdo->lastInsertId()]);
     } catch (PDOException $e) {
@@ -79,7 +81,6 @@ elseif ($method === 'POST') {
     }
 }
 elseif ($method === 'PUT') {
-    // Update status (Admin)
     $data = json_decode(file_get_contents("php://input"), true);
     $id = $_GET['id'];
     
@@ -88,9 +89,16 @@ elseif ($method === 'PUT') {
         exit;
     }
 
-    $stmt = $pdo->prepare("UPDATE leaves SET status = ? WHERE id = ?");
-    $stmt->execute([$data['status'], $id]);
-    
-    echo json_encode(["message" => "Leave status updated"]);
+    if (isset($data['action']) && $data['action'] === 'challenge') {
+        // Employee challenging a rejection
+        $stmt = $pdo->prepare("UPDATE leaves SET employee_note = ? WHERE id = ?");
+        $stmt->execute([$data['employee_note'], $id]);
+        echo json_encode(["message" => "Challenge note added"]);
+    } else {
+        // Admin updating status
+        $stmt = $pdo->prepare("UPDATE leaves SET status = ?, admin_note = ? WHERE id = ?");
+        $stmt->execute([$data['status'], $data['admin_note'] ?? null, $id]);
+        echo json_encode(["message" => "Leave status updated"]);
+    }
 }
 ?>

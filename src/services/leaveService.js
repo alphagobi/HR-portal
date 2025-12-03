@@ -21,7 +21,7 @@ export const submitLeaveRequest = async (leaveData) => {
         const response = await fetch(`${API_URL}?_t=${new Date().getTime()}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(leaveData)
+            body: JSON.stringify({ ...leaveData, user_id: JSON.parse(localStorage.getItem('hr_current_user'))?.id })
         });
         if (!response.ok) throw new Error('Failed to submit leave');
         return await response.json();
@@ -31,12 +31,19 @@ export const submitLeaveRequest = async (leaveData) => {
     }
 };
 
-export const updateLeaveStatus = async (id, status) => {
+export const updateLeaveStatus = async (id, status, admin_note = null, employee_note = null) => {
     try {
+        const payload = { status };
+        if (admin_note) payload.admin_note = admin_note;
+        if (employee_note) {
+            payload.employee_note = employee_note;
+            payload.action = 'challenge';
+        }
+
         const response = await fetch(`${API_URL}?id=${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status })
+            body: JSON.stringify(payload)
         });
         if (!response.ok) throw new Error('Failed to update status');
         return await response.json();

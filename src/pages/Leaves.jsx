@@ -104,6 +104,53 @@ const Leaves = () => {
         }
     };
 
+    const [showChallengeModal, setShowChallengeModal] = useState(false);
+    const [challengeNote, setChallengeNote] = useState('');
+    const [selectedLeaveId, setSelectedLeaveId] = useState(null);
+
+    const handleChallenge = (id) => {
+        setSelectedLeaveId(id);
+        setShowChallengeModal(true);
+    };
+
+    const submitChallenge = async () => {
+        if (!selectedLeaveId || !challengeNote.trim()) return;
+
+        try {
+            // Import updateLeaveStatus if not already imported or define it here if needed, 
+            // but better to import it. Assuming it's imported or available.
+            // Wait, updateLeaveStatus is not imported. I need to import it.
+            // I will add the import in a separate edit.
+            // For now, I'll assume it's available or I'll use fetch directly if needed, 
+            // but let's stick to the service pattern.
+            // Actually, I should update the imports first.
+            // Let's do the UI part here and I'll add the import in another step.
+
+            // Re-using the service function
+            const { updateLeaveStatus } = await import('../services/leaveService');
+            await updateLeaveStatus(selectedLeaveId, 'Rejected', null, challengeNote);
+
+            alert("Challenge submitted successfully.");
+            setShowChallengeModal(false);
+            setChallengeNote('');
+            setSelectedLeaveId(null);
+
+            // Refresh leaves
+            const user = JSON.parse(localStorage.getItem('hr_current_user'));
+            if (user) {
+                const data = await getLeaves(user.id);
+                if (Array.isArray(data)) {
+                    setLeaves(data);
+                } else {
+                    setLeaves(data.leaves || []);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to submit challenge", error);
+            alert("Failed to submit challenge.");
+        }
+    };
+
     return (
         <div className="p-6 max-w-7xl mx-auto">
             <div className="mb-8">
@@ -214,13 +261,33 @@ const Leaves = () => {
                                             </div>
                                             <div>
                                                 <h3 className="font-semibold text-gray-900">{leave.type}</h3>
-                                                <p className="text-sm text-gray-500">{leave.startDate} to {leave.endDate} • {leave.days} days</p>
+                                                <p className="text-sm text-gray-500">{leave.start_date || leave.startDate} to {leave.end_date || leave.endDate} • {leave.days || (Math.ceil((new Date(leave.end_date || leave.endDate) - new Date(leave.start_date || leave.startDate)) / (1000 * 60 * 60 * 24)) + 1)} days</p>
                                                 <p className="text-sm text-gray-600 mt-1">{leave.reason}</p>
+                                                {leave.admin_note && (
+                                                    <div className="mt-2 p-2 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100">
+                                                        <strong>Rejection Reason:</strong> {leave.admin_note}
+                                                    </div>
+                                                )}
+                                                {leave.employee_note && (
+                                                    <div className="mt-2 p-2 bg-orange-50 text-orange-700 text-sm rounded-lg border border-orange-100">
+                                                        <strong>Your Challenge:</strong> {leave.employee_note}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
-                                        <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(leave.status)}`}>
-                                            {getStatusIcon(leave.status)}
-                                            {leave.status}
+                                        <div className="flex flex-col items-end gap-2">
+                                            <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(leave.status)}`}>
+                                                {getStatusIcon(leave.status)}
+                                                {leave.status}
+                                            </div>
+                                            {leave.status === 'Rejected' && !leave.employee_note && (
+                                                <button
+                                                    onClick={() => handleChallenge(leave.id)}
+                                                    className="text-xs text-indigo-600 hover:text-indigo-800 font-medium underline"
+                                                >
+                                                    Challenge Rejection
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 ))
@@ -229,6 +296,37 @@ const Leaves = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Challenge Modal */}
+            {showChallengeModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4">Challenge Rejection</h3>
+                        <p className="text-sm text-gray-500 mb-4">Provide a reason why this rejection should be reconsidered.</p>
+                        <textarea
+                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none mb-4 h-32 resize-none"
+                            placeholder="Your explanation..."
+                            value={challengeNote}
+                            onChange={(e) => setChallengeNote(e.target.value)}
+                        />
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => { setShowChallengeModal(false); setChallengeNote(''); }}
+                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={submitChallenge}
+                                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                                disabled={!challengeNote.trim()}
+                            >
+                                Submit Challenge
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

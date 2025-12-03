@@ -21,7 +21,7 @@ export const submitClaim = async (claimData) => {
         const response = await fetch(`${API_URL}?_t=${new Date().getTime()}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(claimData)
+            body: JSON.stringify({ ...claimData, user_id: JSON.parse(localStorage.getItem('hr_current_user'))?.id })
         });
         if (!response.ok) throw new Error('Failed to submit claim');
         return await response.json();
