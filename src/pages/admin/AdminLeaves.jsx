@@ -4,6 +4,9 @@ import { CheckCircle, XCircle, Clock, Calendar, Search, Filter } from 'lucide-re
 
 const AdminLeaves = () => {
     const [activeTab, setActiveTab] = useState('approvals');
+    const [leaves, setLeaves] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState('All');
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [rejectReason, setRejectReason] = useState('');
     const [selectedLeaveId, setSelectedLeaveId] = useState(null);
