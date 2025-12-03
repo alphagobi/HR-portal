@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getTimesheets, saveTimesheet } from '../../services/timesheetService';
-import { Calendar, Clock, User, Search, ChevronRight, ChevronLeft, MessageSquare, Save } from 'lucide-react';
+import { ChevronDown, ChevronUp, Search, Filter, Download, Calendar, Clock, X } from 'lucide-react';
 import clsx from 'clsx';
 
 const AdminTimesheets = () => {
@@ -10,6 +10,10 @@ const AdminTimesheets = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedEmployee, setSelectedEmployee] = useState(null);
     const [adminRemarks, setAdminRemarks] = useState({}); // { [date_employeeId]: 'remark' }
+    const [dateRange, setDateRange] = useState({ start: '', end: '' });
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [historyData, setHistoryData] = useState([]);
+    const [loadingHistory, setLoadingHistory] = useState(false);
 
     useEffect(() => {
         fetchTimesheets();
@@ -60,6 +64,22 @@ const AdminTimesheets = () => {
         alert('Remarks saved successfully');
     };
 
+    const fetchHistory = async (entryId) => {
+        setLoadingHistory(true);
+        setShowHistoryModal(true);
+        try {
+            const response = await fetch(`/api/timesheets.php?history_for_entry_id=${entryId}`);
+            if (response.ok) {
+                const data = await response.json();
+                setHistoryData(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch history", error);
+        } finally {
+            setLoadingHistory(false);
+        }
+    };
+
     const filteredEmployees = Object.values(groupedData).filter(emp =>
         emp.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -71,7 +91,7 @@ const AdminTimesheets = () => {
                     onClick={() => setSelectedEmployee(null)}
                     className="flex items-center gap-2 text-gray-500 hover:text-indigo-600 mb-6 transition-colors"
                 >
-                    <ChevronLeft size={20} /> Back to Employees
+                    <X size={20} /> Back to Employees
                 </button>
 
                 <div className="flex items-center gap-4 mb-8">
@@ -115,16 +135,26 @@ const AdminTimesheets = () => {
                                                 <tr>
                                                     <th className="px-4 py-2 w-32">Time</th>
                                                     <th className="px-4 py-2">Description</th>
+                                                    <th className="px-4 py-2 w-24">Duration</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100">
                                                 {sheet.entries && sheet.entries.length > 0 ? (
                                                     sheet.entries.map(entry => (
                                                         <tr key={entry.id}>
-                                                            <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
-                                                                {entry.startTime} - {entry.endTime}
+                                                            <td className="px-4 py-3 text-gray-900 font-medium">{entry.startTime} - {entry.endTime}</td>
+                                                            <td className="px-4 py-3 text-gray-600">
+                                                                {entry.description}
+                                                                {entry.is_edited == 1 && (
+                                                                    <span
+                                                                        onClick={() => fetchHistory(entry.id)}
+                                                                        className="ml-2 text-xs text-gray-400 italic cursor-pointer hover:text-indigo-600 hover:underline"
+                                                                    >
+                                                                        (Edited)
+                                                                    </span>
+                                                                )}
                                                             </td>
-                                                            <td className="px-4 py-3 text-gray-600">{entry.description}</td>
+                                                            <td className="px-4 py-3 text-gray-500">{entry.duration} hrs</td>
                                                         </tr>
                                                     ))
                                                 ) : (
@@ -209,6 +239,42 @@ const AdminTimesheets = () => {
                     </div>
                 ))}
             </div>
+
+            {/* History Modal */}
+            {showHistoryModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6 m-4">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold text-gray-900">Edit History</h3>
+                            <button onClick={() => setShowHistoryModal(false)} className="text-gray-400 hover:text-gray-600">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                            {loadingHistory ? (
+                                <div className="text-center py-4 text-gray-500">Loading history...</div>
+                            ) : historyData.length === 0 ? (
+                                <div className="text-center py-4 text-gray-500">No history found.</div>
+                            ) : (
+                                historyData.map((history) => (
+                                    <div key={history.id} className="border-b border-gray-100 pb-3 last:border-0">
+                                        <div className="text-xs text-gray-400 mb-1">
+                                            {new Date(history.changed_at).toLocaleString()}
+                                        </div>
+                                        <div className="font-medium text-sm text-gray-800">
+                                            {history.old_start_time} - {history.old_end_time}
+                                        </div>
+                                        <div className="text-sm text-gray-600 mt-1">
+                                            {history.old_description}
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

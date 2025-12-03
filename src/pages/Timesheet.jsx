@@ -62,11 +62,12 @@ const Timesheet = () => {
             ...newEntry,
             project: 'General',
             id: editingId || Date.now(),
-            date: selectedDate
+            date: selectedDate,
+            is_edited: editingId ? 1 : (entries.find(e => e.id === editingId)?.is_edited || 0)
         };
 
         if (editingId) {
-            setEntries(entries.map(e => e.id === editingId ? entry : e));
+            setEntries(entries.map(e => e.id === editingId ? { ...entry, is_edited: 1 } : e));
         } else {
             setEntries([...entries, entry]);
         }
