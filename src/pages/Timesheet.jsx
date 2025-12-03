@@ -19,27 +19,28 @@ const Timesheet = () => {
 
     const [timesheetMap, setTimesheetMap] = useState({});
 
-    useEffect(() => {
-        const fetchTimesheets = async () => {
-            try {
-                const user = getCurrentUser();
-                const data = await getTimesheets(user ? user.id : null);
-                // Create a map of date -> timesheet object for easy lookup
-                const map = {};
-                data.forEach(t => {
-                    map[t.date] = t;
-                });
-                setTimesheetMap(map);
+    const fetchTimesheets = async () => {
+        try {
+            const user = getCurrentUser();
+            const data = await getTimesheets(user ? user.id : null);
+            // Create a map of date -> timesheet object for easy lookup
+            const map = {};
+            data.forEach(t => {
+                map[t.date] = t;
+            });
+            setTimesheetMap(map);
 
-                // For daily view
-                const todayData = data.find(t => t.date === selectedDate);
-                setEntries(todayData ? todayData.entries : []);
-            } catch (error) {
-                console.error("Failed to fetch timesheets", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+            // For daily view
+            const todayData = data.find(t => t.date === selectedDate);
+            setEntries(todayData ? todayData.entries : []);
+        } catch (error) {
+            console.error("Failed to fetch timesheets", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchTimesheets();
     }, [selectedDate]);
 
