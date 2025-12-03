@@ -183,6 +183,18 @@ const Timesheet = () => {
 
     const daysInMonth = getDaysInMonth(selectedDate);
 
+    const handlePrevDay = () => {
+        const date = new Date(selectedDate);
+        date.setDate(date.getDate() - 1);
+        setSelectedDate(date.toISOString().split('T')[0]);
+    };
+
+    const handleNextDay = () => {
+        const date = new Date(selectedDate);
+        date.setDate(date.getDate() + 1);
+        setSelectedDate(date.toISOString().split('T')[0]);
+    };
+
     return (
         <div className="p-6 max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -216,12 +228,17 @@ const Timesheet = () => {
 
                     {/* Date Navigation */}
                     <div className="flex items-center gap-4 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
-                        <button className="p-2 hover:bg-gray-100 rounded-full text-gray-500"><ChevronLeft size={20} /></button>
+                        <button onClick={handlePrevDay} className="p-2 hover:bg-gray-100 rounded-full text-gray-500"><ChevronLeft size={20} /></button>
                         <div className="flex items-center gap-2 font-medium text-gray-700">
                             <Calendar size={18} className="text-indigo-600" />
-                            {selectedDate}
+                            <input
+                                type="date"
+                                value={selectedDate}
+                                onChange={(e) => setSelectedDate(e.target.value)}
+                                className="bg-transparent border-none outline-none text-gray-700 font-medium cursor-pointer focus:ring-0"
+                            />
                         </div>
-                        <button className="p-2 hover:bg-gray-100 rounded-full text-gray-500"><ChevronRight size={20} /></button>
+                        <button onClick={handleNextDay} className="p-2 hover:bg-gray-100 rounded-full text-gray-500"><ChevronRight size={20} /></button>
                     </div>
                 </div>
             </div>
