@@ -112,7 +112,35 @@ const Timesheet = () => {
 
         await fetchTimesheets(); // Refresh to get real IDs from DB
 
-        setNewEntry(prev => ({ ...prev, description: '', endTime: '' }));
+        // If this entry was linked to a task, update the task
+        if (newEntry.relatedTaskId) {
+            try {
+                // We need the ID of the newly created entry.
+                // Since we just refreshed timesheets, we can find the entry that matches our data.
+                // This is a bit race-condition prone but should work for single user.
+                // Better approach: saveTimesheet should return the new ID, but it saves bulk.
+                // Let's fetch timesheets again (already done) and find the entry.
+                const data = await getTimesheets(getCurrentUser().id);
+                const todayData = data.find(t => t.date === selectedDate);
+                const savedEntry = todayData?.entries.find(e =>
+                    e.startTime === entry.startTime &&
+                    e.endTime === entry.endTime &&
+                    e.description === entry.description
+                );
+
+                if (savedEntry) {
+                    await updateTask(newEntry.relatedTaskId, {
+                        is_completed: 1,
+                        related_entry_id: savedEntry.id
+                    });
+                    fetchDailyTasks(); // Refresh tasks to show checked status
+                }
+            } catch (error) {
+                console.error("Failed to sync task", error);
+            }
+        }
+
+        setNewEntry(prev => ({ ...prev, description: '', endTime: '', relatedTaskId: null }));
         setEditingId(null);
     };
 
@@ -120,14 +148,15 @@ const Timesheet = () => {
         setNewEntry({
             startTime: entry.startTime,
             endTime: entry.endTime,
-            description: entry.description
+            description: entry.description,
+            relatedTaskId: null // When editing, we don't link to a new task
         });
         setEditingId(entry.id);
     };
 
     const handleCancelEdit = () => {
         setEditingId(null);
-        setNewEntry(prev => ({ ...prev, description: '', endTime: '' }));
+        setNewEntry(prev => ({ ...prev, description: '', endTime: '', relatedTaskId: null }));
         // Reset start time logic will trigger via useEffect
     };
 
@@ -147,6 +176,24 @@ const Timesheet = () => {
                 status: currentTimesheet.status || 'draft'
             });
             await fetchTimesheets(); // Refresh to get real IDs from DB
+
+            // Check if this entry was linked to a task and un-complete it
+            // We need to find the task with related_entry_id == entryId
+            // Since we don't have a direct "getTaskByEntryId" API, we can iterate daily tasks.
+            // We already have `tasks` state.
+            const linkedTask = tasks.find(t => t.related_entry_id == entryId);
+            if (linkedTask) {
+                try {
+                    await updateTask(linkedTask.id, {
+                        is_completed: 0,
+                        related_entry_id: null // Clear the link
+                    });
+                    fetchDailyTasks();
+                } catch (error) {
+                    console.error("Failed to unsync task", error);
+                }
+            }
+
             if (editingId === entryId) {
                 handleCancelEdit();
             }
@@ -267,36 +314,37 @@ const Timesheet = () => {
         return dateString > today;
     };
 
-    const handleLogTask = (task) => {
+    const handleLogTask = async (task) => {
         if (isFutureDate(selectedDate)) {
             alert("You cannot log time for future dates.");
             return;
         }
 
-        let endTime = '';
-        if (task.planned_time && newEntry.startTime) {
-            let minutes = 0;
-            const timeStr = task.planned_time.toLowerCase();
-            if (timeStr.includes('h')) {
-                minutes += parseFloat(timeStr) * 60;
-            } else if (timeStr.includes('m')) {
-                minutes += parseFloat(timeStr);
-            }
-
-            if (minutes > 0) {
-                const [h, m] = newEntry.startTime.split(':').map(Number);
-                const date = new Date();
-                date.setHours(h, m, 0, 0);
-                date.setMinutes(date.getMinutes() + minutes);
-                endTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-            }
-        }
-
-        setNewEntry(prev => ({
-            ...prev,
+        // Pre-fill data
+        const entryData = {
+            startTime: task.start_time || newEntry.startTime,
+            endTime: task.end_time || '',
             description: task.task_content,
-            endTime: endTime || prev.endTime
-        }));
+            project: 'General',
+            date: selectedDate,
+            id: Date.now(),
+            is_edited: 0
+        };
+
+        // If we have start and end time, we can auto-save immediately?
+        // User said "if the task is logged and entry was added, it will automatically check it as completed".
+        // Let's pre-fill the form and let user click "Add Entry" to confirm,
+        // OR we can auto-add if times are present.
+        // Let's stick to pre-fill for safety, but we need to track which task is being logged to link them.
+        // Actually, to "automatically check as completed" upon entry addition, we need to pass the task ID to handleAddEntry.
+
+        setNewEntry({
+            startTime: entryData.startTime,
+            endTime: entryData.endTime,
+            description: entryData.description,
+            relatedTaskId: task.id // Store this temporarily
+        });
+
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -576,8 +624,10 @@ const Timesheet = () => {
                                                     <p className={clsx("text-sm text-gray-800 break-words", task.is_completed == 1 && "line-through text-gray-400")}>
                                                         {task.task_content}
                                                     </p>
-                                                    {task.planned_time && (
-                                                        <span className="text-xs text-gray-400 block mt-0.5">Est: {task.planned_time}</span>
+                                                    {task.start_time && (
+                                                        <span className="text-xs text-gray-400 block mt-0.5">
+                                                            {task.start_time} - {task.end_time}
+                                                        </span>
                                                     )}
                                                 </div>
                                             </div>
@@ -585,12 +635,12 @@ const Timesheet = () => {
                                             <div className="mt-3 flex items-center justify-between gap-2 pt-2 border-t border-gray-200/50">
                                                 <button
                                                     onClick={() => handleLogTask(task)}
-                                                    disabled={isFutureDate(selectedDate)}
+                                                    disabled={isFutureDate(selectedDate) || task.is_completed == 1}
                                                     className={clsx(
                                                         "text-xs font-medium flex items-center gap-1",
-                                                        isFutureDate(selectedDate) ? "text-gray-300 cursor-not-allowed" : "text-indigo-600 hover:text-indigo-800"
+                                                        (isFutureDate(selectedDate) || task.is_completed == 1) ? "text-gray-300 cursor-not-allowed" : "text-indigo-600 hover:text-indigo-800"
                                                     )}
-                                                    title={isFutureDate(selectedDate) ? "Cannot log future tasks" : "Use as description for time entry"}
+                                                    title={isFutureDate(selectedDate) ? "Cannot log future tasks" : (task.is_completed == 1 ? "Task already logged" : "Use as description for time entry")}
                                                 >
                                                     <Clock size={12} /> Log
                                                 </button>
@@ -598,8 +648,12 @@ const Timesheet = () => {
                                                 <div className="flex items-center gap-2">
                                                     <button
                                                         onClick={() => handleMoveTask(task)}
-                                                        className="text-xs text-gray-500 hover:text-indigo-600 flex items-center gap-1"
-                                                        title="Move to next day"
+                                                        disabled={task.is_completed == 1}
+                                                        className={clsx(
+                                                            "text-xs flex items-center gap-1",
+                                                            task.is_completed == 1 ? "text-gray-300 cursor-not-allowed" : "text-gray-500 hover:text-indigo-600"
+                                                        )}
+                                                        title={task.is_completed == 1 ? "Cannot move completed task" : "Move to next day"}
                                                     >
                                                         Move <ArrowRight size={12} />
                                                     </button>
@@ -649,38 +703,17 @@ const Timesheet = () => {
                                             </td>
                                             <td className="px-6 py-4">
                                                 {day.isSunday ? '' : (
-                                                    <input
-                                                        type="text"
-                                                        className="w-full bg-transparent outline-none border-b border-transparent focus:border-indigo-300 placeholder-gray-400"
-                                                        placeholder="Enter milestone..."
-                                                        value={dayData.milestone || ''}
-                                                        onChange={(e) => handleSummaryChange(day.date, 'milestone', e.target.value)}
-                                                        onBlur={() => handleSummarySave(day.date)}
-                                                    />
+                                                    <div className="w-full py-2 text-gray-600">{dayData.milestone || '-'}</div>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4">
                                                 {day.isSunday ? '' : (
-                                                    <input
-                                                        type="text"
-                                                        className="w-full bg-transparent outline-none border-b border-transparent focus:border-indigo-300 placeholder-gray-400"
-                                                        placeholder="Task details..."
-                                                        value={dayData.taskDescription || ''}
-                                                        onChange={(e) => handleSummaryChange(day.date, 'taskDescription', e.target.value)}
-                                                        onBlur={() => handleSummarySave(day.date)}
-                                                    />
+                                                    <div className="w-full py-2 text-gray-600">{dayData.taskDescription || '-'}</div>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4">
                                                 {day.isSunday ? '' : (
-                                                    <input
-                                                        type="text"
-                                                        className="w-full bg-transparent outline-none border-b border-transparent focus:border-indigo-300 placeholder-gray-400"
-                                                        placeholder="Add comments..."
-                                                        value={dayData.comments || ''}
-                                                        onChange={(e) => handleSummaryChange(day.date, 'comments', e.target.value)}
-                                                        onBlur={() => handleSummarySave(day.date)}
-                                                    />
+                                                    <div className="w-full py-2 text-gray-600">{dayData.comments || '-'}</div>
                                                 )}
                                             </td>
                                         </tr>

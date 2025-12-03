@@ -7,14 +7,23 @@ if ($method === 'GET') {
     $user_id = $_GET['user_id'] ?? null;
     $date = $_GET['date'] ?? null;
 
-    if (!$user_id || !$date) {
+    if (!$user_id) {
         http_response_code(400);
-        echo json_encode(["error" => "Missing user_id or date"]);
+        echo json_encode(["error" => "Missing user_id"]);
         exit;
     }
 
-    $stmt = $pdo->prepare("SELECT * FROM planned_tasks WHERE user_id = ? AND planned_date = ? ORDER BY created_at ASC");
-    $stmt->execute([$user_id, $date]);
+    if ($date) {
+        $stmt = $pdo->prepare("SELECT * FROM planned_tasks WHERE user_id = ? AND planned_date = ? ORDER BY created_at ASC");
+        $stmt->execute([$user_id, $date]);
+    } else {
+        // Fetch all future tasks or recent tasks? Let's fetch all for now or maybe limit to recent/future.
+        // User asked for "list and viewable for multiple days".
+        // Let's fetch all tasks >= today - 7 days to keep it relevant but inclusive.
+        // Or just all. Let's do all for simplicity as per request.
+        $stmt = $pdo->prepare("SELECT * FROM planned_tasks WHERE user_id = ? ORDER BY planned_date ASC, created_at ASC");
+        $stmt->execute([$user_id]);
+    }
     echo json_encode($stmt->fetchAll());
 } 
 elseif ($method === 'POST') {
@@ -26,9 +35,15 @@ elseif ($method === 'POST') {
         exit;
     }
 
-    $stmt = $pdo->prepare("INSERT INTO planned_tasks (user_id, task_content, planned_date, planned_time) VALUES (?, ?, ?, ?)");
+    $stmt = $pdo->prepare("INSERT INTO planned_tasks (user_id, task_content, planned_date, start_time, end_time) VALUES (?, ?, ?, ?, ?)");
     try {
-        $stmt->execute([$data['user_id'], $data['task_content'], $data['planned_date'], $data['planned_time'] ?? null]);
+        $stmt->execute([
+            $data['user_id'], 
+            $data['task_content'], 
+            $data['planned_date'], 
+            $data['start_time'] ?? null,
+            $data['end_time'] ?? null
+        ]);
         echo json_encode(["message" => "Task created", "id" => $pdo->lastInsertId()]);
     } catch (PDOException $e) {
         http_response_code(500);
@@ -52,14 +67,34 @@ elseif ($method === 'PUT') {
         $stmt->execute([$data['new_date'], $id]);
         echo json_encode(["message" => "Task moved"]);
     } elseif (isset($data['is_completed'])) {
-        // Update completion status
-        $stmt = $pdo->prepare("UPDATE planned_tasks SET is_completed = ? WHERE id = ?");
-        $stmt->execute([$data['is_completed'], $id]);
+        // Update completion status and related entry
+        $related_entry_id = $data['related_entry_id'] ?? null;
+        // If uncompleting, we might want to clear related_entry_id, or handle it via specific logic
+        // For now, we update whatever is passed.
+        
+        $sql = "UPDATE planned_tasks SET is_completed = ?";
+        $params = [$data['is_completed']];
+
+        if (array_key_exists('related_entry_id', $data)) {
+            $sql .= ", related_entry_id = ?";
+            $params[] = $data['related_entry_id'];
+        }
+
+        $sql .= " WHERE id = ?";
+        $params[] = $id;
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
         echo json_encode(["message" => "Task status updated"]);
     } else {
-        // Update content and time
-        $stmt = $pdo->prepare("UPDATE planned_tasks SET task_content = ?, planned_time = ? WHERE id = ?");
-        $stmt->execute([$data['task_content'], $data['planned_time'] ?? null, $id]);
+        // Update content and times
+        $stmt = $pdo->prepare("UPDATE planned_tasks SET task_content = ?, start_time = ?, end_time = ? WHERE id = ?");
+        $stmt->execute([
+            $data['task_content'], 
+            $data['start_time'] ?? null, 
+            $data['end_time'] ?? null, 
+            $id
+        ]);
         echo json_encode(["message" => "Task updated"]);
     }
 }
