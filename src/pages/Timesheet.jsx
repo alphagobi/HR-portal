@@ -262,9 +262,41 @@ const Timesheet = () => {
         }
     };
 
+    const isFutureDate = (dateString) => {
+        const today = new Date().toISOString().split('T')[0];
+        return dateString > today;
+    };
+
     const handleLogTask = (task) => {
-        setNewEntry(prev => ({ ...prev, description: task.task_content }));
-        // Optionally scroll to top or focus input
+        if (isFutureDate(selectedDate)) {
+            alert("You cannot log time for future dates.");
+            return;
+        }
+
+        let endTime = '';
+        if (task.planned_time && newEntry.startTime) {
+            let minutes = 0;
+            const timeStr = task.planned_time.toLowerCase();
+            if (timeStr.includes('h')) {
+                minutes += parseFloat(timeStr) * 60;
+            } else if (timeStr.includes('m')) {
+                minutes += parseFloat(timeStr);
+            }
+
+            if (minutes > 0) {
+                const [h, m] = newEntry.startTime.split(':').map(Number);
+                const date = new Date();
+                date.setHours(h, m, 0, 0);
+                date.setMinutes(date.getMinutes() + minutes);
+                endTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+            }
+        }
+
+        setNewEntry(prev => ({
+            ...prev,
+            description: task.task_content,
+            endTime: endTime || prev.endTime
+        }));
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -414,13 +446,16 @@ const Timesheet = () => {
                             <div className="flex gap-2">
                                 <button
                                     onClick={handleAddEntry}
+                                    disabled={isFutureDate(selectedDate)}
                                     className={clsx(
                                         "flex-1 text-white py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2",
-                                        editingId ? "bg-amber-600 hover:bg-amber-700" : "bg-indigo-600 hover:bg-indigo-700"
+                                        isFutureDate(selectedDate)
+                                            ? "bg-gray-300 cursor-not-allowed"
+                                            : (editingId ? "bg-amber-600 hover:bg-amber-700" : "bg-indigo-600 hover:bg-indigo-700")
                                     )}
                                 >
                                     {editingId ? <Pencil size={18} /> : <Plus size={18} />}
-                                    {editingId ? "Update Entry" : "Add Entry"}
+                                    {isFutureDate(selectedDate) ? "Cannot Log Future Time" : (editingId ? "Update Entry" : "Add Entry")}
                                 </button>
                                 {editingId && (
                                     <button
@@ -541,14 +576,21 @@ const Timesheet = () => {
                                                     <p className={clsx("text-sm text-gray-800 break-words", task.is_completed == 1 && "line-through text-gray-400")}>
                                                         {task.task_content}
                                                     </p>
+                                                    {task.planned_time && (
+                                                        <span className="text-xs text-gray-400 block mt-0.5">Est: {task.planned_time}</span>
+                                                    )}
                                                 </div>
                                             </div>
 
                                             <div className="mt-3 flex items-center justify-between gap-2 pt-2 border-t border-gray-200/50">
                                                 <button
                                                     onClick={() => handleLogTask(task)}
-                                                    className="text-xs font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
-                                                    title="Use as description for time entry"
+                                                    disabled={isFutureDate(selectedDate)}
+                                                    className={clsx(
+                                                        "text-xs font-medium flex items-center gap-1",
+                                                        isFutureDate(selectedDate) ? "text-gray-300 cursor-not-allowed" : "text-indigo-600 hover:text-indigo-800"
+                                                    )}
+                                                    title={isFutureDate(selectedDate) ? "Cannot log future tasks" : "Use as description for time entry"}
                                                 >
                                                     <Clock size={12} /> Log
                                                 </button>

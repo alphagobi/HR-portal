@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { LayoutDashboard, FileText, Clock, Calendar, DollarSign, Menu, X, LogOut } from 'lucide-react';
+import { LayoutDashboard, FileText, Clock, Calendar, DollarSign, Menu, X, LogOut, CheckSquare } from 'lucide-react';
 import { useState } from 'react';
 import { logout } from '../services/authService';
 import clsx from 'clsx';
@@ -16,6 +16,7 @@ const Layout = () => {
     const navItems = [
         { name: 'Dashboard', path: '/', icon: LayoutDashboard },
         { name: 'Policies', path: '/policies', icon: FileText },
+        { name: 'Tasks', path: '/tasks', icon: CheckSquare },
         { name: 'Timesheet', path: '/timesheet', icon: Clock },
         { name: 'Leaves', path: '/leaves', icon: Calendar },
         { name: 'Reimbursements', path: '/reimbursements', icon: DollarSign },

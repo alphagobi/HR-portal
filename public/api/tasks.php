@@ -26,9 +26,9 @@ elseif ($method === 'POST') {
         exit;
     }
 
-    $stmt = $pdo->prepare("INSERT INTO planned_tasks (user_id, task_content, planned_date) VALUES (?, ?, ?)");
+    $stmt = $pdo->prepare("INSERT INTO planned_tasks (user_id, task_content, planned_date, planned_time) VALUES (?, ?, ?, ?)");
     try {
-        $stmt->execute([$data['user_id'], $data['task_content'], $data['planned_date']]);
+        $stmt->execute([$data['user_id'], $data['task_content'], $data['planned_date'], $data['planned_time'] ?? null]);
         echo json_encode(["message" => "Task created", "id" => $pdo->lastInsertId()]);
     } catch (PDOException $e) {
         http_response_code(500);
@@ -57,9 +57,9 @@ elseif ($method === 'PUT') {
         $stmt->execute([$data['is_completed'], $id]);
         echo json_encode(["message" => "Task status updated"]);
     } else {
-        // Update content
-        $stmt = $pdo->prepare("UPDATE planned_tasks SET task_content = ? WHERE id = ?");
-        $stmt->execute([$data['task_content'], $id]);
+        // Update content and time
+        $stmt = $pdo->prepare("UPDATE planned_tasks SET task_content = ?, planned_time = ? WHERE id = ?");
+        $stmt->execute([$data['task_content'], $data['planned_time'] ?? null, $id]);
         echo json_encode(["message" => "Task updated"]);
     }
 }

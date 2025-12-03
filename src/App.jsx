@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
 import Policies from './pages/Policies';
+import Tasks from './pages/Tasks';
 import Timesheet from './pages/Timesheet';
 import Leaves from './pages/Leaves';
 import Reimbursements from './pages/Reimbursements';
@@ -31,6 +32,7 @@ function App() {
         }>
           <Route index element={<Dashboard />} />
           <Route path="policies" element={<Policies />} />
+          <Route path="tasks" element={<Tasks />} />
           <Route path="timesheet" element={<Timesheet />} />
           <Route path="leaves" element={<Leaves />} />
           <Route path="reimbursements" element={<Reimbursements />} />
