@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getTimesheets, saveTimesheet } from '../../services/timesheetService';
-import { ChevronDown, ChevronUp, Search, Filter, Download, Calendar, Clock, X, ChevronRight, ChevronLeft } from 'lucide-react';
+import { ChevronDown, ChevronUp, Search, Filter, Download, Calendar, Clock, X, ChevronRight, ChevronLeft, MessageSquare, Save, User } from 'lucide-react';
 import clsx from 'clsx';
 
 const AdminTimesheets = () => {
