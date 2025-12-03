@@ -18,7 +18,8 @@ const Timesheet = () => {
     useEffect(() => {
         const fetchTimesheets = async () => {
             try {
-                const data = await getTimesheets();
+                const user = getCurrentUser();
+                const data = await getTimesheets(user ? user.id : null);
                 // Create a map of date -> timesheet object for easy lookup
                 const map = {};
                 data.forEach(t => {
