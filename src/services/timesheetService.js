@@ -22,7 +22,7 @@ export const saveTimesheet = async (timesheetData) => {
         const user = getCurrentUser();
         const payload = {
             ...timesheetData,
-            employeeId: user ? user.id : timesheetData.employeeId
+            employeeId: timesheetData.employeeId || (user ? user.id : null)
         };
 
         const response = await fetch(API_URL, {
