@@ -87,6 +87,8 @@ const Timesheet = () => {
             status: currentTimesheet.status || 'draft'
         });
 
+        await fetchTimesheets(); // Refresh to get real IDs from DB
+
         setNewEntry(prev => ({ ...prev, description: '', endTime: '' }));
         setEditingId(null);
     };
@@ -121,6 +123,7 @@ const Timesheet = () => {
                 comments: currentTimesheet.comments || '',
                 status: currentTimesheet.status || 'draft'
             });
+            await fetchTimesheets(); // Refresh to get real IDs from DB
             if (editingId === entryId) {
                 handleCancelEdit();
             }
@@ -166,14 +169,20 @@ const Timesheet = () => {
     const handleSummarySave = async (date) => {
         const data = timesheetMap[date];
         if (data) {
-            await saveTimesheet({
-                date: date,
-                entries: data.entries || [], // Preserve entries
-                milestone: data.milestone,
-                taskDescription: data.taskDescription,
-                comments: data.comments,
-                status: data.status || 'draft'
-            });
+            try {
+                await saveTimesheet({
+                    date: date,
+                    entries: data.entries || [], // Preserve entries
+                    milestone: data.milestone,
+                    taskDescription: data.taskDescription,
+                    comments: data.comments,
+                    status: data.status || 'draft'
+                });
+                fetchTimesheets(); // Refresh to get real IDs from DB
+            } catch (error) {
+                console.error(error);
+                alert('Failed to save entry');
+            }
         }
     };
 
