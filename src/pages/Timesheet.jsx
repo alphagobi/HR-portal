@@ -380,11 +380,18 @@ const Timesheet = () => {
                                     <div className="p-8 text-center text-gray-400">No entries for this date.</div>
                                 ) : (
                                     entries.map((entry) => (
-                                        <div key={entry.id} className="p-4 hover:bg-gray-50 transition-colors flex justify-between items-center group">
+                                        <div key={entry.id} className={clsx("p-4 hover:bg-gray-50 transition-colors flex justify-between items-center group", entry.is_deleted == 1 && "opacity-60 bg-gray-50")}>
                                             <div>
                                                 <div className="flex items-center gap-3 mb-1">
-                                                    <span className="text-sm font-bold text-gray-900">{entry.startTime} - {entry.endTime}</span>
-                                                    {entry.is_edited == 1 && (
+                                                    <span className={clsx("text-sm font-bold text-gray-900", entry.is_deleted == 1 && "line-through")}>{entry.startTime} - {entry.endTime}</span>
+                                                    {entry.is_deleted == 1 ? (
+                                                        <span
+                                                            onClick={() => fetchHistory(entry.id)}
+                                                            className="text-xs text-red-500 font-medium cursor-pointer hover:underline"
+                                                        >
+                                                            (Deleted)
+                                                        </span>
+                                                    ) : entry.is_edited == 1 && (
                                                         <span
                                                             onClick={() => fetchHistory(entry.id)}
                                                             className="text-xs text-gray-400 italic cursor-pointer hover:text-indigo-600 hover:underline"
@@ -393,24 +400,24 @@ const Timesheet = () => {
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className="text-gray-600 text-sm">{entry.description}</p>
+                                                <p className={clsx("text-gray-600 text-sm", entry.is_deleted == 1 && "line-through")}>{entry.description}</p>
                                             </div>
-                                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                                                <button
-                                                    onClick={() => handleEditEntry(entry)}
-                                                    className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors"
-                                                    title="Edit Entry"
-                                                >
-                                                    <Pencil size={16} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDeleteEntry(entry.id)}
-                                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                                                    title="Delete Entry"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
+                                            {!entry.is_deleted && (
+                                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button
+                                                        onClick={() => handleEditEntry(entry)}
+                                                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                                    >
+                                                        <Pencil size={16} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteEntry(entry.id)}
+                                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     ))
                                 )}

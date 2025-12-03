@@ -28,7 +28,7 @@ if ($method === 'GET') {
     // 2. Get Entries for each timesheet
     // Optimization: Get all entries for these timesheets in one query if possible, but loop is simpler for now
     foreach ($timesheets as &$sheet) {
-        $stmtEntries = $pdo->prepare("SELECT id, timesheet_id, start_time as startTime, end_time as endTime, description, project, duration, is_edited FROM timesheet_entries WHERE timesheet_id = ?");
+        $stmtEntries = $pdo->prepare("SELECT id, timesheet_id, start_time as startTime, end_time as endTime, description, project, duration, is_edited, is_deleted FROM timesheet_entries WHERE timesheet_id = ?");
         $stmtEntries->execute([$sheet['id']]);
         $sheet['entries'] = $stmtEntries->fetchAll();
     }
@@ -53,23 +53,25 @@ elseif ($method === 'POST') {
         if ($existing) {
             $timesheet_id = $existing['id'];
             // Update existing
-            $update = $pdo->prepare("UPDATE timesheets SET milestone = ?, task_description = ?, comments = ?, status = ? WHERE id = ?");
+            $update = $pdo->prepare("UPDATE timesheets SET milestone = ?, task_description = ?, comments = ?, admin_remarks = ?, status = ? WHERE id = ?");
             $update->execute([
                 $data['milestone'] ?? '',
                 $data['taskDescription'] ?? '',
                 $data['comments'] ?? '',
+                $data['adminRemarks'] ?? '',
                 $data['status'] ?? 'draft',
                 $timesheet_id
             ]);
         } else {
             // Create new
-            $insert = $pdo->prepare("INSERT INTO timesheets (employee_id, date, milestone, task_description, comments, status) VALUES (?, ?, ?, ?, ?, ?)");
+            $insert = $pdo->prepare("INSERT INTO timesheets (employee_id, date, milestone, task_description, comments, admin_remarks, status) VALUES (?, ?, ?, ?, ?, ?, ?)");
             $insert->execute([
                 $employee_id,
                 $date,
                 $data['milestone'] ?? '',
                 $data['taskDescription'] ?? '',
                 $data['comments'] ?? '',
+                $data['adminRemarks'] ?? '',
                 $data['status'] ?? 'draft'
             ]);
             $timesheet_id = $pdo->lastInsertId();
@@ -135,11 +137,11 @@ elseif ($method === 'POST') {
                 }
             }
 
-            // Delete removed entries
+            // Soft Delete removed entries
             $toDelete = array_diff(array_keys($existingEntries), $processedIds);
             if (!empty($toDelete)) {
                 $placeholders = implode(',', array_fill(0, count($toDelete), '?'));
-                $deleteStmt = $pdo->prepare("DELETE FROM timesheet_entries WHERE id IN ($placeholders)");
+                $deleteStmt = $pdo->prepare("UPDATE timesheet_entries SET is_deleted = 1 WHERE id IN ($placeholders)");
                 $deleteStmt->execute(array_values($toDelete));
             }
         }

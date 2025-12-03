@@ -142,11 +142,18 @@ const AdminTimesheets = () => {
                                                 <tbody className="divide-y divide-gray-100">
                                                     {sheet.entries && sheet.entries.length > 0 ? (
                                                         sheet.entries.map(entry => (
-                                                            <tr key={entry.id}>
-                                                                <td className="px-4 py-3 text-gray-900 font-medium">{entry.startTime} - {entry.endTime}</td>
-                                                                <td className="px-4 py-3 text-gray-600">
+                                                            <tr key={entry.id} className={clsx(entry.is_deleted == 1 && "bg-gray-50 opacity-75")}>
+                                                                <td className={clsx("px-4 py-3 text-gray-900 font-medium", entry.is_deleted == 1 && "line-through text-gray-500")}>{entry.startTime} - {entry.endTime}</td>
+                                                                <td className={clsx("px-4 py-3 text-gray-600", entry.is_deleted == 1 && "line-through text-gray-400")}>
                                                                     {entry.description}
-                                                                    {entry.is_edited == 1 && (
+                                                                    {entry.is_deleted == 1 ? (
+                                                                        <span
+                                                                            onClick={() => fetchHistory(entry.id)}
+                                                                            className="ml-2 text-xs text-red-500 font-medium cursor-pointer hover:underline no-underline"
+                                                                        >
+                                                                            (Deleted)
+                                                                        </span>
+                                                                    ) : entry.is_edited == 1 && (
                                                                         <span
                                                                             onClick={() => fetchHistory(entry.id)}
                                                                             className="ml-2 text-xs text-gray-400 italic cursor-pointer hover:text-indigo-600 hover:underline"

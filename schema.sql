@@ -47,6 +47,8 @@ CREATE TABLE IF NOT EXISTS timesheet_entries (
     description TEXT,
     project VARCHAR(100) DEFAULT 'General',
     duration DECIMAL(5,2), -- Calculated hours
+    is_edited BOOLEAN DEFAULT FALSE,
+    is_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (timesheet_id) REFERENCES timesheets(id) ON DELETE CASCADE
 );
