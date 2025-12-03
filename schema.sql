@@ -51,6 +51,20 @@ CREATE TABLE IF NOT EXISTS timesheet_entries (
     FOREIGN KEY (timesheet_id) REFERENCES timesheets(id) ON DELETE CASCADE
 );
 
+-- Add is_edited column if not exists (handled via migration script usually, but documenting here)
+-- ALTER TABLE timesheet_entries ADD COLUMN is_edited BOOLEAN DEFAULT FALSE;
+
+-- Timesheet Entry History
+CREATE TABLE IF NOT EXISTS timesheet_entry_history (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    entry_id INT NOT NULL,
+    old_description TEXT,
+    old_start_time VARCHAR(10),
+    old_end_time VARCHAR(10),
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (entry_id) REFERENCES timesheet_entries(id) ON DELETE CASCADE
+);
+
 -- Leaves
 CREATE TABLE IF NOT EXISTS leaves (
     id INT AUTO_INCREMENT PRIMARY KEY,

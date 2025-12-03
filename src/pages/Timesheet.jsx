@@ -11,7 +11,11 @@ const Timesheet = () => {
     const [entries, setEntries] = useState([]);
     const [loading, setLoading] = useState(true);
     const [newEntry, setNewEntry] = useState({ startTime: '09:00', endTime: '', description: '' });
+
     const [editingId, setEditingId] = useState(null);
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [historyData, setHistoryData] = useState([]);
+    const [loadingHistory, setLoadingHistory] = useState(false);
 
     const [timesheetMap, setTimesheetMap] = useState({});
 
@@ -140,6 +144,22 @@ const Timesheet = () => {
                 [field]: value
             }
         }));
+    };
+
+    const fetchHistory = async (entryId) => {
+        setLoadingHistory(true);
+        setShowHistoryModal(true);
+        try {
+            const response = await fetch(`/api/timesheets.php?history_for_entry_id=${entryId}`);
+            if (response.ok) {
+                const data = await response.json();
+                setHistoryData(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch history", error);
+        } finally {
+            setLoadingHistory(false);
+        }
     };
 
     const handleSummarySave = async (date) => {
@@ -363,6 +383,14 @@ const Timesheet = () => {
                                             <div>
                                                 <div className="flex items-center gap-3 mb-1">
                                                     <span className="text-sm font-bold text-gray-900">{entry.startTime} - {entry.endTime}</span>
+                                                    {entry.is_edited == 1 && (
+                                                        <span
+                                                            onClick={() => fetchHistory(entry.id)}
+                                                            className="text-xs text-gray-400 italic cursor-pointer hover:text-indigo-600 hover:underline"
+                                                        >
+                                                            (Edited)
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <p className="text-gray-600 text-sm">{entry.description}</p>
                                             </div>
@@ -460,8 +488,45 @@ const Timesheet = () => {
                         </table>
                     </div>
                 </div>
+            )
+            }
+
+            {/* History Modal */}
+            {showHistoryModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6 m-4">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold text-gray-900">Edit History</h3>
+                            <button onClick={() => setShowHistoryModal(false)} className="text-gray-400 hover:text-gray-600">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+                            {loadingHistory ? (
+                                <div className="text-center py-4 text-gray-500">Loading history...</div>
+                            ) : historyData.length === 0 ? (
+                                <div className="text-center py-4 text-gray-500">No history found.</div>
+                            ) : (
+                                historyData.map((history) => (
+                                    <div key={history.id} className="border-b border-gray-100 pb-3 last:border-0">
+                                        <div className="text-xs text-gray-400 mb-1">
+                                            {new Date(history.changed_at).toLocaleString()}
+                                        </div>
+                                        <div className="font-medium text-sm text-gray-800">
+                                            {history.old_start_time} - {history.old_end_time}
+                                        </div>
+                                        <div className="text-sm text-gray-600 mt-1">
+                                            {history.old_description}
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
             )}
-        </div>
+        </div >
     );
 };
 

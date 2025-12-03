@@ -4,6 +4,16 @@ require_once 'config.php';
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
+    $history_for_entry_id = $_GET['history_for_entry_id'] ?? null;
+
+    if ($history_for_entry_id) {
+        // Get History for a specific entry
+        $stmt = $pdo->prepare("SELECT * FROM timesheet_entry_history WHERE entry_id = ? ORDER BY changed_at DESC");
+        $stmt->execute([$history_for_entry_id]);
+        echo json_encode($stmt->fetchAll());
+        exit;
+    }
+
     $employee_id = $_GET['employee_id'] ?? null;
     
     // 1. Get Timesheets
@@ -18,7 +28,7 @@ if ($method === 'GET') {
     // 2. Get Entries for each timesheet
     // Optimization: Get all entries for these timesheets in one query if possible, but loop is simpler for now
     foreach ($timesheets as &$sheet) {
-        $stmtEntries = $pdo->prepare("SELECT id, timesheet_id, start_time as startTime, end_time as endTime, description, project, duration FROM timesheet_entries WHERE timesheet_id = ?");
+        $stmtEntries = $pdo->prepare("SELECT id, timesheet_id, start_time as startTime, end_time as endTime, description, project, duration, is_edited FROM timesheet_entries WHERE timesheet_id = ?");
         $stmtEntries->execute([$sheet['id']]);
         $sheet['entries'] = $stmtEntries->fetchAll();
     }
@@ -65,20 +75,72 @@ elseif ($method === 'POST') {
             $timesheet_id = $pdo->lastInsertId();
         }
 
-        // Handle Entries: Delete all old ones and re-insert (simplest sync)
+        // Handle Entries: Smart Update to preserve history
         if (isset($data['entries']) && is_array($data['entries'])) {
-            $delete = $pdo->prepare("DELETE FROM timesheet_entries WHERE timesheet_id = ?");
-            $delete->execute([$timesheet_id]);
+            // 1. Get existing entries to know what to update/delete
+            $stmtExisting = $pdo->prepare("SELECT id, start_time, end_time, description FROM timesheet_entries WHERE timesheet_id = ?");
+            $stmtExisting->execute([$timesheet_id]);
+            $existingEntries = [];
+            while ($row = $stmtExisting->fetch()) {
+                $existingEntries[$row['id']] = $row;
+            }
+
+            $processedIds = [];
 
             $insertEntry = $pdo->prepare("INSERT INTO timesheet_entries (timesheet_id, start_time, end_time, description, project) VALUES (?, ?, ?, ?, ?)");
+            $updateEntry = $pdo->prepare("UPDATE timesheet_entries SET start_time = ?, end_time = ?, description = ?, project = ?, is_edited = ? WHERE id = ?");
+            $insertHistory = $pdo->prepare("INSERT INTO timesheet_entry_history (entry_id, old_start_time, old_end_time, old_description) VALUES (?, ?, ?, ?)");
+
             foreach ($data['entries'] as $entry) {
-                $insertEntry->execute([
-                    $timesheet_id,
-                    $entry['startTime'] ?? '',
-                    $entry['endTime'] ?? '',
-                    $entry['description'] ?? '',
-                    $entry['project'] ?? 'General'
-                ]);
+                $entryId = $entry['id'] ?? null;
+                $startTime = $entry['startTime'] ?? '';
+                $endTime = $entry['endTime'] ?? '';
+                $description = $entry['description'] ?? '';
+                $project = $entry['project'] ?? 'General';
+
+                if ($entryId && isset($existingEntries[$entryId])) {
+                    // Update existing
+                    $old = $existingEntries[$entryId];
+                    $processedIds[] = $entryId;
+
+                    // Check if changed
+                    if ($old['start_time'] != $startTime || $old['end_time'] != $endTime || $old['description'] != $description) {
+                        // Save history
+                        $insertHistory->execute([
+                            $entryId,
+                            $old['start_time'],
+                            $old['end_time'],
+                            $old['description']
+                        ]);
+                        
+                        // Update with is_edited = true
+                        $updateEntry->execute([$startTime, $endTime, $description, $project, 1, $entryId]);
+                    } else {
+                        // No change, just ensure project is updated if needed (optional, but good practice)
+                        // For now, we update anyway to be safe, but keep is_edited as is (or set to what it was? No, only set true on change)
+                        // Actually, if no change in core fields, we don't need to touch is_edited.
+                        // Let's just update the fields.
+                         $pdo->prepare("UPDATE timesheet_entries SET start_time = ?, end_time = ?, description = ?, project = ? WHERE id = ?")->execute([$startTime, $endTime, $description, $project, $entryId]);
+                    }
+
+                } else {
+                    // Insert new
+                    $insertEntry->execute([
+                        $timesheet_id,
+                        $startTime,
+                        $endTime,
+                        $description,
+                        $project
+                    ]);
+                }
+            }
+
+            // Delete removed entries
+            $toDelete = array_diff(array_keys($existingEntries), $processedIds);
+            if (!empty($toDelete)) {
+                $placeholders = implode(',', array_fill(0, count($toDelete), '?'));
+                $deleteStmt = $pdo->prepare("DELETE FROM timesheet_entries WHERE id IN ($placeholders)");
+                $deleteStmt->execute(array_values($toDelete));
             }
         }
 
