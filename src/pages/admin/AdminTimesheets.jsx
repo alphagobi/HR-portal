@@ -21,7 +21,7 @@ const AdminTimesheets = () => {
 
         // Group by employee
         const grouped = data.reduce((acc, sheet) => {
-            const empId = sheet.employeeId;
+            const empId = sheet.employee_id;
             if (!acc[empId]) {
                 acc[empId] = {
                     id: empId,
