@@ -14,7 +14,8 @@ import AdminLeaves from './pages/admin/AdminLeaves';
 import AdminTimesheets from './pages/admin/AdminTimesheets';
 import AdminAnnouncements from './pages/admin/AdminAnnouncements';
 import AdminUsers from './pages/admin/AdminUsers';
-import AdminReimbursements from './pages/admin/AdminReimbursements'; // Added this import
+import AdminReimbursements from './pages/admin/AdminReimbursements';
+import AdminPolicies from './pages/admin/AdminPolicies';
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
           <Route path="leaves" element={<AdminLeaves />} />
           <Route path="reimbursements" element={<AdminReimbursements />} />
           <Route path="announcements" element={<AdminAnnouncements />} />
+          <Route path="policies" element={<AdminPolicies />} />
         </Route>
       </Routes>
     </Router>
