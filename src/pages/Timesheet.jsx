@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { getTimesheets, saveTimesheet } from '../services/timesheetService';
+import { getTasks, createTask, updateTask, deleteTask } from '../services/taskService';
 import { getCurrentUser } from '../services/authService';
-import { Calendar, Clock, Plus, ChevronLeft, ChevronRight, Table as TableIcon, LayoutList, Pencil, X, Trash2 } from 'lucide-react';
+import { Calendar, Clock, Plus, ChevronLeft, ChevronRight, Table as TableIcon, LayoutList, Pencil, X, Trash2, CheckSquare, Square, ArrowRight } from 'lucide-react';
 import clsx from 'clsx';
 
 const Timesheet = () => {
@@ -18,6 +19,11 @@ const Timesheet = () => {
     const [loadingHistory, setLoadingHistory] = useState(false);
 
     const [timesheetMap, setTimesheetMap] = useState({});
+
+    // Task Planner State
+    const [tasks, setTasks] = useState([]);
+    const [newTaskContent, setNewTaskContent] = useState('');
+    const [loadingTasks, setLoadingTasks] = useState(false);
 
     const fetchTimesheets = async () => {
         try {
@@ -40,8 +46,24 @@ const Timesheet = () => {
         }
     };
 
+    const fetchDailyTasks = async () => {
+        setLoadingTasks(true);
+        try {
+            const user = getCurrentUser();
+            if (user) {
+                const data = await getTasks(user.id, selectedDate);
+                setTasks(data);
+            }
+        } catch (error) {
+            console.error("Failed to fetch tasks", error);
+        } finally {
+            setLoadingTasks(false);
+        }
+    };
+
     useEffect(() => {
         fetchTimesheets();
+        fetchDailyTasks();
     }, [selectedDate]);
 
     // Auto-set start time based on last entry
@@ -187,6 +209,65 @@ const Timesheet = () => {
         }
     };
 
+    // Task Planner Handlers
+    const handleAddTask = async (e) => {
+        e.preventDefault();
+        if (!newTaskContent.trim()) return;
+
+        const user = getCurrentUser();
+        if (!user) return;
+
+        try {
+            await createTask({
+                user_id: user.id,
+                task_content: newTaskContent,
+                planned_date: selectedDate
+            });
+            setNewTaskContent('');
+            fetchDailyTasks();
+        } catch (error) {
+            console.error("Failed to create task", error);
+        }
+    };
+
+    const handleToggleTask = async (task) => {
+        try {
+            await updateTask(task.id, { is_completed: task.is_completed == 1 ? 0 : 1 });
+            fetchDailyTasks();
+        } catch (error) {
+            console.error("Failed to update task", error);
+        }
+    };
+
+    const handleMoveTask = async (task) => {
+        const nextDay = new Date(selectedDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        const nextDateStr = nextDay.toISOString().split('T')[0];
+
+        try {
+            await updateTask(task.id, { action: 'move', new_date: nextDateStr });
+            fetchDailyTasks();
+        } catch (error) {
+            console.error("Failed to move task", error);
+        }
+    };
+
+    const handleDeleteTask = async (id) => {
+        if (!window.confirm("Delete this task?")) return;
+        try {
+            await deleteTask(id);
+            fetchDailyTasks();
+        } catch (error) {
+            console.error("Failed to delete task", error);
+        }
+    };
+
+    const handleLogTask = (task) => {
+        setNewEntry(prev => ({ ...prev, description: task.task_content }));
+        // Optionally scroll to top or focus input
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     const totalHours = entries.reduce((acc, curr) => {
         if (!curr.startTime || !curr.endTime) return acc;
         const start = parseInt(curr.startTime.split(':')[0]);
@@ -277,8 +358,8 @@ const Timesheet = () => {
 
             {viewMode === 'daily' ? (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Daily Entry Form */}
-                    <div className="lg:col-span-3 space-y-6">
+                    {/* Daily Entry Form & List */}
+                    <div className="lg:col-span-2 space-y-6">
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                             <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                                 <Clock className="text-indigo-600" size={20} />
@@ -307,42 +388,15 @@ const Timesheet = () => {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Quick Add Duration</label>
                                     <div className="flex gap-2 flex-wrap">
-                                        <button
-                                            onClick={() => addDuration(5)}
-                                            className="px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors"
-                                        >
-                                            +5m
-                                        </button>
-                                        <button
-                                            onClick={() => addDuration(15)}
-                                            className="px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors"
-                                        >
-                                            +15m
-                                        </button>
-                                        <button
-                                            onClick={() => addDuration(30)}
-                                            className="px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors"
-                                        >
-                                            +30m
-                                        </button>
-                                        <button
-                                            onClick={() => addDuration(60)}
-                                            className="px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors"
-                                        >
-                                            +1h
-                                        </button>
-                                        <button
-                                            onClick={() => addDuration(120)}
-                                            className="px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors"
-                                        >
-                                            +2h
-                                        </button>
-                                        <button
-                                            onClick={() => addDuration(240)}
-                                            className="px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors"
-                                        >
-                                            +4h
-                                        </button>
+                                        {[5, 15, 30, 60, 120, 240].map(min => (
+                                            <button
+                                                key={min}
+                                                onClick={() => addDuration(min)}
+                                                className="px-3 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors"
+                                            >
+                                                +{min < 60 ? `${min}m` : `${min / 60}h`}
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
                             </div>
@@ -428,6 +482,94 @@ const Timesheet = () => {
                                                     </button>
                                                 </div>
                                             )}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Task Planner Sidebar */}
+                    <div className="lg:col-span-1">
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 h-full flex flex-col">
+                            <div className="p-4 border-b border-gray-100 bg-gray-50 rounded-t-xl">
+                                <h2 className="font-bold text-gray-900 flex items-center gap-2">
+                                    <CheckSquare size={18} className="text-indigo-600" />
+                                    Daily Plan
+                                </h2>
+                                <p className="text-xs text-gray-500 mt-1">Tasks for {selectedDate}</p>
+                            </div>
+
+                            <div className="p-4 border-b border-gray-100">
+                                <form onSubmit={handleAddTask} className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        className="flex-1 p-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        placeholder="Add a task..."
+                                        value={newTaskContent}
+                                        onChange={(e) => setNewTaskContent(e.target.value)}
+                                    />
+                                    <button
+                                        type="submit"
+                                        className="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                                        disabled={!newTaskContent.trim()}
+                                    >
+                                        <Plus size={18} />
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                                {loadingTasks ? (
+                                    <div className="text-center text-gray-400 text-sm py-4">Loading tasks...</div>
+                                ) : tasks.length === 0 ? (
+                                    <div className="text-center text-gray-400 text-sm py-8">
+                                        No tasks planned for today.<br />
+                                        <span className="text-xs">Add one above!</span>
+                                    </div>
+                                ) : (
+                                    tasks.map(task => (
+                                        <div key={task.id} className="group bg-gray-50 p-3 rounded-lg border border-gray-100 hover:border-indigo-200 transition-all">
+                                            <div className="flex items-start gap-3">
+                                                <button
+                                                    onClick={() => handleToggleTask(task)}
+                                                    className={clsx("mt-0.5", task.is_completed == 1 ? "text-green-600" : "text-gray-400 hover:text-gray-600")}
+                                                >
+                                                    {task.is_completed == 1 ? <CheckSquare size={18} /> : <Square size={18} />}
+                                                </button>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className={clsx("text-sm text-gray-800 break-words", task.is_completed == 1 && "line-through text-gray-400")}>
+                                                        {task.task_content}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-3 flex items-center justify-between gap-2 pt-2 border-t border-gray-200/50">
+                                                <button
+                                                    onClick={() => handleLogTask(task)}
+                                                    className="text-xs font-medium text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+                                                    title="Use as description for time entry"
+                                                >
+                                                    <Clock size={12} /> Log
+                                                </button>
+
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => handleMoveTask(task)}
+                                                        className="text-xs text-gray-500 hover:text-indigo-600 flex items-center gap-1"
+                                                        title="Move to next day"
+                                                    >
+                                                        Move <ArrowRight size={12} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteTask(task.id)}
+                                                        className="text-gray-400 hover:text-red-600"
+                                                        title="Delete task"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     ))
                                 )}
