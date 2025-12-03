@@ -33,6 +33,7 @@ const AdminLayout = () => {
         { path: '/admin/leaves', icon: CheckSquare, label: 'Leave Approvals' },
         { path: '/admin/reimbursements', icon: DollarSign, label: 'Reimbursements' },
         { path: '/admin/announcements', icon: Megaphone, label: 'Announcements' },
+        { path: '/admin/policies', icon: FileText, label: 'Policies' },
     ];
 
     const handleLogout = () => {
