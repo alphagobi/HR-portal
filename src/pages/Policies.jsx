@@ -72,7 +72,11 @@ const Policies = () => {
             ) : (
                 <div className="space-y-4">
                     {filteredPolicies.map((policy) => (
-                        <div key={policy.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div
+                            key={policy.id}
+                            onClick={() => setSelectedPolicy(policy)}
+                            className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 cursor-pointer hover:shadow-md transition-shadow"
+                        >
                             <div className="flex items-start gap-4">
                                 <div className="p-3 bg-gray-50 rounded-lg text-gray-400">
                                     <FileText size={24} />
@@ -93,7 +97,6 @@ const Policies = () => {
                             ) : (
                                 <div className="flex gap-3 w-full md:w-auto">
                                     <button
-                                        onClick={() => setSelectedPolicy(policy)}
                                         className="flex-1 md:flex-none px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
                                     >
                                         Read & Acknowledge
@@ -127,8 +130,20 @@ const Policies = () => {
                         </div>
 
                         {/* Content */}
-                        <div className="p-8 overflow-y-auto flex-1 prose prose-indigo max-w-none">
-                            <ReactMarkdown>{selectedPolicy.content}</ReactMarkdown>
+                        <div className="p-8 overflow-y-auto flex-1">
+                            <ReactMarkdown
+                                components={{
+                                    ul: ({ node, ...props }) => <ul className="list-disc ml-6 mb-4" {...props} />,
+                                    ol: ({ node, ...props }) => <ol className="list-decimal ml-6 mb-4" {...props} />,
+                                    li: ({ node, ...props }) => <li className="mb-1" {...props} />,
+                                    h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mb-4" {...props} />,
+                                    h2: ({ node, ...props }) => <h2 className="text-xl font-bold mb-3" {...props} />,
+                                    h3: ({ node, ...props }) => <h3 className="text-lg font-bold mb-2" {...props} />,
+                                    p: ({ node, ...props }) => <p className="mb-4" {...props} />,
+                                }}
+                            >
+                                {selectedPolicy.content}
+                            </ReactMarkdown>
                         </div>
 
                         {/* Footer */}
