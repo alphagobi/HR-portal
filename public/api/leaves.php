@@ -24,15 +24,18 @@ if ($method === 'GET') {
         ];
 
         foreach ($leaves as $leave) {
-            if ($leave['status'] === 'Approved') {
+            $status = trim($leave['status']);
+            $type = trim($leave['type']);
+
+            if (strcasecmp($status, 'Approved') === 0) {
                 // Calculate days
                 $start = new DateTime($leave['start_date']);
                 $end = new DateTime($leave['end_date']);
                 // inclusive difference
                 $days = $end->diff($start)->days + 1;
                 
-                if (isset($usage[$leave['type']])) {
-                    $usage[$leave['type']] += $days;
+                if (isset($usage[$type])) {
+                    $usage[$type] += $days;
                 }
             }
         }
