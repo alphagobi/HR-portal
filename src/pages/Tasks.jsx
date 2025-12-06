@@ -1,4 +1,3 @@
-```javascript
 import React, { useState, useEffect } from 'react';
 import { getTasks, createTask, updateTask, deleteTask } from '../services/taskService';
 import { getCurrentUser } from '../services/authService';
@@ -169,7 +168,7 @@ const Tasks = () => {
                                                 )}
                                             </div>
                                         </div>
-                                        
+
                                         <button
                                             onClick={() => handleDeleteTask(task.id)}
                                             className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-2"
@@ -258,4 +257,3 @@ const Tasks = () => {
 };
 
 export default Tasks;
-```
