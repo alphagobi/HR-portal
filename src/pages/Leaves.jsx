@@ -9,11 +9,101 @@ const Leaves = () => {
     const [usage, setUsage] = useState({ 'Informed Leave': 0, 'Emergency Leave': 0 });
     const [newRequest, setNewRequest] = useState({ type: 'Informed Leave', startDate: '', endDate: '', reason: '' });
 
-    // ... (useEffect for fetching leaves remains same)
+    useEffect(() => {
+        const fetchLeaves = async () => {
+            try {
+                const user = JSON.parse(localStorage.getItem('hr_current_user'));
+                const data = await getLeaves(user?.id);
+                // Handle both old (array) and new (object) API responses for backward compatibility
+                if (Array.isArray(data)) {
+                    setLeaves(data);
+                } else {
+                    setLeaves(data.leaves || []);
+                    setLimits(data.limits || { 'Informed Leave': 6, 'Emergency Leave': 6 });
+                    setUsage(data.usage || { 'Informed Leave': 0, 'Emergency Leave': 0 });
+                }
+            } catch (error) {
+                console.error("Failed to fetch leaves", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchLeaves();
+    }, []);
 
-    // ... (handleSubmit remains same)
+    const handleSubmit = async (e) => {
+        e.preventDefault();
 
-    // ... (getStatusColor and getStatusIcon remain same)
+        const user = JSON.parse(localStorage.getItem('hr_current_user'));
+        if (!user) {
+            alert("Please log in to submit a leave request.");
+            return;
+        }
+
+        // Guard Rail: Check for Emergency Leave
+        const start = new Date(newRequest.startDate);
+        const today = new Date();
+        const diffTime = start - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        let finalType = newRequest.type;
+        let isEmergency = false;
+
+        if (diffDays < 7) {
+            finalType = 'Emergency Leave';
+            isEmergency = true;
+        }
+
+        // Prepare payload for API (snake_case)
+        const apiPayload = {
+            employee_id: user.id,
+            type: finalType,
+            start_date: newRequest.startDate,
+            end_date: newRequest.endDate,
+            reason: newRequest.reason
+        };
+
+        // Optimistic UI update (camelCase for frontend)
+        const uiRequest = {
+            ...newRequest,
+            type: finalType,
+            id: Date.now(), // Temporary ID
+            status: 'Pending',
+            days: 1, // Mock calculation
+            startDate: newRequest.startDate,
+            endDate: newRequest.endDate
+        };
+
+        setLeaves([uiRequest, ...leaves]);
+
+        try {
+            await submitLeaveRequest(apiPayload);
+            if (isEmergency) {
+                alert("Notice: Since this leave is within 7 days, it has been classified as 'Emergency Leave'.");
+            }
+            setNewRequest({ type: 'Informed Leave', startDate: '', endDate: '', reason: '' });
+        } catch (error) {
+            console.error("Failed to submit leave", error);
+            alert("Failed to submit leave request.");
+            // Revert optimistic update if needed, or just let the user know
+        }
+    };
+
+    const getStatusColor = (status) => {
+        switch (status.toLowerCase()) {
+            case 'approved': return 'text-emerald-600 bg-emerald-50 border-emerald-100';
+            case 'rejected': return 'text-red-600 bg-red-50 border-red-100';
+            default: return 'text-amber-600 bg-amber-50 border-amber-100';
+        }
+    };
+
+    const getStatusIcon = (status) => {
+        switch (status.toLowerCase()) {
+            case 'approved': return <CheckCircle size={16} />;
+            case 'rejected': return <XCircle size={16} />;
+            default: return <Clock size={16} />;
+        }
+    };
 
     const [showChallengeModal, setShowChallengeModal] = useState(false);
     const [challengeNote, setChallengeNote] = useState(''); // Used as message input
