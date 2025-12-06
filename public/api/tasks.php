@@ -14,14 +14,24 @@ if ($method === 'GET') {
     }
 
     if ($date) {
-        $stmt = $pdo->prepare("SELECT * FROM planned_tasks WHERE user_id = ? AND planned_date = ? ORDER BY created_at ASC");
+        $stmt = $pdo->prepare("
+            SELECT pt.*, t.date as completed_date 
+            FROM planned_tasks pt
+            LEFT JOIN timesheet_entries te ON pt.related_entry_id = te.id
+            LEFT JOIN timesheets t ON te.timesheet_id = t.id
+            WHERE pt.user_id = ? AND pt.planned_date = ? 
+            ORDER BY pt.created_at ASC
+        ");
         $stmt->execute([$user_id, $date]);
     } else {
-        // Fetch all future tasks or recent tasks? Let's fetch all for now or maybe limit to recent/future.
-        // User asked for "list and viewable for multiple days".
-        // Let's fetch all tasks >= today - 7 days to keep it relevant but inclusive.
-        // Or just all. Let's do all for simplicity as per request.
-        $stmt = $pdo->prepare("SELECT * FROM planned_tasks WHERE user_id = ? ORDER BY planned_date ASC, created_at ASC");
+        $stmt = $pdo->prepare("
+            SELECT pt.*, t.date as completed_date 
+            FROM planned_tasks pt
+            LEFT JOIN timesheet_entries te ON pt.related_entry_id = te.id
+            LEFT JOIN timesheets t ON te.timesheet_id = t.id
+            WHERE pt.user_id = ? 
+            ORDER BY pt.planned_date ASC, pt.created_at ASC
+        ");
         $stmt->execute([$user_id]);
     }
     echo json_encode($stmt->fetchAll());

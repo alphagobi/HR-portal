@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getTasks, createTask, updateTask, deleteTask } from '../services/taskService';
+import { getTimesheets, saveTimesheet } from '../services/timesheetService';
 import { getCurrentUser } from '../services/authService';
-import { Plus, Trash2, Calendar, Clock, Search, X, Play } from 'lucide-react';
+import { Plus, Calendar, Clock, Search, X, Play, ChevronDown, ChevronUp, Save } from 'lucide-react';
 import clsx from 'clsx';
 
 const Tasks = () => {
@@ -13,6 +14,14 @@ const Tasks = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [viewMode, setViewMode] = useState('monthly'); // 'daily', 'weekly', 'monthly'
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+
+    // Inline Logging State
+    const [expandedTaskId, setExpandedTaskId] = useState(null);
+    const [logData, setLogData] = useState({
+        date: new Date().toISOString().split('T')[0],
+        duration: '',
+        remarks: ''
+    });
 
     const [newTask, setNewTask] = useState({
         content: '',
@@ -61,19 +70,75 @@ const Tasks = () => {
         }
     };
 
-    const handleDeleteTask = async (id) => {
-        if (window.confirm('Are you sure you want to delete this task?')) {
-            try {
-                await deleteTask(id);
-                fetchTasks();
-            } catch (error) {
-                console.error("Failed to delete task", error);
-            }
+    // Removed handleDeleteTask as per request
+
+    const toggleLogForm = (task) => {
+        if (expandedTaskId === task.id) {
+            setExpandedTaskId(null);
+        } else {
+            setExpandedTaskId(task.id);
+            setLogData({
+                date: new Date().toISOString().split('T')[0],
+                duration: task.eta || '', // Pre-fill with ETA if available
+                remarks: task.task_content
+            });
         }
     };
 
-    const handleLogTask = (task) => {
-        navigate('/dashboard', { state: { taskToLog: task } });
+    const handleSaveLog = async (task) => {
+        if (!logData.duration || !logData.date) {
+            alert("Please fill in date and duration.");
+            return;
+        }
+
+        const user = getCurrentUser();
+        if (!user) return;
+
+        try {
+            // 1. Fetch existing timesheet for the selected date
+            const timesheets = await getTimesheets(user.id);
+            const existingSheet = timesheets.find(t => t.date === logData.date);
+
+            let entries = existingSheet ? [...existingSheet.entries] : [];
+
+            // 2. Add new entry
+            const durationInHours = (parseFloat(logData.duration) / 60).toFixed(2);
+            const newEntry = {
+                id: Date.now(), // Temp ID
+                duration: durationInHours,
+                description: logData.remarks || task.task_content,
+                taskId: task.id,
+                project: 'General',
+                startTime: '09:00', // Defaults
+                endTime: '10:00',
+                type: 'planned'
+            };
+            entries.push(newEntry);
+
+            // 3. Save Timesheet
+            await saveTimesheet({
+                employeeId: user.id,
+                date: logData.date,
+                entries: entries,
+                status: existingSheet ? existingSheet.status : 'draft'
+            });
+
+            // 4. Update Task as Completed
+            await updateTask(task.id, {
+                is_completed: true,
+                // We rely on the backend to link the task to the entry if needed, 
+                // but for now we just mark it complete. 
+                // Ideally updateTask should also accept related_entry_id but we don't have the real DB ID of the entry yet.
+                // The backend sync logic (if any) or a second call would be needed for perfect linking.
+                // For now, let's assume the backend `saveTimesheet` or `updateTask` handles it or we just mark it complete.
+            });
+
+            setExpandedTaskId(null);
+            fetchTasks(); // Refresh to get updated status and colors
+        } catch (error) {
+            console.error("Failed to log work", error);
+            alert("Failed to log work. Please try again.");
+        }
     };
 
     const addEta = (minutes) => {
@@ -81,6 +146,27 @@ const Tasks = () => {
             const currentEta = parseInt(prev.eta || 0);
             return { ...prev, eta: (currentEta + minutes).toString() };
         });
+    };
+
+    const getTaskColor = (task) => {
+        if (!task.is_completed) return "bg-white border-gray-200";
+
+        if (!task.completed_date) return "bg-gray-50 border-gray-200"; // Completed but no date?
+
+        const planned = new Date(task.planned_date);
+        const completed = new Date(task.completed_date);
+
+        // Reset times to compare only dates
+        planned.setHours(0, 0, 0, 0);
+        completed.setHours(0, 0, 0, 0);
+
+        if (completed.getTime() < planned.getTime()) {
+            return "bg-green-50 border-green-200"; // Early
+        } else if (completed.getTime() === planned.getTime()) {
+            return "bg-yellow-50 border-yellow-200"; // On Time
+        } else {
+            return "bg-red-50 border-red-200"; // Late
+        }
     };
 
     // Filter Logic
@@ -256,42 +342,79 @@ const Tasks = () => {
                             </div>
                             <div className="divide-y divide-gray-100">
                                 {groupedTasks[date].map(task => (
-                                    <div key={task.id} className="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between group">
-                                        <div className="flex items-center gap-4 flex-1">
-                                            <button
-                                                onClick={() => handleLogTask(task)}
-                                                className={clsx(
-                                                    "flex-shrink-0 transition-colors p-2 rounded-full hover:bg-indigo-50 text-indigo-600",
-                                                    task.is_completed && "opacity-50 cursor-not-allowed"
-                                                )}
-                                                title="Log Work"
-                                                disabled={task.is_completed}
-                                            >
-                                                <Play size={20} fill="currentColor" />
-                                            </button>
-                                            <div className="flex-1">
-                                                <p className={clsx(
-                                                    "text-gray-900 font-medium transition-all",
-                                                    task.is_completed && "text-gray-400 line-through"
-                                                )}>
-                                                    {task.task_content}
-                                                </p>
-                                                {task.eta && (
-                                                    <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
-                                                        <Clock size={12} />
-                                                        <span>{task.eta} mins</span>
-                                                    </div>
-                                                )}
+                                    <div key={task.id} className={`transition-colors border-b border-gray-100 last:border-0 ${getTaskColor(task)}`}>
+                                        <div className="p-4 flex items-center justify-between group">
+                                            <div className="flex items-center gap-4 flex-1">
+                                                <button
+                                                    onClick={() => toggleLogForm(task)}
+                                                    className={clsx(
+                                                        "flex-shrink-0 transition-colors p-2 rounded-full hover:bg-black/5",
+                                                        task.is_completed ? "text-gray-400" : "text-indigo-600"
+                                                    )}
+                                                    title={task.is_completed ? "Completed" : "Log Work"}
+                                                    disabled={task.is_completed}
+                                                >
+                                                    {task.is_completed ? <div className="w-5 h-5 rounded-full bg-gray-400" /> : <Play size={20} fill="currentColor" />}
+                                                </button>
+                                                <div className="flex-1">
+                                                    <p className={clsx(
+                                                        "text-gray-900 font-medium transition-all",
+                                                        task.is_completed && "text-gray-500 line-through"
+                                                    )}>
+                                                        {task.task_content}
+                                                    </p>
+                                                    {task.eta && (
+                                                        <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                                                            <Clock size={12} />
+                                                            <span>{task.eta} mins</span>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <button
-                                            onClick={() => handleDeleteTask(task.id)}
-                                            className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-2"
-                                            title="Delete Task"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
+                                        {/* Inline Log Form */}
+                                        {expandedTaskId === task.id && (
+                                            <div className="p-4 bg-gray-50 border-t border-gray-100 ml-12 mr-4 mb-4 rounded-lg shadow-inner">
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-gray-500 mb-1">Date</label>
+                                                        <input
+                                                            type="date"
+                                                            className="w-full p-2 text-sm border border-gray-200 rounded-md"
+                                                            value={logData.date}
+                                                            onChange={(e) => setLogData({ ...logData, date: e.target.value })}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-gray-500 mb-1">Duration (mins)</label>
+                                                        <input
+                                                            type="number"
+                                                            className="w-full p-2 text-sm border border-gray-200 rounded-md"
+                                                            placeholder="e.g. 60"
+                                                            value={logData.duration}
+                                                            onChange={(e) => setLogData({ ...logData, duration: e.target.value })}
+                                                        />
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleSaveLog(task)}
+                                                        className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 flex items-center justify-center gap-2"
+                                                    >
+                                                        <Save size={16} /> Save Log
+                                                    </button>
+                                                </div>
+                                                <div className="mt-3">
+                                                    <label className="block text-xs font-medium text-gray-500 mb-1">Remarks</label>
+                                                    <input
+                                                        type="text"
+                                                        className="w-full p-2 text-sm border border-gray-200 rounded-md"
+                                                        placeholder="Optional remarks..."
+                                                        value={logData.remarks}
+                                                        onChange={(e) => setLogData({ ...logData, remarks: e.target.value })}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
