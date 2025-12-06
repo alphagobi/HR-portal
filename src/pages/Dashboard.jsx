@@ -1,4 +1,3 @@
-```javascript
 import React, { useEffect, useState } from 'react';
 import { getAnnouncements } from '../services/announcementService';
 import { getLeaves } from '../services/leaveService';
@@ -9,7 +8,7 @@ import { Bell, Calendar, CheckCircle, Clock, Plus, CheckSquare, Square, AlertCir
 
 const StatCard = ({ title, value, icon: Icon, color }) => (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
-        <div className={`p - 3 rounded - lg ${ color } `}>
+        <div className={`p-3 rounded-lg ${color}`}>
             <Icon size={24} className="text-white" />
         </div>
         <div>
@@ -23,7 +22,7 @@ const Dashboard = () => {
     const [announcements, setAnnouncements] = useState([]);
     const [leaveBalance, setLeaveBalance] = useState('Loading...');
     const [loading, setLoading] = useState(true);
-    
+
     // Task & Timesheet State
     const [todayTasks, setTodayTasks] = useState([]);
     const [loggedEntries, setLoggedEntries] = useState([]);
@@ -33,7 +32,7 @@ const Dashboard = () => {
         remarks: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
-    
+
     // New Task State
     const [showAddTask, setShowAddTask] = useState(false);
     const [newTaskContent, setNewTaskContent] = useState('');
@@ -44,7 +43,7 @@ const Dashboard = () => {
 
     const fetchDashboardData = async () => {
         if (!user?.id) return;
-        
+
         try {
             // 1. Fetch Announcements
             const announcementsData = await getAnnouncements(user.id);
@@ -55,7 +54,7 @@ const Dashboard = () => {
             if (leaveData.limits && leaveData.usage) {
                 const totalLimit = (leaveData.limits['Informed Leave'] || 0) + (leaveData.limits['Emergency Leave'] || 0);
                 const totalUsage = (leaveData.usage['Informed Leave'] || 0) + (leaveData.usage['Emergency Leave'] || 0);
-                setLeaveBalance(`${ totalLimit - totalUsage } Days`);
+                setLeaveBalance(`${totalLimit - totalUsage} Days`);
             } else {
                 setLeaveBalance('12 Days');
             }
@@ -86,7 +85,7 @@ const Dashboard = () => {
             alert("Please fill in all fields.");
             return;
         }
-        
+
         setIsSubmitting(true);
         try {
             // Prepare entry
@@ -134,15 +133,15 @@ const Dashboard = () => {
                 task_content: newTaskContent,
                 planned_date: today
             });
-            
+
             // Refresh tasks
             const tasksData = await getTasks(user.id, today);
             setTodayTasks(tasksData);
-            
+
             // Select the new task (assuming response returns id or we find it)
             // For safety, let's just find the task with the same content created just now.
             const newTask = tasksData.find(t => t.task_content === newTaskContent && !t.is_completed);
-            
+
             if (newTask) {
                 setLogForm(prev => ({ ...prev, taskId: newTask.id, remarks: newTask.task_content }));
             }
@@ -226,8 +225,8 @@ const Dashboard = () => {
                                             setLogForm(prev => ({ ...prev, taskId: '' }));
                                         } else {
                                             const task = todayTasks.find(t => t.id == e.target.value);
-                                            setLogForm(prev => ({ 
-                                                ...prev, 
+                                            setLogForm(prev => ({
+                                                ...prev,
                                                 taskId: e.target.value,
                                                 remarks: task ? task.task_content : prev.remarks
                                             }));
@@ -275,7 +274,7 @@ const Dashboard = () => {
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className={`px - 6 py - 2 bg - indigo - 600 text - white rounded - lg font - medium hover: bg - indigo - 700 transition - colors flex items - center gap - 2 ${ isSubmitting ? 'opacity-70 cursor-not-allowed' : '' } `}
+                                className={`px-6 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
                             >
                                 {isSubmitting ? 'Saving...' : <><Plus size={18} /> Log Work</>}
                             </button>
@@ -292,11 +291,11 @@ const Dashboard = () => {
                                 loggedEntries.map(entry => (
                                     <div key={entry.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm">
                                         <div className="flex items-center gap-3">
-                                            <div className={`w - 2 h - 2 rounded - full ${ entry.type === 'planned' ? 'bg-green-500' : 'bg-orange-500' } `} title={entry.type === 'planned' ? 'Planned Task' : 'Unplanned Task'}></div>
+                                            <div className={`w-2 h-2 rounded-full ${entry.type === 'planned' ? 'bg-green-500' : 'bg-orange-500'}`} title={entry.type === 'planned' ? 'Planned Task' : 'Unplanned Task'}></div>
                                             <span className="font-medium text-gray-900">{entry.duration} hrs</span>
                                             <span className="text-gray-600 truncate max-w-xs" title={entry.description}>{entry.description}</span>
                                         </div>
-                                        <span className={`text - xs px - 2 py - 1 rounded - full ${ entry.type === 'planned' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700' } `}>
+                                        <span className={`text-xs px-2 py-1 rounded-full ${entry.type === 'planned' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
                                             {entry.type === 'planned' ? 'Planned' : 'Unplanned'}
                                         </span>
                                     </div>
@@ -352,17 +351,17 @@ const Dashboard = () => {
 
             {/* Announcements & Stats - Moved below */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                 <StatCard 
-                    title="Leave Balance" 
-                    value={leaveBalance} 
-                    icon={Calendar} 
-                    color="bg-emerald-500" 
+                <StatCard
+                    title="Leave Balance"
+                    value={leaveBalance}
+                    icon={Calendar}
+                    color="bg-emerald-500"
                 />
                 {/* Add more stats if needed */}
             </div>
-            
-             {/* Announcements Section */}
-             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+
+            {/* Announcements Section */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                     <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                         <Bell className="text-indigo-600" size={20} />
