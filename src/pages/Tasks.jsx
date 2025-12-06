@@ -1,19 +1,19 @@
+```javascript
 import React, { useState, useEffect } from 'react';
 import { getTasks, createTask, updateTask, deleteTask } from '../services/taskService';
 import { getCurrentUser } from '../services/authService';
-import { Calendar, Plus, Trash2, CheckSquare, Square, Clock, Filter } from 'lucide-react';
+import { Plus, Trash2, CheckCircle, Circle, Calendar, Clock, Search, X } from 'lucide-react';
 import clsx from 'clsx';
 
 const Tasks = () => {
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
-    // Removed filter state as we are showing all tasks grouped by date
-
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
     const [newTask, setNewTask] = useState({
         content: '',
         date: new Date().toISOString().split('T')[0],
-        startTime: '',
-        endTime: ''
+        eta: ''
     });
 
     const fetchTasks = async () => {
@@ -169,13 +169,7 @@ const Tasks = () => {
                                                 )}
                                             </div>
                                         </div>
-
-                                        {/* Only allow deleting if not planned (created > 8 hours ago logic handled in backend/UI check usually, but for now just show delete) */}
-                                        {/* User requirement: "Planned tasks should be non-editable and non-deletable". 
-                                            We can check created_at vs now, but for simplicity let's just show delete for now or check if it's not completed/linked? 
-                                            The previous logic was: disable delete if created > 8 hours ago. 
-                                            Let's re-implement that check if we have created_at.
-                                        */}
+                                        
                                         <button
                                             onClick={() => handleDeleteTask(task.id)}
                                             className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-2"
@@ -264,3 +258,4 @@ const Tasks = () => {
 };
 
 export default Tasks;
+```
