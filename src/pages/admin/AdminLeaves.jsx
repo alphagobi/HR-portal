@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { getLeaves, updateLeaveStatus } from '../../services/leaveService';
-import { CheckCircle, XCircle, Clock, Calendar, Search, Filter } from 'lucide-react';
+import { getLeaves, updateLeaveStatus, getLeaveMessages, sendLeaveMessage } from '../../services/leaveService';
+import { CheckCircle, XCircle, Clock, Calendar, Search, Filter, MessageSquare, Send } from 'lucide-react';
+import { getCurrentUser } from '../../services/authService';
 
 const AdminLeaves = () => {
     const [activeTab, setActiveTab] = useState('approvals');
@@ -11,6 +12,49 @@ const AdminLeaves = () => {
     const [rejectReason, setRejectReason] = useState('');
     const [selectedLeaveId, setSelectedLeaveId] = useState(null);
     const [users, setUsers] = useState([]);
+
+    // Chat State
+    const [showChatModal, setShowChatModal] = useState(false);
+    const [messages, setMessages] = useState([]);
+    const [chatMessage, setChatMessage] = useState('');
+    const messagesEndRef = React.useRef(null);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
+    const handleOpenChat = async (id) => {
+        setSelectedLeaveId(id);
+        setShowChatModal(true);
+        const msgs = await getLeaveMessages(id);
+        setMessages(msgs);
+    };
+
+    const submitChatMessage = async () => {
+        if (!selectedLeaveId || !chatMessage.trim()) return;
+
+        try {
+            const user = getCurrentUser();
+            await sendLeaveMessage({
+                leave_id: selectedLeaveId,
+                sender_id: user.id,
+                sender_type: 'admin',
+                message: chatMessage
+            });
+
+            setChatMessage('');
+            // Refresh messages
+            const msgs = await getLeaveMessages(selectedLeaveId);
+            setMessages(msgs);
+        } catch (error) {
+            console.error("Failed to send message", error);
+            alert("Failed to send message.");
+        }
+    };
 
     useEffect(() => {
         fetchLeaves();
@@ -198,6 +242,13 @@ const AdminLeaves = () => {
                                                         </button>
                                                     </div>
                                                 )}
+                                                <button
+                                                    onClick={() => handleOpenChat(leave.id)}
+                                                    className="p-1 text-indigo-600 hover:bg-indigo-50 rounded transition-colors ml-2"
+                                                    title="Chat"
+                                                >
+                                                    <MessageSquare size={20} />
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}
@@ -302,6 +353,64 @@ const AdminLeaves = () => {
                                 disabled={!rejectReason.trim()}
                             >
                                 Reject Request
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Chat Modal */}
+            {showChatModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 h-[500px] flex flex-col">
+                        <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-4">
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900">Leave Discussion</h3>
+                                <p className="text-xs text-gray-500">Chat with Employee</p>
+                            </div>
+                            <button
+                                onClick={() => { setShowChatModal(false); setChatMessage(''); }}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <XCircle size={24} />
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto space-y-4 mb-4 p-2">
+                            {messages.map((msg) => (
+                                <div key={msg.id} className={`flex ${msg.sender_type === 'admin' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`p-3 rounded-lg max-w-[80%] text-sm ${msg.sender_type === 'admin'
+                                        ? 'bg-indigo-600 text-white rounded-tr-none'
+                                        : 'bg-gray-100 text-gray-800 rounded-tl-none'
+                                        }`}>
+                                        <p className="font-bold text-xs mb-1 opacity-75">
+                                            {msg.sender_type === 'admin' ? 'You' : msg.sender_name || 'Employee'}
+                                        </p>
+                                        {msg.message}
+                                        <p className="text-[10px] mt-1 opacity-50 text-right">
+                                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                            <div ref={messagesEndRef} />
+                        </div>
+
+                        <div className="flex gap-2 pt-2 border-t border-gray-100">
+                            <input
+                                type="text"
+                                className="flex-1 p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                placeholder="Type a message..."
+                                value={chatMessage}
+                                onChange={(e) => setChatMessage(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && submitChatMessage()}
+                            />
+                            <button
+                                onClick={submitChatMessage}
+                                className="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                                disabled={!chatMessage.trim()}
+                            >
+                                <Send size={20} />
                             </button>
                         </div>
                     </div>

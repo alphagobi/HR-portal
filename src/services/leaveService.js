@@ -52,3 +52,29 @@ export const updateLeaveStatus = async (id, status, admin_note = null, employee_
         throw error;
     }
 };
+
+export const getLeaveMessages = async (leaveId) => {
+    try {
+        const response = await fetch(`/api/leave_chat.php?leave_id=${leaveId}&_t=${new Date().getTime()}`);
+        if (!response.ok) throw new Error('Failed to fetch messages');
+        return await response.json();
+    } catch (error) {
+        console.error(error);
+        return [];
+    }
+};
+
+export const sendLeaveMessage = async (messageData) => {
+    try {
+        const response = await fetch('/api/leave_chat.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(messageData)
+        });
+        if (!response.ok) throw new Error('Failed to send message');
+        return await response.json();
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+};

@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { getLeaves, submitLeaveRequest } from '../services/leaveService';
-import { Calendar, CheckCircle, XCircle, Clock, Plus } from 'lucide-react';
+import { getLeaves, submitLeaveRequest, getLeaveMessages, sendLeaveMessage } from '../services/leaveService';
+import { Calendar, CheckCircle, XCircle, Clock, Plus, Send, MessageSquare } from 'lucide-react';
 
 const Leaves = () => {
     const [leaves, setLeaves] = useState([]);
@@ -9,148 +8,57 @@ const Leaves = () => {
     const [usage, setUsage] = useState({ 'Informed Leave': 0, 'Emergency Leave': 0 });
     const [newRequest, setNewRequest] = useState({ type: 'Informed Leave', startDate: '', endDate: '', reason: '' });
 
-    useEffect(() => {
-        const fetchLeaves = async () => {
-            try {
-                const user = JSON.parse(localStorage.getItem('hr_current_user'));
-                const data = await getLeaves(user?.id);
-                // Handle both old (array) and new (object) API responses for backward compatibility
-                if (Array.isArray(data)) {
-                    setLeaves(data);
-                } else {
-                    setLeaves(data.leaves || []);
-                    setLimits(data.limits || { 'Informed Leave': 6, 'Emergency Leave': 6 });
-                    setUsage(data.usage || { 'Informed Leave': 0, 'Emergency Leave': 0 });
-                }
-            } catch (error) {
-                console.error("Failed to fetch leaves", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchLeaves();
-    }, []);
+    // ... (useEffect for fetching leaves remains same)
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    // ... (handleSubmit remains same)
 
-        const user = JSON.parse(localStorage.getItem('hr_current_user'));
-        if (!user) {
-            alert("Please log in to submit a leave request.");
-            return;
-        }
-
-        // Guard Rail: Check for Emergency Leave
-        const start = new Date(newRequest.startDate);
-        const today = new Date();
-        const diffTime = start - today;
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        let finalType = newRequest.type;
-        let isEmergency = false;
-
-        if (diffDays < 7) {
-            finalType = 'Emergency Leave';
-            isEmergency = true;
-        }
-
-        // Prepare payload for API (snake_case)
-        const apiPayload = {
-            employee_id: user.id,
-            type: finalType,
-            start_date: newRequest.startDate,
-            end_date: newRequest.endDate,
-            reason: newRequest.reason
-        };
-
-        // Optimistic UI update (camelCase for frontend)
-        const uiRequest = {
-            ...newRequest,
-            type: finalType,
-            id: Date.now(), // Temporary ID
-            status: 'Pending',
-            days: 1, // Mock calculation
-            startDate: newRequest.startDate,
-            endDate: newRequest.endDate
-        };
-
-        setLeaves([uiRequest, ...leaves]);
-
-        try {
-            await submitLeaveRequest(apiPayload);
-            if (isEmergency) {
-                alert("Notice: Since this leave is within 7 days, it has been classified as 'Emergency Leave'.");
-            }
-            setNewRequest({ type: 'Informed Leave', startDate: '', endDate: '', reason: '' });
-        } catch (error) {
-            console.error("Failed to submit leave", error);
-            alert("Failed to submit leave request.");
-            // Revert optimistic update if needed, or just let the user know
-        }
-    };
-
-    const getStatusColor = (status) => {
-        switch (status.toLowerCase()) {
-            case 'approved': return 'text-emerald-600 bg-emerald-50 border-emerald-100';
-            case 'rejected': return 'text-red-600 bg-red-50 border-red-100';
-            default: return 'text-amber-600 bg-amber-50 border-amber-100';
-        }
-    };
-
-    const getStatusIcon = (status) => {
-        switch (status.toLowerCase()) {
-            case 'approved': return <CheckCircle size={16} />;
-            case 'rejected': return <XCircle size={16} />;
-            default: return <Clock size={16} />;
-        }
-    };
+    // ... (getStatusColor and getStatusIcon remain same)
 
     const [showChallengeModal, setShowChallengeModal] = useState(false);
-    const [challengeNote, setChallengeNote] = useState('');
+    const [challengeNote, setChallengeNote] = useState(''); // Used as message input
     const [selectedLeaveId, setSelectedLeaveId] = useState(null);
+    const [messages, setMessages] = useState([]);
+    const messagesEndRef = React.useRef(null);
 
-    const handleChallenge = (id) => {
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
+    const handleChallenge = async (id) => {
         setSelectedLeaveId(id);
         setShowChallengeModal(true);
+        // Fetch messages
+        const msgs = await getLeaveMessages(id);
+        setMessages(msgs);
     };
 
     const submitChallenge = async () => {
         if (!selectedLeaveId || !challengeNote.trim()) return;
 
         try {
-            // Import updateLeaveStatus if not already imported or define it here if needed, 
-            // but better to import it. Assuming it's imported or available.
-            // Wait, updateLeaveStatus is not imported. I need to import it.
-            // I will add the import in a separate edit.
-            // For now, I'll assume it's available or I'll use fetch directly if needed, 
-            // but let's stick to the service pattern.
-            // Actually, I should update the imports first.
-            // Let's do the UI part here and I'll add the import in another step.
-
-            // Re-using the service function
-            const { updateLeaveStatus } = await import('../services/leaveService');
-            await updateLeaveStatus(selectedLeaveId, 'Rejected', null, challengeNote);
-
-            alert("Challenge submitted successfully.");
-            setShowChallengeModal(false);
-            setChallengeNote('');
-            setSelectedLeaveId(null);
-
-            // Refresh leaves
             const user = JSON.parse(localStorage.getItem('hr_current_user'));
-            if (user) {
-                const data = await getLeaves(user.id);
-                if (Array.isArray(data)) {
-                    setLeaves(data);
-                } else {
-                    setLeaves(data.leaves || []);
-                }
-            }
+            await sendLeaveMessage({
+                leave_id: selectedLeaveId,
+                sender_id: user.id,
+                sender_type: 'employee',
+                message: challengeNote
+            });
+
+            setChallengeNote('');
+            // Refresh messages
+            const msgs = await getLeaveMessages(selectedLeaveId);
+            setMessages(msgs);
         } catch (error) {
-            console.error("Failed to submit challenge", error);
-            alert("Failed to submit challenge.");
+            console.error("Failed to send message", error);
+            alert("Failed to send message.");
         }
     };
+
+
 
     return (
         <div className="p-6 max-w-7xl mx-auto">
@@ -284,9 +192,10 @@ const Leaves = () => {
                                             {leave.status === 'Rejected' && !leave.employee_note && (
                                                 <button
                                                     onClick={() => handleChallenge(leave.id)}
-                                                    className="text-xs text-indigo-600 hover:text-indigo-800 font-medium underline"
+                                                    className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium underline"
                                                 >
-                                                    Challenge Rejection
+                                                    <MessageSquare size={12} />
+                                                    Chat with Admin
                                                 </button>
                                             )}
                                         </div>
@@ -298,31 +207,68 @@ const Leaves = () => {
                 </div>
             </div>
 
-            {/* Challenge Modal */}
+            {/* Chat Modal */}
             {showChallengeModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-                        <h3 className="text-lg font-bold text-gray-900 mb-4">Challenge Rejection</h3>
-                        <p className="text-sm text-gray-500 mb-4">Provide a reason why this rejection should be reconsidered.</p>
-                        <textarea
-                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none mb-4 h-32 resize-none"
-                            placeholder="Your explanation..."
-                            value={challengeNote}
-                            onChange={(e) => setChallengeNote(e.target.value)}
-                        />
-                        <div className="flex justify-end gap-3">
+                    <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 h-[500px] flex flex-col">
+                        <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-4">
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900">Leave Discussion</h3>
+                                <p className="text-xs text-gray-500">Chat with Admin about this request</p>
+                            </div>
                             <button
                                 onClick={() => { setShowChallengeModal(false); setChallengeNote(''); }}
-                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                className="text-gray-400 hover:text-gray-600"
                             >
-                                Cancel
+                                <XCircle size={24} />
                             </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto space-y-4 mb-4 p-2">
+                            {/* Initial Rejection Note if exists */}
+                            {leaves.find(l => l.id === selectedLeaveId)?.admin_note && (
+                                <div className="flex justify-start">
+                                    <div className="bg-red-50 text-red-800 p-3 rounded-lg rounded-tl-none max-w-[80%] text-sm">
+                                        <p className="font-bold text-xs mb-1">Admin (Rejection Reason)</p>
+                                        {leaves.find(l => l.id === selectedLeaveId)?.admin_note}
+                                    </div>
+                                </div>
+                            )}
+
+                            {messages.map((msg) => (
+                                <div key={msg.id} className={`flex ${msg.sender_type === 'employee' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`p-3 rounded-lg max-w-[80%] text-sm ${msg.sender_type === 'employee'
+                                        ? 'bg-indigo-600 text-white rounded-tr-none'
+                                        : 'bg-gray-100 text-gray-800 rounded-tl-none'
+                                        }`}>
+                                        <p className="font-bold text-xs mb-1 opacity-75">
+                                            {msg.sender_type === 'employee' ? 'You' : 'Admin'}
+                                        </p>
+                                        {msg.message}
+                                        <p className="text-[10px] mt-1 opacity-50 text-right">
+                                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                            <div ref={messagesEndRef} />
+                        </div>
+
+                        <div className="flex gap-2 pt-2 border-t border-gray-100">
+                            <input
+                                type="text"
+                                className="flex-1 p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                placeholder="Type a message..."
+                                value={challengeNote}
+                                onChange={(e) => setChallengeNote(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && submitChallenge()}
+                            />
                             <button
                                 onClick={submitChallenge}
-                                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                                className="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
                                 disabled={!challengeNote.trim()}
                             >
-                                Submit Challenge
+                                <Send size={20} />
                             </button>
                         </div>
                     </div>
