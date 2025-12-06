@@ -114,7 +114,7 @@ const Tasks = () => {
                             <Plus className="text-indigo-600" size={20} />
                             New Task
                         </h2>
-                        <form onSubmit={handleAddTask} className="space-y-4">
+                        <form onSubmit={handleCreateTask} className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Date <span className="text-red-500">*</span></label>
                                 <input

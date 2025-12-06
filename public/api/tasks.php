@@ -37,6 +37,7 @@ elseif ($method === 'POST') {
 
     $stmt = $pdo->prepare("INSERT INTO planned_tasks (user_id, task_content, planned_date, start_time, end_time, eta) VALUES (?, ?, ?, ?, ?, ?)");
     try {
+        $stmt->execute([
             $data['user_id'], 
             $data['task_content'], 
             $data['planned_date'], 
