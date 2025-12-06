@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { getAnnouncements } from '../services/announcementService';
+import { getLeaves } from '../services/leaveService';
 import { getCurrentUser } from '../services/authService';
 import { LayoutDashboard, FileText, Clock, Calendar, DollarSign, Menu, X, LogOut, CheckSquare, Megaphone } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -10,17 +11,37 @@ import clsx from 'clsx';
 const Layout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [unreadAnnouncements, setUnreadAnnouncements] = useState(0);
+    const [unreadLeaves, setUnreadLeaves] = useState(0);
+    const [user, setUser] = useState(null); // User state to store current user
     const location = useLocation();
-    const user = getCurrentUser();
 
     useEffect(() => {
         document.title = 'Internal Portal - AlphaGobi';
+        const currentUser = getCurrentUser(); // Get current user once
+        setUser(currentUser);
 
         const fetchUnread = async () => {
-            if (user?.id) {
-                const data = await getAnnouncements(user.id);
-                const unread = data.filter(a => !a.is_acknowledged).length;
-                setUnreadAnnouncements(unread);
+            if (currentUser?.id) {
+                // Announcements
+                const announcements = await getAnnouncements(currentUser.id);
+                const unreadAnn = announcements.filter(a => !a.is_acknowledged).length;
+                setUnreadAnnouncements(unreadAnn);
+
+                // Leaves
+                try {
+                    const leavesData = await getLeaves(currentUser.id);
+                    let unreadL = 0;
+                    if (Array.isArray(leavesData)) {
+                        // Admin view (array of leaves)
+                        unreadL = leavesData.reduce((acc, l) => acc + (parseInt(l.unread_count) || 0), 0);
+                    } else if (leavesData.leaves) {
+                        // Employee view (object with leaves array)
+                        unreadL = leavesData.leaves.reduce((acc, l) => acc + (parseInt(l.unread_count) || 0), 0);
+                    }
+                    setUnreadLeaves(unreadL);
+                } catch (e) {
+                    console.error("Failed to fetch leaves for badge", e);
+                }
             }
         };
         fetchUnread();
@@ -32,7 +53,7 @@ const Layout = () => {
         { name: 'Policies', path: '/policies', icon: FileText },
         { name: 'Tasks', path: '/tasks', icon: CheckSquare },
         { name: 'Timesheet', path: '/timesheet', icon: Clock },
-        { name: 'Leaves', path: '/leaves', icon: Calendar },
+        { name: 'Leaves', path: '/leaves', icon: Calendar, badge: unreadLeaves },
         { name: 'Reimbursements', path: '/reimbursements', icon: DollarSign },
     ];
 

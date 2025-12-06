@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getLeaves, updateLeaveStatus, getLeaveMessages, sendLeaveMessage } from '../../services/leaveService';
+import React, { useState, useEffect } from 'react';
+import { getLeaves, updateLeaveStatus, getLeaveMessages, sendLeaveMessage, markLeaveMessagesRead } from '../../services/leaveService';
 import { CheckCircle, XCircle, Clock, Calendar, Search, Filter, MessageSquare, Send } from 'lucide-react';
 import { getCurrentUser } from '../../services/authService';
 
@@ -32,6 +33,11 @@ const AdminLeaves = () => {
         setShowChatModal(true);
         const msgs = await getLeaveMessages(id);
         setMessages(msgs);
+
+        // Mark as read
+        await markLeaveMessagesRead(id, 'admin');
+        // Update local state
+        setLeaves(prev => prev.map(l => l.id === id ? { ...l, unread_count: 0 } : l));
     };
 
     const submitChatMessage = async () => {
@@ -244,10 +250,13 @@ const AdminLeaves = () => {
                                                 )}
                                                 <button
                                                     onClick={() => handleOpenChat(leave.id)}
-                                                    className="p-1 text-indigo-600 hover:bg-indigo-50 rounded transition-colors ml-2"
+                                                    className="p-1 text-indigo-600 hover:bg-indigo-50 rounded transition-colors ml-2 relative"
                                                     title="Chat"
                                                 >
                                                     <MessageSquare size={20} />
+                                                    {leave.unread_count > 0 && (
+                                                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                                                    )}
                                                 </button>
                                             </td>
                                         </tr>

@@ -7,8 +7,14 @@ if ($method === 'GET') {
     $employee_id = $_GET['employee_id'] ?? null;
     
     if ($employee_id) {
-        // Get leaves for specific employee
-        $stmt = $pdo->prepare("SELECT * FROM leaves WHERE employee_id = ? ORDER BY created_at DESC");
+        // Get leaves for specific employee with unread count from admin
+        $stmt = $pdo->prepare("
+            SELECT l.*, 
+            (SELECT COUNT(*) FROM leave_chats lc WHERE lc.leave_id = l.id AND lc.sender_type = 'admin' AND lc.is_read = 0) as unread_count
+            FROM leaves l 
+            WHERE l.employee_id = ? 
+            ORDER BY l.created_at DESC
+        ");
         $stmt->execute([$employee_id]);
         $leaves = $stmt->fetchAll();
 
@@ -49,8 +55,9 @@ if ($method === 'GET') {
             'usage' => $usage
         ]);
     } else {
-        // Get all leaves (Admin) - Join with users to get names
-        $sql = "SELECT l.*, u.name as employee_name, u.department, u.informed_leave_limit, u.emergency_leave_limit 
+        // Get all leaves (Admin) - Join with users to get names and unread count from employees
+        $sql = "SELECT l.*, u.name as employee_name, u.department, u.informed_leave_limit, u.emergency_leave_limit,
+                (SELECT COUNT(*) FROM leave_chats lc WHERE lc.leave_id = l.id AND lc.sender_type = 'employee' AND lc.is_read = 0) as unread_count
                 FROM leaves l 
                 JOIN users u ON l.employee_id = u.id 
                 ORDER BY l.created_at DESC";

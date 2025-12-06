@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getLeaves, submitLeaveRequest, getLeaveMessages, sendLeaveMessage } from '../services/leaveService';
+import { getLeaves, submitLeaveRequest, getLeaveMessages, sendLeaveMessage, markLeaveMessagesRead } from '../services/leaveService';
 import { Calendar, CheckCircle, XCircle, Clock, Plus, Send, MessageSquare } from 'lucide-react';
 
 const Leaves = () => {
@@ -125,6 +125,14 @@ const Leaves = () => {
         // Fetch messages
         const msgs = await getLeaveMessages(id);
         setMessages(msgs);
+
+        // Mark as read
+        const user = JSON.parse(localStorage.getItem('hr_current_user'));
+        if (user) {
+            await markLeaveMessagesRead(id, 'employee');
+            // Update local state to remove badge immediately
+            setLeaves(prev => prev.map(l => l.id === id ? { ...l, unread_count: 0 } : l));
+        }
     };
 
     const submitChallenge = async () => {
@@ -283,10 +291,13 @@ const Leaves = () => {
                                             {leave.status === 'Rejected' && !leave.employee_note && (
                                                 <button
                                                     onClick={() => handleChallenge(leave.id)}
-                                                    className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium underline"
+                                                    className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium underline relative"
                                                 >
                                                     <MessageSquare size={12} />
                                                     Chat with Admin
+                                                    {leave.unread_count > 0 && (
+                                                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                                                    )}
                                                 </button>
                                             )}
                                         </div>

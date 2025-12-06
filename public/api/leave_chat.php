@@ -28,6 +28,31 @@ if ($method === 'GET') {
 elseif ($method === 'POST') {
     $data = json_decode(file_get_contents("php://input"), true);
     
+    if (isset($data['action']) && $data['action'] === 'mark_read') {
+        if (!isset($data['leave_id']) || !isset($data['user_type'])) {
+            http_response_code(400);
+            echo json_encode(["error" => "Missing required fields"]);
+            exit;
+        }
+
+        $leave_id = $data['leave_id'];
+        $user_type = $data['user_type']; // 'employee' or 'admin' (the one READING)
+        
+        // If employee is reading, mark 'admin' messages as read
+        // If admin is reading, mark 'employee' messages as read
+        $sender_type_to_mark = ($user_type === 'employee') ? 'admin' : 'employee';
+        
+        try {
+            $stmt = $pdo->prepare("UPDATE leave_chats SET is_read = 1 WHERE leave_id = ? AND sender_type = ?");
+            $stmt->execute([$leave_id, $sender_type_to_mark]);
+            echo json_encode(["message" => "Marked as read"]);
+        } catch (PDOException $e) {
+            http_response_code(500);
+            echo json_encode(["error" => $e->getMessage()]);
+        }
+        exit;
+    }
+    
     if (!isset($data['leave_id']) || !isset($data['sender_id']) || !isset($data['sender_type']) || !isset($data['message'])) {
         http_response_code(400);
         echo json_encode(["error" => "Missing required fields"]);
