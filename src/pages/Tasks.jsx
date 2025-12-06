@@ -9,6 +9,9 @@ const Tasks = () => {
     const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [viewMode, setViewMode] = useState('monthly'); // 'daily', 'weekly', 'monthly'
+    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+
     const [newTask, setNewTask] = useState({
         content: '',
         date: new Date().toISOString().split('T')[0],
@@ -83,21 +86,76 @@ const Tasks = () => {
         });
     };
 
-    // Group tasks by date
-    const groupedTasks = tasks.reduce((acc, task) => {
+    // Filter Logic
+    const getFilteredTasks = () => {
+        let filtered = tasks;
+
+        // Date Filtering
+        if (viewMode === 'monthly') {
+            const selectedMonth = selectedDate.slice(0, 7);
+            filtered = tasks.filter(t => t.planned_date.startsWith(selectedMonth));
+        } else if (viewMode === 'daily') {
+            filtered = tasks.filter(t => t.planned_date === selectedDate);
+        } else if (viewMode === 'weekly') {
+            const date = new Date(selectedDate);
+            const day = date.getDay(); // 0 (Sun) to 6 (Sat)
+            const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+            const monday = new Date(date.setDate(diff));
+            const sunday = new Date(date.setDate(monday.getDate() + 6));
+
+            const startStr = monday.toISOString().split('T')[0];
+            const endStr = sunday.toISOString().split('T')[0];
+
+            filtered = tasks.filter(t => t.planned_date >= startStr && t.planned_date <= endStr);
+        }
+
+        // Search Filtering
+        if (searchQuery) {
+            const lowerQuery = searchQuery.toLowerCase();
+            // If search query exists, we want to show ALL tasks for days that have a match
+            // First, find dates that have matching tasks
+            const matchingDates = new Set(
+                filtered.filter(t => t.task_content.toLowerCase().includes(lowerQuery))
+                    .map(t => t.planned_date)
+            );
+            // Then filter to include all tasks for those dates
+            filtered = filtered.filter(t => matchingDates.has(t.planned_date));
+        }
+
+        return filtered;
+    };
+
+    const filteredTasks = getFilteredTasks();
+
+    // Calculate Stats
+    const totalTasks = filteredTasks.length;
+    const plannedMinutes = filteredTasks.reduce((acc, task) => acc + parseInt(task.eta || 0), 0);
+    const plannedHours = plannedMinutes / 60;
+
+    // Calculate Capacity (8 hours per day)
+    let capacityHours = 0;
+    if (viewMode === 'daily') {
+        capacityHours = 8;
+    } else if (viewMode === 'weekly') {
+        capacityHours = 7 * 8; // 7 days
+    } else if (viewMode === 'monthly') {
+        const year = parseInt(selectedDate.split('-')[0]);
+        const month = parseInt(selectedDate.split('-')[1]);
+        const daysInMonth = new Date(year, month, 0).getDate();
+        capacityHours = daysInMonth * 8;
+    }
+
+    const unplannedHours = Math.max(0, capacityHours - plannedHours);
+
+    // Group tasks by date for display
+    const groupedTasks = filteredTasks.reduce((acc, task) => {
         const date = task.planned_date;
         if (!acc[date]) acc[date] = [];
         acc[date].push(task);
         return acc;
     }, {});
 
-    // Filter groups based on search query (Day-level search)
-    const filteredGroups = Object.entries(groupedTasks).filter(([date, dayTasks]) => {
-        if (!searchQuery) return true;
-        const lowerQuery = searchQuery.toLowerCase();
-        // Check if ANY task in the day matches the query
-        return dayTasks.some(task => task.task_content.toLowerCase().includes(lowerQuery));
-    }).sort((a, b) => new Date(b[0]) - new Date(a[0])); // Sort by date descending
+    const sortedDates = Object.keys(groupedTasks).sort((a, b) => new Date(b) - new Date(a));
 
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-6">
@@ -106,8 +164,51 @@ const Tasks = () => {
                     <h1 className="text-2xl font-bold text-gray-900">Task Planner</h1>
                     <p className="text-gray-500">Plan your work ahead of time.</p>
                 </div>
-                <div className="flex items-center gap-4 w-full md:w-auto">
-                    <div className="relative flex-1 md:w-64">
+
+                <div className="flex items-center gap-4">
+                    {/* View Controls */}
+                    <div className="flex items-center gap-4 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
+                        <div className="flex gap-1 bg-gray-100 p-1 rounded-md">
+                            <button
+                                onClick={() => setViewMode('daily')}
+                                className={clsx("px-3 py-1 text-sm font-medium rounded-md transition-colors", viewMode === 'daily' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700')}
+                            >
+                                Daily
+                            </button>
+                            <button
+                                onClick={() => setViewMode('weekly')}
+                                className={clsx("px-3 py-1 text-sm font-medium rounded-md transition-colors", viewMode === 'weekly' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700')}
+                            >
+                                Weekly
+                            </button>
+                            <button
+                                onClick={() => setViewMode('monthly')}
+                                className={clsx("px-3 py-1 text-sm font-medium rounded-md transition-colors", viewMode === 'monthly' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700')}
+                            >
+                                Monthly
+                            </button>
+                        </div>
+
+                        <div className="h-6 w-px bg-gray-200 mx-2"></div>
+
+                        {viewMode === 'monthly' ? (
+                            <input
+                                type="month"
+                                value={selectedDate.slice(0, 7)}
+                                onChange={(e) => setSelectedDate(e.target.value + '-01')}
+                                className="p-1 border-none bg-transparent focus:ring-0 text-sm font-medium text-gray-700 outline-none"
+                            />
+                        ) : (
+                            <input
+                                type="date"
+                                value={selectedDate}
+                                onChange={(e) => setSelectedDate(e.target.value)}
+                                className="p-1 border-none bg-transparent focus:ring-0 text-sm font-medium text-gray-700 outline-none"
+                            />
+                        )}
+                    </div>
+
+                    <div className="relative w-64 hidden md:block">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                         <input
                             type="text"
@@ -126,13 +227,29 @@ const Tasks = () => {
                 </div>
             </div>
 
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <p className="text-sm text-gray-500 font-medium">Total Tasks</p>
+                    <h3 className="text-2xl font-bold text-gray-900">{totalTasks}</h3>
+                </div>
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <p className="text-sm text-green-600 font-medium">Planned Hours</p>
+                    <h3 className="text-2xl font-bold text-green-700">{plannedHours.toFixed(1)}</h3>
+                </div>
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <p className="text-sm text-orange-600 font-medium">Unplanned Hours</p>
+                    <h3 className="text-2xl font-bold text-orange-700">{unplannedHours.toFixed(1)}</h3>
+                </div>
+            </div>
+
             <div className="space-y-6">
                 {loading ? (
                     <div className="text-center py-12 text-gray-500">Loading tasks...</div>
-                ) : filteredGroups.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500">No tasks found.</div>
+                ) : sortedDates.length === 0 ? (
+                    <div className="text-center py-12 text-gray-500">No tasks found for this period.</div>
                 ) : (
-                    filteredGroups.map(([date, dayTasks]) => (
+                    sortedDates.map(date => (
                         <div key={date} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                             <div className="bg-gray-50 px-6 py-3 border-b border-gray-200 flex items-center gap-2">
                                 <Calendar size={18} className="text-indigo-600" />
@@ -141,7 +258,7 @@ const Tasks = () => {
                                 </h3>
                             </div>
                             <div className="divide-y divide-gray-100">
-                                {dayTasks.map(task => (
+                                {groupedTasks[date].map(task => (
                                     <div key={task.id} className="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between group">
                                         <div className="flex items-center gap-4 flex-1">
                                             <button
