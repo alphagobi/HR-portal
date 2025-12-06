@@ -138,12 +138,15 @@ const Dashboard = () => {
             const tasksData = await getTasks(user.id, today);
             setTodayTasks(tasksData);
 
-            // Select the new task (assuming response returns id or we find it)
-            // For safety, let's just find the task with the same content created just now.
-            const newTask = tasksData.find(t => t.task_content === newTaskContent && !t.is_completed);
-
-            if (newTask) {
-                setLogForm(prev => ({ ...prev, taskId: newTask.id, remarks: newTask.task_content }));
+            // Select the new task using the ID from response
+            if (response && response.id) {
+                setLogForm(prev => ({ ...prev, taskId: response.id }));
+            } else {
+                // Fallback: find by content if ID not returned (though it should be)
+                const newTask = tasksData.find(t => t.task_content === newTaskContent && !t.is_completed);
+                if (newTask) {
+                    setLogForm(prev => ({ ...prev, taskId: newTask.id }));
+                }
             }
 
             setNewTaskContent('');
@@ -224,11 +227,9 @@ const Dashboard = () => {
                                             setShowAddTask(true);
                                             setLogForm(prev => ({ ...prev, taskId: '' }));
                                         } else {
-                                            const task = todayTasks.find(t => t.id == e.target.value);
                                             setLogForm(prev => ({
                                                 ...prev,
-                                                taskId: e.target.value,
-                                                remarks: task ? task.task_content : prev.remarks
+                                                taskId: e.target.value
                                             }));
                                         }
                                     }}
@@ -348,17 +349,6 @@ const Dashboard = () => {
                     </div>
                 </div>
             )}
-
-            {/* Announcements & Stats - Moved below */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <StatCard
-                    title="Leave Balance"
-                    value={leaveBalance}
-                    icon={Calendar}
-                    color="bg-emerald-500"
-                />
-                {/* Add more stats if needed */}
-            </div>
 
             {/* Announcements Section */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
