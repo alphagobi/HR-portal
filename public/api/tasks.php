@@ -35,14 +35,14 @@ elseif ($method === 'POST') {
         exit;
     }
 
-    $stmt = $pdo->prepare("INSERT INTO planned_tasks (user_id, task_content, planned_date, start_time, end_time) VALUES (?, ?, ?, ?, ?)");
+    $stmt = $pdo->prepare("INSERT INTO planned_tasks (user_id, task_content, planned_date, start_time, end_time, eta) VALUES (?, ?, ?, ?, ?, ?)");
     try {
-        $stmt->execute([
             $data['user_id'], 
             $data['task_content'], 
             $data['planned_date'], 
             $data['start_time'] ?? null,
-            $data['end_time'] ?? null
+            $data['end_time'] ?? null,
+            $data['eta'] ?? null
         ]);
         echo json_encode(["message" => "Task created", "id" => $pdo->lastInsertId()]);
     } catch (PDOException $e) {

@@ -47,9 +47,9 @@ const Tasks = () => {
         fetchTasks();
     }, []);
 
-    const handleAddTask = async (e) => {
+    const handleCreateTask = async (e) => {
         e.preventDefault();
-        if (!newTask.content.trim() || !newTask.date) return;
+        if (!newTask.content) return;
 
         const user = getCurrentUser();
         if (!user) return;
@@ -58,11 +58,10 @@ const Tasks = () => {
             await createTask({
                 user_id: user.id,
                 task_content: newTask.content,
-                planned_date: newTask.date,
-                start_time: newTask.startTime,
-                end_time: newTask.endTime
+                planned_date: selectedDate,
+                eta: newTask.eta || null
             });
-            setNewTask(prev => ({ ...prev, content: '', startTime: '', endTime: '' }));
+            setNewTask({ content: '', eta: '' });
             fetchTasks();
         } catch (error) {
             console.error("Failed to create task", error);
@@ -135,33 +134,20 @@ const Tasks = () => {
                                     value={newTask.content}
                                     onChange={(e) => setNewTask({ ...newTask, content: e.target.value })}
                                 />
+                                <input
+                                    type="number"
+                                    placeholder="ETA (mins)"
+                                    className="w-24 p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    value={newTask.eta}
+                                    onChange={(e) => setNewTask({ ...newTask, eta: e.target.value })}
+                                />
+                                <button
+                                    type="submit"
+                                    className="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 font-medium flex items-center gap-2"
+                                >
+                                    <Plus size={20} /> Add
+                                </button>
                             </div>
-                            <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-                                    <input
-                                        type="time"
-                                        className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                                        value={newTask.startTime}
-                                        onChange={(e) => setNewTask({ ...newTask, startTime: e.target.value })}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
-                                    <input
-                                        type="time"
-                                        className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                                        value={newTask.endTime}
-                                        onChange={(e) => setNewTask({ ...newTask, endTime: e.target.value })}
-                                    />
-                                </div>
-                            </div>
-                            <button
-                                type="submit"
-                                className="w-full py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
-                            >
-                                Add Task
-                            </button>
                         </form>
                     </div>
                 </div>
@@ -202,10 +188,10 @@ const Tasks = () => {
                                                         </p>
                                                     </div>
 
-                                                    {(task.start_time || task.end_time) && (
-                                                        <div className="flex items-center gap-1 text-xs text-indigo-600 mt-2 font-medium bg-indigo-50 w-fit px-2 py-1 rounded">
+                                                    {task.eta && (
+                                                        <div className="flex items-center gap-1 text-xs text-gray-400 mt-1 ml-7">
                                                             <Clock size={12} />
-                                                            {task.start_time || '...'} - {task.end_time || '...'}
+                                                            <span>{task.eta} mins</span>
                                                         </div>
                                                     )}
                                                 </div>

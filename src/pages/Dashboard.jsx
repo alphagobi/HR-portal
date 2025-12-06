@@ -81,18 +81,21 @@ const Dashboard = () => {
 
     const handleLogWork = async (e) => {
         e.preventDefault();
-        if (!logForm.taskId || !logForm.duration || !logForm.remarks) {
-            alert("Please fill in all fields.");
+        if (!logForm.taskId || !logForm.duration) {
+            alert("Please fill in required fields.");
             return;
         }
 
         setIsSubmitting(true);
         try {
+            // Convert minutes to hours
+            const durationInHours = (parseFloat(logForm.duration) / 60).toFixed(2);
+
             // Prepare entry
             const newEntry = {
                 id: Date.now(), // Temp ID
-                duration: parseFloat(logForm.duration),
-                description: logForm.remarks,
+                duration: durationInHours,
+                description: logForm.remarks || 'Work logged',
                 taskId: logForm.taskId,
                 project: 'General',
                 startTime: null,
@@ -245,15 +248,14 @@ const Dashboard = () => {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Duration (Hours) <span className="text-red-500">*</span></label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Duration (Minutes) <span className="text-red-500">*</span></label>
                                 <input
                                     type="number"
-                                    step="0.5"
-                                    min="0.5"
-                                    max="24"
+                                    step="1"
+                                    min="1"
                                     required
                                     className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                                    placeholder="e.g. 2.5"
+                                    placeholder="e.g. 30"
                                     value={logForm.duration}
                                     onChange={(e) => setLogForm(prev => ({ ...prev, duration: e.target.value }))}
                                 />
@@ -261,9 +263,8 @@ const Dashboard = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Remarks <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Remarks <span className="text-gray-400 font-normal">(Optional)</span></label>
                             <textarea
-                                required
                                 className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none h-24 resize-none"
                                 placeholder="What did you work on?"
                                 value={logForm.remarks}

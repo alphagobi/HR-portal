@@ -1,0 +1,1 @@
+ALTER TABLE planned_tasks ADD COLUMN eta INT NULL DEFAULT NULL AFTER task_content;
