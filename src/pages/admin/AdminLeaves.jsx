@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import React, { useState, useEffect } from 'react';
+
 import { getLeaves, updateLeaveStatus, getLeaveMessages, sendLeaveMessage, markLeaveMessagesRead } from '../../services/leaveService';
 import { CheckCircle, XCircle, Clock, Calendar, Search, Filter, MessageSquare, Send } from 'lucide-react';
 import { getCurrentUser } from '../../services/authService';
