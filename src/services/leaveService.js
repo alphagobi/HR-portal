@@ -78,3 +78,22 @@ export const sendLeaveMessage = async (messageData) => {
         throw error;
     }
 };
+
+export const markLeaveMessagesRead = async (leaveId, userType) => {
+    try {
+        const response = await fetch('/api/leave_chat.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'mark_read',
+                leave_id: leaveId,
+                user_type: userType
+            })
+        });
+        if (!response.ok) throw new Error('Failed to mark messages as read');
+        return await response.json();
+    } catch (error) {
+        console.error(error);
+        // Don't throw, just log
+    }
+};
