@@ -179,7 +179,7 @@ const AdminLeaves = () => {
                                     <tr>
                                         <th className="p-4 font-medium text-gray-500">Employee</th>
                                         <th className="p-4 font-medium text-gray-500">Leave Type</th>
-                                        <th className="p-4 font-medium text-gray-500">Duration</th>
+                                        <th className="p-4 font-medium text-gray-500">Date</th>
                                         <th className="p-4 font-medium text-gray-500">Reason</th>
                                         <th className="p-4 font-medium text-gray-500">Status</th>
                                         <th className="p-4 font-medium text-gray-500 text-right">Actions</th>
@@ -205,24 +205,11 @@ const AdminLeaves = () => {
                                             <td className="p-4">
                                                 <div className="flex items-center gap-2 text-sm text-gray-600">
                                                     <Calendar size={14} />
-                                                    <span>{leave.start_date} to {leave.end_date}</span>
-                                                    <span className="text-gray-400">
-                                                        ({Math.ceil((new Date(leave.end_date) - new Date(leave.start_date)) / (1000 * 60 * 60 * 24)) + 1} days)
-                                                    </span>
+                                                    <span>{leave.start_date}</span>
                                                 </div>
                                             </td>
                                             <td className="p-4">
-                                                <div className="max-w-xs">
-                                                    <p className="text-sm text-gray-600 truncate" title={leave.reason}>
-                                                        {leave.reason}
-                                                    </p>
-                                                    {leave.admin_note && (
-                                                        <p className="text-xs text-red-500 mt-1">Note: {leave.admin_note}</p>
-                                                    )}
-                                                    {leave.employee_note && (
-                                                        <p className="text-xs text-orange-500 mt-1">Challenge: {leave.employee_note}</p>
-                                                    )}
-                                                </div>
+                                                <p className="text-sm text-gray-900 max-w-xs">{leave.reason}</p>
                                             </td>
                                             <td className="p-4">
                                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(leave.status)}`}>

@@ -188,24 +188,14 @@ const Leaves = () => {
                                 </select>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
                                     <input
                                         type="date"
                                         className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                                         value={newRequest.startDate}
-                                        onChange={(e) => setNewRequest({ ...newRequest, startDate: e.target.value })}
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-                                    <input
-                                        type="date"
-                                        className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                                        value={newRequest.endDate}
-                                        onChange={(e) => setNewRequest({ ...newRequest, endDate: e.target.value })}
+                                        onChange={(e) => setNewRequest({ ...newRequest, startDate: e.target.value, endDate: e.target.value })}
                                         required
                                     />
                                 </div>
@@ -269,16 +259,11 @@ const Leaves = () => {
                                             </div>
                                             <div>
                                                 <h3 className="font-semibold text-gray-900">{leave.type}</h3>
-                                                <p className="text-sm text-gray-500">{leave.start_date || leave.startDate} to {leave.end_date || leave.endDate} • {leave.days || (Math.ceil((new Date(leave.end_date || leave.endDate) - new Date(leave.start_date || leave.startDate)) / (1000 * 60 * 60 * 24)) + 1)} days</p>
+                                                <p className="text-sm text-gray-500">{leave.start_date || leave.startDate} • 1 day</p>
                                                 <p className="text-sm text-gray-600 mt-1">{leave.reason}</p>
                                                 {leave.admin_note && (
                                                     <div className="mt-2 p-2 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100">
                                                         <strong>Rejection Reason:</strong> {leave.admin_note}
-                                                    </div>
-                                                )}
-                                                {leave.employee_note && (
-                                                    <div className="mt-2 p-2 bg-orange-50 text-orange-700 text-sm rounded-lg border border-orange-100">
-                                                        <strong>Your Challenge:</strong> {leave.employee_note}
                                                     </div>
                                                 )}
                                             </div>

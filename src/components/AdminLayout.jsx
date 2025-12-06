@@ -15,6 +15,7 @@ import {
     Users
 } from 'lucide-react';
 import { logout, getCurrentUser } from '../services/authService';
+import { getLeaves } from '../services/leaveService';
 import clsx from 'clsx';
 
 const AdminLayout = () => {
@@ -22,15 +23,31 @@ const AdminLayout = () => {
     const navigate = useNavigate();
     const user = getCurrentUser();
 
+    const [unreadLeaves, setUnreadLeaves] = useState(0);
+
     React.useEffect(() => {
         document.title = 'Admin Portal - AlphaGobi';
+
+        const fetchUnread = async () => {
+            if (user?.id) {
+                try {
+                    const leavesData = await getLeaves(); // Fetch all leaves for admin
+                    // Admin view: count unread messages from employees
+                    const unreadL = leavesData.reduce((acc, l) => acc + (parseInt(l.unread_count) || 0), 0);
+                    setUnreadLeaves(unreadL);
+                } catch (e) {
+                    console.error("Failed to fetch leaves for badge", e);
+                }
+            }
+        };
+        fetchUnread();
     }, []);
 
     const navItems = [
         { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
         { path: '/admin/users', icon: Users, label: 'Users' },
         { path: '/admin/timesheets', icon: Clock, label: 'Timesheets' },
-        { path: '/admin/leaves', icon: CheckSquare, label: 'Leave Approvals' },
+        { path: '/admin/leaves', icon: CheckSquare, label: 'Leave Approvals', badge: unreadLeaves },
         { path: '/admin/reimbursements', icon: DollarSign, label: 'Reimbursements' },
         { path: '/admin/announcements', icon: Megaphone, label: 'Announcements' },
         { path: '/admin/policies', icon: FileText, label: 'Policies' },
@@ -83,6 +100,11 @@ const AdminLayout = () => {
                         >
                             <item.icon size={20} />
                             <span className="font-medium">{item.label}</span>
+                            {item.badge > 0 && (
+                                <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                    {item.badge}
+                                </span>
+                            )}
                         </NavLink>
                     ))}
                 </nav>
