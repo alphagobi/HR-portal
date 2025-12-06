@@ -9,7 +9,9 @@ import Policies from './pages/Policies';
 import Tasks from './pages/Tasks';
 import Timesheet from './pages/Timesheet';
 import Leaves from './pages/Leaves';
+import Leaves from './pages/Leaves';
 import Reimbursements from './pages/Reimbursements';
+import Announcements from './pages/Announcements';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminLeaves from './pages/admin/AdminLeaves';
 import AdminTimesheets from './pages/admin/AdminTimesheets';
@@ -35,7 +37,10 @@ function App() {
           <Route path="tasks" element={<Tasks />} />
           <Route path="timesheet" element={<Timesheet />} />
           <Route path="leaves" element={<Leaves />} />
+          <Route path="timesheet" element={<Timesheet />} />
+          <Route path="leaves" element={<Leaves />} />
           <Route path="reimbursements" element={<Reimbursements />} />
+          <Route path="announcements" element={<Announcements />} />
         </Route>
 
         {/* Admin Routes - Protected & Admin Only */}

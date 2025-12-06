@@ -1,7 +1,11 @@
 const API_URL = '/api/tasks.php';
 
 export const getTasks = async (userId, date) => {
-    const response = await fetch(`${API_URL}?user_id=${userId}&date=${date}`);
+    let url = `${API_URL}?user_id=${userId}`;
+    if (date) {
+        url += `&date=${date}`;
+    }
+    const response = await fetch(url);
     if (!response.ok) throw new Error('Failed to fetch tasks');
     return await response.json();
 };

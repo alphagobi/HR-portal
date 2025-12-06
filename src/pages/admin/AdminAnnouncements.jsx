@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getAnnouncements, createAnnouncement, deleteAnnouncement } from '../../services/announcementService';
-import { Megaphone, Plus, Trash2, Calendar, User } from 'lucide-react';
+import { getAnnouncements, createAnnouncement, deleteAnnouncement, getAcknowledgementStats } from '../../services/announcementService';
+import { Megaphone, Plus, Trash2, Calendar, User, Eye, CheckCircle, X } from 'lucide-react';
 
 const AdminAnnouncements = () => {
     const [announcements, setAnnouncements] = useState([]);
@@ -10,6 +10,11 @@ const AdminAnnouncements = () => {
         title: '',
         content: ''
     });
+
+    // Acknowledgement Modal State
+    const [showAckModal, setShowAckModal] = useState(false);
+    const [ackStats, setAckStats] = useState([]);
+    const [selectedAnnouncementTitle, setSelectedAnnouncementTitle] = useState('');
 
     useEffect(() => {
         fetchAnnouncements();
@@ -38,6 +43,13 @@ const AdminAnnouncements = () => {
             await fetchAnnouncements();
             setLoading(false);
         }
+    };
+
+    const handleViewAcknowledgements = async (announcement) => {
+        setSelectedAnnouncementTitle(announcement.title);
+        const stats = await getAcknowledgementStats(announcement.id);
+        setAckStats(stats);
+        setShowAckModal(true);
     };
 
     return (
@@ -100,28 +112,35 @@ const AdminAnnouncements = () => {
                 {announcements.map((announcement) => (
                     <div key={announcement.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
                         <div className="flex justify-between items-start">
-                            <div className="flex items-start gap-4">
+                            <div className="flex items-start gap-4 flex-1">
                                 <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
                                     <Megaphone size={24} />
                                 </div>
-                                <div>
+                                <div className="flex-1">
                                     <h3 className="text-lg font-semibold text-gray-900 mb-1">{announcement.title}</h3>
                                     <p className="text-gray-600 mb-3">{announcement.content}</p>
-                                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                                    <div className="flex items-center gap-6 text-sm text-gray-500">
                                         <div className="flex items-center gap-1">
                                             <Calendar size={14} />
-                                            <span>{announcement.date}</span>
+                                            <span>{new Date(announcement.created_at).toLocaleDateString()}</span>
                                         </div>
                                         <div className="flex items-center gap-1">
                                             <User size={14} />
-                                            <span>{announcement.author}</span>
+                                            <span>{announcement.author_name || 'Admin'}</span>
                                         </div>
+                                        <button
+                                            onClick={() => handleViewAcknowledgements(announcement)}
+                                            className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+                                        >
+                                            <CheckCircle size={14} />
+                                            <span>{announcement.ack_count || 0} Acknowledged</span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
                             <button
                                 onClick={() => handleDelete(announcement.id)}
-                                className="text-gray-400 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition-colors"
+                                className="text-gray-400 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition-colors ml-4"
                                 title="Delete Announcement"
                             >
                                 <Trash2 size={20} />
@@ -137,6 +156,43 @@ const AdminAnnouncements = () => {
                     </div>
                 )}
             </div>
+
+            {/* Acknowledgement Modal */}
+            {showAckModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 max-h-[80vh] flex flex-col">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold text-gray-900">Acknowledgements</h3>
+                            <button onClick={() => setShowAckModal(false)} className="text-gray-400 hover:text-gray-600">
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <p className="text-sm text-gray-500 mb-4">Users who acknowledged: <strong>{selectedAnnouncementTitle}</strong></p>
+
+                        <div className="flex-1 overflow-y-auto space-y-2">
+                            {ackStats.length > 0 ? (
+                                ackStats.map((stat) => (
+                                    <div key={stat.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-xs">
+                                                {stat.name.charAt(0)}
+                                            </div>
+                                            <span className="font-medium text-gray-900">{stat.name}</span>
+                                        </div>
+                                        <span className="text-xs text-gray-500">
+                                            {new Date(stat.acknowledged_at).toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-8 text-gray-500">
+                                    No acknowledgements yet.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

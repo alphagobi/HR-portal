@@ -172,7 +172,7 @@ const Tasks = () => {
                         <div className="text-center py-12 text-gray-400">Loading tasks...</div>
                     ) : sortedDates.length === 0 ? (
                         <div className="text-center py-12 bg-white rounded-xl border border-gray-100 border-dashed">
-                            <p className="text-gray-500 font-medium">No upcoming tasks.</p>
+                            <p className="text-gray-500 font-medium">No tasks found.</p>
                             <p className="text-sm text-gray-400 mt-1">Use the form to add one!</p>
                         </div>
                     ) : (

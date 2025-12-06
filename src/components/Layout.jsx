@@ -1,20 +1,34 @@
 import React from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { LayoutDashboard, FileText, Clock, Calendar, DollarSign, Menu, X, LogOut, CheckSquare } from 'lucide-react';
-import { useState } from 'react';
+import { getAnnouncements } from '../services/announcementService';
+import { getCurrentUser } from '../services/authService';
+import { LayoutDashboard, FileText, Clock, Calendar, DollarSign, Menu, X, LogOut, CheckSquare, Megaphone } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { logout } from '../services/authService';
 import clsx from 'clsx';
 
 const Layout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [unreadAnnouncements, setUnreadAnnouncements] = useState(0);
     const location = useLocation();
+    const user = getCurrentUser();
 
-    React.useEffect(() => {
+    useEffect(() => {
         document.title = 'Internal Portal - AlphaGobi';
-    }, []);
+
+        const fetchUnread = async () => {
+            if (user?.id) {
+                const data = await getAnnouncements(user.id);
+                const unread = data.filter(a => !a.is_acknowledged).length;
+                setUnreadAnnouncements(unread);
+            }
+        };
+        fetchUnread();
+    }, [location.pathname]); // Refresh on navigation
 
     const navItems = [
         { name: 'Dashboard', path: '/', icon: LayoutDashboard },
+        { name: 'Announcements', path: '/announcements', icon: Megaphone, badge: unreadAnnouncements },
         { name: 'Policies', path: '/policies', icon: FileText },
         { name: 'Tasks', path: '/tasks', icon: CheckSquare },
         { name: 'Timesheet', path: '/timesheet', icon: Clock },
@@ -70,7 +84,12 @@ const Layout = () => {
                                 )}
                             >
                                 <Icon size={20} />
-                                {item.name}
+                                <span className="flex-1">{item.name}</span>
+                                {item.badge > 0 && (
+                                    <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                        {item.badge}
+                                    </span>
+                                )}
                             </Link>
                         );
                     })}

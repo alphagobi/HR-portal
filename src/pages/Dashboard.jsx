@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getAnnouncements } from '../services/announcementService';
+import { getLeaves } from '../services/leaveService';
 import { getCurrentUser } from '../services/authService';
 import { Bell, Calendar, CheckCircle, Clock } from 'lucide-react';
 
@@ -17,6 +18,7 @@ const StatCard = ({ title, value, icon: Icon, color }) => (
 
 const Dashboard = () => {
     const [announcements, setAnnouncements] = useState([]);
+    const [leaveBalance, setLeaveBalance] = useState('Loading...');
     const [loading, setLoading] = useState(true);
     const user = getCurrentUser();
 
@@ -25,6 +27,17 @@ const Dashboard = () => {
             try {
                 const data = await getAnnouncements();
                 setAnnouncements(data);
+
+                if (user?.id) {
+                    const leaveData = await getLeaves(user.id);
+                    if (leaveData.limits && leaveData.usage) {
+                        const totalLimit = (leaveData.limits['Informed Leave'] || 0) + (leaveData.limits['Emergency Leave'] || 0);
+                        const totalUsage = (leaveData.usage['Informed Leave'] || 0) + (leaveData.usage['Emergency Leave'] || 0);
+                        setLeaveBalance(`${totalLimit - totalUsage} Days`);
+                    } else {
+                        setLeaveBalance('12 Days'); // Fallback
+                    }
+                }
             } catch (error) {
                 console.error("Failed to fetch announcements", error);
             } finally {
@@ -42,56 +55,36 @@ const Dashboard = () => {
                 <p className="text-gray-500">Here's what's happening today.</p>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard
-                    title="Leave Balance"
-                    value="12 Days"
-                    icon={Calendar}
-                    color="bg-blue-500"
-                />
-                <StatCard
-                    title="Pending Tasks"
-                    value="5"
-                    icon={Clock}
-                    color="bg-amber-500"
-                />
-                <StatCard
-                    title="Approved Claims"
-                    value="$1,250"
-                    icon={CheckCircle}
-                    color="bg-emerald-500"
-                />
-                <StatCard
-                    title="New Notices"
-                    value="3"
-                    icon={Bell}
-                    color="bg-indigo-500"
-                />
-            </div>
-
-            {/* Announcements Section */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                    <h2 className="text-lg font-bold text-gray-900">Announcements</h2>
-                    <button className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">View All</button>
+            {/* Core Values Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-xl text-white shadow-lg transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="p-3 bg-white/20 rounded-lg backdrop-blur-sm">
+                            <CheckCircle size={24} className="text-white" />
+                        </div>
+                        <h3 className="text-xl font-bold">Integrity</h3>
+                    </div>
+                    <p className="text-indigo-100">Doing the right thing, even when no one is watching. Upholding the highest standards of honesty.</p>
                 </div>
 
-                <div className="divide-y divide-gray-100">
-                    {loading ? (
-                        <div className="p-6 text-center text-gray-500">Loading announcements...</div>
-                    ) : (
-                        (announcements || []).map((item) => (
-                            <div key={item.id} className="p-6 hover:bg-gray-50 transition-colors">
-                                <div className="flex justify-between items-start mb-2">
-                                    <h3 className="font-semibold text-gray-900">{item.title}</h3>
-                                    <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">{item.date}</span>
-                                </div>
-                                <p className="text-gray-600 text-sm mb-3">{item.content}</p>
-                                <div className="text-xs text-gray-400 font-medium">Posted by {item.author}</div>
-                            </div>
-                        ))
-                    )}
+                <div className="bg-gradient-to-br from-blue-500 to-cyan-600 p-6 rounded-xl text-white shadow-lg transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="p-3 bg-white/20 rounded-lg backdrop-blur-sm">
+                            <Clock size={24} className="text-white" />
+                        </div>
+                        <h3 className="text-xl font-bold">Effort</h3>
+                    </div>
+                    <p className="text-blue-100">Going above and beyond. Consistently delivering your best work and striving for excellence.</p>
+                </div>
+
+                <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 rounded-xl text-white shadow-lg transform hover:scale-105 transition-transform duration-200">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="p-3 bg-white/20 rounded-lg backdrop-blur-sm">
+                            <Bell size={24} className="text-white" />
+                        </div>
+                        <h3 className="text-xl font-bold">Intelligence</h3>
+                    </div>
+                    <p className="text-emerald-100">Solving problems smartly. Continuous learning and applying knowledge to create value.</p>
                 </div>
             </div>
         </div>

@@ -12,7 +12,8 @@ const Leaves = () => {
     useEffect(() => {
         const fetchLeaves = async () => {
             try {
-                const data = await getLeaves();
+                const user = JSON.parse(localStorage.getItem('hr_current_user'));
+                const data = await getLeaves(user?.id);
                 // Handle both old (array) and new (object) API responses for backward compatibility
                 if (Array.isArray(data)) {
                     setLeaves(data);
