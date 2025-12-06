@@ -28,7 +28,7 @@ if ($method === 'GET') {
     // 2. Get Entries for each timesheet
     // Optimization: Get all entries for these timesheets in one query if possible, but loop is simpler for now
     foreach ($timesheets as &$sheet) {
-        $stmtEntries = $pdo->prepare("SELECT id, timesheet_id, start_time as startTime, end_time as endTime, description, project, duration, is_edited, is_deleted FROM timesheet_entries WHERE timesheet_id = ?");
+        $stmtEntries = $pdo->prepare("SELECT id, timesheet_id, start_time as startTime, end_time as endTime, duration, description, project, task_id, type, is_edited, is_deleted FROM timesheet_entries WHERE timesheet_id = ?");
         $stmtEntries->execute([$sheet['id']]);
         $sheet['entries'] = $stmtEntries->fetchAll();
     }
@@ -80,7 +80,7 @@ elseif ($method === 'POST') {
         // Handle Entries: Smart Update to preserve history
         if (isset($data['entries']) && is_array($data['entries'])) {
             // 1. Get existing entries to know what to update/delete
-            $stmtExisting = $pdo->prepare("SELECT id, start_time, end_time, description FROM timesheet_entries WHERE timesheet_id = ?");
+            $stmtExisting = $pdo->prepare("SELECT id, start_time, end_time, description, duration, task_id, type FROM timesheet_entries WHERE timesheet_id = ?");
             $stmtExisting->execute([$timesheet_id]);
             $existingEntries = [];
             while ($row = $stmtExisting->fetch()) {
@@ -89,16 +89,40 @@ elseif ($method === 'POST') {
 
             $processedIds = [];
 
-            $insertEntry = $pdo->prepare("INSERT INTO timesheet_entries (timesheet_id, start_time, end_time, description, project) VALUES (?, ?, ?, ?, ?)");
-            $updateEntry = $pdo->prepare("UPDATE timesheet_entries SET start_time = ?, end_time = ?, description = ?, project = ?, is_edited = ? WHERE id = ?");
+            $insertEntry = $pdo->prepare("INSERT INTO timesheet_entries (timesheet_id, start_time, end_time, duration, description, project, task_id, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $updateEntry = $pdo->prepare("UPDATE timesheet_entries SET start_time = ?, end_time = ?, duration = ?, description = ?, project = ?, is_edited = ? WHERE id = ?");
+            // History table might need update if we want to track duration changes, but for now let's keep it simple or update it too if schema allows.
+            // Assuming history table only tracks start/end/desc for now. We can skip history for duration or add it later if requested.
+            // For now, we'll just track description changes in history if duration changes? 
+            // Let's stick to the existing history logic for start/end/desc.
             $insertHistory = $pdo->prepare("INSERT INTO timesheet_entry_history (entry_id, old_start_time, old_end_time, old_description) VALUES (?, ?, ?, ?)");
 
             foreach ($data['entries'] as $entry) {
                 $entryId = $entry['id'] ?? null;
-                $startTime = $entry['startTime'] ?? '';
-                $endTime = $entry['endTime'] ?? '';
+                $startTime = $entry['startTime'] ?? null;
+                $endTime = $entry['endTime'] ?? null;
+                $duration = $entry['duration'] ?? 0;
                 $description = $entry['description'] ?? '';
                 $project = $entry['project'] ?? 'General';
+                $taskId = $entry['taskId'] ?? null;
+                
+                // Determine Type (Planned vs Unplanned)
+                $type = 'unplanned';
+                if ($taskId) {
+                    // Check task creation time
+                    $stmtTask = $pdo->prepare("SELECT created_at FROM planned_tasks WHERE id = ?");
+                    $stmtTask->execute([$taskId]);
+                    $task = $stmtTask->fetch();
+                    if ($task) {
+                        $createdAt = new DateTime($task['created_at']);
+                        $now = new DateTime();
+                        $diff = $now->diff($createdAt);
+                        $hours = $diff->h + ($diff->days * 24);
+                        if ($hours >= 8) {
+                            $type = 'planned';
+                        }
+                    }
+                }
 
                 if ($entryId && isset($existingEntries[$entryId])) {
                     // Update existing
@@ -106,7 +130,7 @@ elseif ($method === 'POST') {
                     $processedIds[] = $entryId;
 
                     // Check if changed
-                    if ($old['start_time'] != $startTime || $old['end_time'] != $endTime || $old['description'] != $description) {
+                    if ($old['start_time'] != $startTime || $old['end_time'] != $endTime || $old['description'] != $description || $old['duration'] != $duration) {
                         // Save history
                         $insertHistory->execute([
                             $entryId,
@@ -116,13 +140,9 @@ elseif ($method === 'POST') {
                         ]);
                         
                         // Update with is_edited = true
-                        $updateEntry->execute([$startTime, $endTime, $description, $project, 1, $entryId]);
+                        $updateEntry->execute([$startTime, $endTime, $duration, $description, $project, 1, $entryId]);
                     } else {
-                        // No change, just ensure project is updated if needed (optional, but good practice)
-                        // For now, we update anyway to be safe, but keep is_edited as is (or set to what it was? No, only set true on change)
-                        // Actually, if no change in core fields, we don't need to touch is_edited.
-                        // Let's just update the fields.
-                         $pdo->prepare("UPDATE timesheet_entries SET start_time = ?, end_time = ?, description = ?, project = ? WHERE id = ?")->execute([$startTime, $endTime, $description, $project, $entryId]);
+                         $pdo->prepare("UPDATE timesheet_entries SET start_time = ?, end_time = ?, duration = ?, description = ?, project = ? WHERE id = ?")->execute([$startTime, $endTime, $duration, $description, $project, $entryId]);
                     }
 
                 } else {
@@ -131,8 +151,11 @@ elseif ($method === 'POST') {
                         $timesheet_id,
                         $startTime,
                         $endTime,
+                        $duration,
                         $description,
-                        $project
+                        $project,
+                        $taskId,
+                        $type
                     ]);
                 }
             }

@@ -200,12 +200,6 @@ const Tasks = () => {
                                                         <p className={clsx("text-gray-900 font-medium", task.is_completed == 1 && "line-through text-gray-400")}>
                                                             {task.task_content}
                                                         </p>
-                                                        <button
-                                                            onClick={() => handleDeleteTask(task.id)}
-                                                            className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                        >
-                                                            <Trash2 size={18} />
-                                                        </button>
                                                     </div>
 
                                                     {(task.start_time || task.end_time) && (
