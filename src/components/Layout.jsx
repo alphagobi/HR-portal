@@ -49,12 +49,12 @@ const Layout = () => {
 
     const navItems = [
         { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-        { name: 'Announcements', path: '/announcements', icon: Megaphone, badge: unreadAnnouncements },
-        { name: 'Policies', path: '/policies', icon: FileText },
         { name: 'Tasks', path: '/tasks', icon: CheckSquare },
         { name: 'Timesheet', path: '/timesheet', icon: Clock },
         { name: 'Leaves', path: '/leaves', icon: Calendar, badge: unreadLeaves },
         { name: 'Reimbursements', path: '/reimbursements', icon: DollarSign },
+        { name: 'Announcements', path: '/announcements', icon: Megaphone, badge: unreadAnnouncements },
+        { name: 'Policies', path: '/policies', icon: FileText },
     ];
 
     const handleLogout = () => {
