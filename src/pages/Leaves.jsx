@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { getLeaves, submitLeaveRequest, getLeaveMessages, sendLeaveMessage } from '../services/leaveService';
 import { Calendar, CheckCircle, XCircle, Clock, Plus, Send, MessageSquare } from 'lucide-react';
 
