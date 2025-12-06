@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { getAnnouncements } from '../services/announcementService';
 import { getLeaves } from '../services/leaveService';
 import { getTasks, updateTask, createTask } from '../services/taskService';
@@ -19,6 +20,7 @@ const StatCard = ({ title, value, icon: Icon, color }) => (
 );
 
 const Dashboard = () => {
+    const location = useLocation();
     const [announcements, setAnnouncements] = useState([]);
     const [leaveBalance, setLeaveBalance] = useState('Loading...');
     const [loading, setLoading] = useState(true);
@@ -40,6 +42,22 @@ const Dashboard = () => {
 
     const user = getCurrentUser();
     const today = new Date().toISOString().split('T')[0];
+
+    useEffect(() => {
+        if (location.state?.taskToLog) {
+            const task = location.state.taskToLog;
+            setLogForm(prev => ({
+                ...prev,
+                taskId: task.id,
+                remarks: task.task_content // Pre-fill remarks with task content
+            }));
+            // Optionally scroll to the log form
+            const logFormElement = document.getElementById('log-work-form');
+            if (logFormElement) {
+                logFormElement.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    }, [location.state]);
 
     const fetchDashboardData = async () => {
         if (!user?.id) return;

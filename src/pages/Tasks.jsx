@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getTasks, createTask, updateTask, deleteTask } from '../services/taskService';
 import { getCurrentUser } from '../services/authService';
-import { Plus, Trash2, CheckCircle, Circle, Calendar, Clock, Search, X } from 'lucide-react';
+import { Plus, Trash2, Calendar, Clock, Search, X, Play } from 'lucide-react';
 import clsx from 'clsx';
 
 const Tasks = () => {
+    const navigate = useNavigate();
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
@@ -59,15 +61,6 @@ const Tasks = () => {
         }
     };
 
-    const handleToggleComplete = async (task) => {
-        try {
-            await updateTask(task.id, { is_completed: !task.is_completed });
-            fetchTasks();
-        } catch (error) {
-            console.error("Failed to update task", error);
-        }
-    };
-
     const handleDeleteTask = async (id) => {
         if (window.confirm('Are you sure you want to delete this task?')) {
             try {
@@ -77,6 +70,10 @@ const Tasks = () => {
                 console.error("Failed to delete task", error);
             }
         }
+    };
+
+    const handleLogTask = (task) => {
+        navigate('/dashboard', { state: { taskToLog: task } });
     };
 
     const addEta = (minutes) => {
@@ -262,13 +259,15 @@ const Tasks = () => {
                                     <div key={task.id} className="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between group">
                                         <div className="flex items-center gap-4 flex-1">
                                             <button
-                                                onClick={() => handleToggleComplete(task)}
+                                                onClick={() => handleLogTask(task)}
                                                 className={clsx(
-                                                    "flex-shrink-0 transition-colors",
-                                                    task.is_completed ? "text-green-500" : "text-gray-300 hover:text-indigo-500"
+                                                    "flex-shrink-0 transition-colors p-2 rounded-full hover:bg-indigo-50 text-indigo-600",
+                                                    task.is_completed && "opacity-50 cursor-not-allowed"
                                                 )}
+                                                title="Log Work"
+                                                disabled={task.is_completed}
                                             >
-                                                {task.is_completed ? <CheckCircle size={24} /> : <Circle size={24} />}
+                                                <Play size={20} fill="currentColor" />
                                             </button>
                                             <div className="flex-1">
                                                 <p className={clsx(
