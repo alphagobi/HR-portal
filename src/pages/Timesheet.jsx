@@ -1,4 +1,3 @@
-```javascript
 import React, { useState, useEffect } from 'react';
 import { getTimesheets } from '../services/timesheetService';
 import { getCurrentUser } from '../services/authService';
@@ -41,10 +40,10 @@ const Timesheet = () => {
             const diff = date.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
             const monday = new Date(date.setDate(diff));
             const sunday = new Date(date.setDate(monday.getDate() + 6));
-            
+
             const startStr = monday.toISOString().split('T')[0];
             const endStr = sunday.toISOString().split('T')[0];
-            
+
             return timesheets.filter(t => t.date >= startStr && t.date <= endStr);
         }
         return [];
@@ -74,26 +73,26 @@ const Timesheet = () => {
                 </div>
                 <div className="flex items-center gap-4 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
                     <div className="flex gap-1 bg-gray-100 p-1 rounded-md">
-                        <button 
+                        <button
                             onClick={() => setViewMode('daily')}
-                            className={`px - 3 py - 1 text - sm font - medium rounded - md transition - colors ${ viewMode === 'daily' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700' } `}
+                            className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${viewMode === 'daily' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                         >
                             Daily
                         </button>
-                        <button 
+                        <button
                             onClick={() => setViewMode('weekly')}
-                            className={`px - 3 py - 1 text - sm font - medium rounded - md transition - colors ${ viewMode === 'weekly' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700' } `}
+                            className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${viewMode === 'weekly' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                         >
                             Weekly
                         </button>
-                        <button 
+                        <button
                             onClick={() => setViewMode('monthly')}
-                            className={`px - 3 py - 1 text - sm font - medium rounded - md transition - colors ${ viewMode === 'monthly' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700' } `}
+                            className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${viewMode === 'monthly' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
                         >
                             Monthly
                         </button>
                     </div>
-                    
+
                     <div className="h-6 w-px bg-gray-200 mx-2"></div>
 
                     {viewMode === 'monthly' ? (
@@ -154,11 +153,11 @@ const Timesheet = () => {
                                     {sheet.entries.filter(e => e.is_deleted != 1).map(entry => (
                                         <div key={entry.id} className="flex items-center justify-between text-sm">
                                             <div className="flex items-center gap-3">
-                                                <div className={`w - 2 h - 2 rounded - full ${ entry.type === 'planned' ? 'bg-green-500' : 'bg-orange-500' } `} title={entry.type === 'planned' ? 'Planned' : 'Unplanned'}></div>
+                                                <div className={`w-2 h-2 rounded-full ${entry.type === 'planned' ? 'bg-green-500' : 'bg-orange-500'}`} title={entry.type === 'planned' ? 'Planned' : 'Unplanned'}></div>
                                                 <span className="text-gray-700">{entry.description}</span>
                                             </div>
                                             <div className="flex items-center gap-3">
-                                                <span className={`text - xs px - 2 py - 0.5 rounded - full ${ entry.type === 'planned' ? 'bg-green-50 text-green-700' : 'bg-orange-50 text-orange-700' } `}>
+                                                <span className={`text-xs px-2 py-0.5 rounded-full ${entry.type === 'planned' ? 'bg-green-50 text-green-700' : 'bg-orange-50 text-orange-700'}`}>
                                                     {entry.type === 'planned' ? 'Planned' : 'Unplanned'}
                                                 </span>
                                                 <span className="font-medium text-gray-900">{entry.duration} hrs</span>
