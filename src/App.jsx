@@ -9,6 +9,7 @@ import Policies from './pages/Policies';
 import Tasks from './pages/Tasks';
 import Timesheet from './pages/Timesheet';
 import Leaves from './pages/Leaves';
+import Calendar from './pages/Calendar';
 import Reimbursements from './pages/Reimbursements';
 import Announcements from './pages/Announcements';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -37,6 +38,7 @@ function App() {
           <Route path="tasks" element={<Tasks />} />
           <Route path="timesheet" element={<Timesheet />} />
           <Route path="leaves" element={<Leaves />} />
+          <Route path="calendar" element={<Calendar />} />
           <Route path="reimbursements" element={<Reimbursements />} />
           <Route path="announcements" element={<Announcements />} />
         </Route>

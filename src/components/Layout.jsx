@@ -52,6 +52,7 @@ const Layout = () => {
         { name: 'Tasks', path: '/tasks', icon: CheckSquare },
         { name: 'Timesheet', path: '/timesheet', icon: Clock },
         { name: 'Leaves', path: '/leaves', icon: Calendar, badge: unreadLeaves },
+        { name: 'Calendar', path: '/calendar', icon: Calendar },
         { name: 'Reimbursements', path: '/reimbursements', icon: DollarSign },
         { name: 'Announcements', path: '/announcements', icon: Megaphone, badge: unreadAnnouncements },
         { name: 'Policies', path: '/policies', icon: FileText },
