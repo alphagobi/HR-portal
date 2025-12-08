@@ -201,7 +201,7 @@ const Leaves = () => {
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Apply for Leave</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Leave Type</label>
                             <select
@@ -226,14 +226,6 @@ const Leaves = () => {
                             />
                             <p className="text-xs text-gray-400 mt-1">Leaves are applied for single days.</p>
                         </div>
-                        <div className="flex items-end">
-                            <button
-                                type="submit"
-                                className="w-full bg-indigo-600 text-white px-6 py-2.5 rounded-lg hover:bg-indigo-700 font-medium transition-colors flex items-center justify-center gap-2"
-                            >
-                                <Send size={18} /> Submit Request
-                            </button>
-                        </div>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
@@ -244,6 +236,14 @@ const Leaves = () => {
                             value={newRequest.reason}
                             onChange={(e) => setNewRequest({ ...newRequest, reason: e.target.value })}
                         />
+                    </div>
+                    <div className="flex justify-end">
+                        <button
+                            type="submit"
+                            className="bg-indigo-600 text-white px-6 py-2.5 rounded-lg hover:bg-indigo-700 font-medium transition-colors flex items-center gap-2"
+                        >
+                            <Send size={18} /> Submit Request
+                        </button>
                     </div>
                 </form>
             </div>
