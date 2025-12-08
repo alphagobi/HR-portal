@@ -285,18 +285,16 @@ const Leaves = () => {
 
                                     {/* Action Buttons */}
                                     <div className="flex items-center gap-2">
-                                        {leave.status === 'Rejected' && !leave.employee_note && (
-                                            <button
-                                                onClick={() => handleChallenge(leave.id)}
-                                                className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors relative"
-                                            >
-                                                <MessageSquare size={14} />
-                                                Chat with Admin
-                                                {leave.unread_count > 0 && (
-                                                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
-                                                )}
-                                            </button>
-                                        )}
+                                        <button
+                                            onClick={() => handleChallenge(leave.id)}
+                                            className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors relative"
+                                        >
+                                            <MessageSquare size={14} />
+                                            {leave.status === 'Rejected' ? 'Discuss Rejection' : 'Chat with Admin'}
+                                            {leave.unread_count > 0 && (
+                                                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                                            )}
+                                        </button>
                                     </div>
                                 </div>
                             </div>
