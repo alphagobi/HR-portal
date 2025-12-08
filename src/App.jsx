@@ -18,6 +18,7 @@ import AdminAnnouncements from './pages/admin/AdminAnnouncements';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminReimbursements from './pages/admin/AdminReimbursements';
 import AdminPolicies from './pages/admin/AdminPolicies';
+import AdminCalendar from './pages/admin/AdminCalendar';
 
 function App() {
   return (
@@ -52,6 +53,7 @@ function App() {
           <Route path="leaves" element={<AdminLeaves />} />
           <Route path="reimbursements" element={<AdminReimbursements />} />
           <Route path="announcements" element={<AdminAnnouncements />} />
+          <Route path="calendar" element={<AdminCalendar />} />
           <Route path="policies" element={<AdminPolicies />} />
         </Route>
       </Routes>
