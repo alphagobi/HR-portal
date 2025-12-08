@@ -367,105 +367,119 @@ const Leaves = () => {
                             {leaves.length === 0 ? (
                                 <p className="text-center text-gray-500 py-4">No leave history found.</p>
                             ) : (
-                                                )}
-                        </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                        <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(leave.status)}`}>
-                            {getStatusIcon(leave.status)}
-                            {leave.status}
-                        </div>
-                        {leave.status === 'Rejected' && !leave.employee_note && (
-                            <button
-                                onClick={() => handleChallenge(leave.id)}
-                                className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium underline relative"
-                            >
-                                <MessageSquare size={12} />
-                                Chat with Admin
-                                {leave.unread_count > 0 && (
-                                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                                )}
-                            </button>
-                        )}
-                    </div>
-                </div>
-                ))
+                                leaves.slice(0, 5).map((leave) => (
+                                    <div key={leave.id} className="border-b border-gray-50 last:border-0 pb-4 last:pb-0">
+                                        <div className="flex justify-between items-start mb-1">
+                                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusColor(leave.status)} flex items-center gap-1`}>
+                                                {getStatusIcon(leave.status)} {leave.status}
+                                            </span>
+                                            <span className="text-xs text-gray-400">{new Date(leave.created_at || Date.now()).toLocaleDateString()}</span>
+                                        </div>
+                                        <p className="font-medium text-gray-900 text-sm">{leave.type}</p>
+                                        <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+                                            <Calendar size={12} />
+                                            <span>
+                                                {new Date(leave.start_date).toLocaleDateString()}
+                                                {leave.end_date && leave.end_date !== leave.start_date ? ` - ${new Date(leave.end_date).toLocaleDateString()}` : ''}
+                                            </span>
+                                        </div>
+                                        {leave.admin_remarks && (
+                                            <div className="mt-2 text-xs bg-gray-50 p-2 rounded text-gray-600">
+                                                <span className="font-semibold">Admin:</span> {leave.admin_remarks}
+                                            </div>
+                                        )}
+
+                                        {/* Chat Button */}
+                                        <div className="flex justify-end mt-2">
+                                            {leave.status === 'Rejected' && !leave.employee_note && (
+                                                <button
+                                                    onClick={() => handleChallenge(leave.id)}
+                                                    className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium underline relative"
+                                                >
+                                                    <MessageSquare size={12} />
+                                                    Chat with Admin
+                                                    {leave.unread_count > 0 && (
+                                                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                                                    )}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))
                             )}
-            </div>
-        </div>
-                </div >
-            </div >
-
-    {/* Chat Modal */ }
-{
-    showChallengeModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 h-[500px] flex flex-col">
-                <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-4">
-                    <div>
-                        <h3 className="text-lg font-bold text-gray-900">Leave Discussion</h3>
-                        <p className="text-xs text-gray-500">Chat with Admin about this request</p>
+                        </div>
                     </div>
-                    <button
-                        onClick={() => { setShowChallengeModal(false); setChallengeNote(''); }}
-                        className="text-gray-400 hover:text-gray-600"
-                    >
-                        <XCircle size={24} />
-                    </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto space-y-4 mb-4 p-2">
-                    {/* Initial Rejection Note if exists */}
-                    {leaves.find(l => l.id === selectedLeaveId)?.admin_note && (
-                        <div className="flex justify-start">
-                            <div className="bg-red-50 text-red-800 p-3 rounded-lg rounded-tl-none max-w-[80%] text-sm">
-                                <p className="font-bold text-xs mb-1">Admin (Rejection Reason)</p>
-                                {leaves.find(l => l.id === selectedLeaveId)?.admin_note}
-                            </div>
-                        </div>
-                    )}
-
-                    {messages.map((msg) => (
-                        <div key={msg.id} className={`flex ${msg.sender_type === 'employee' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`p-3 rounded-lg max-w-[80%] text-sm ${msg.sender_type === 'employee'
-                                ? 'bg-indigo-600 text-white rounded-tr-none'
-                                : 'bg-gray-100 text-gray-800 rounded-tl-none'
-                                }`}>
-                                <p className="font-bold text-xs mb-1 opacity-75">
-                                    {msg.sender_type === 'employee' ? 'You' : 'Admin'}
-                                </p>
-                                {msg.message}
-                                <p className="text-[10px] mt-1 opacity-50 text-right">
-                                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </p>
-                            </div>
-                        </div>
-                    ))}
-                    <div ref={messagesEndRef} />
-                </div>
-
-                <div className="flex gap-2 pt-2 border-t border-gray-100">
-                    <input
-                        type="text"
-                        className="flex-1 p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                        placeholder="Type a message..."
-                        value={challengeNote}
-                        onChange={(e) => setChallengeNote(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && submitChallenge()}
-                    />
-                    <button
-                        onClick={submitChallenge}
-                        className="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-                        disabled={!challengeNote.trim()}
-                    >
-                        <Send size={20} />
-                    </button>
                 </div>
             </div>
+
+            {/* Chat Modal */}
+            {showChallengeModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 h-[500px] flex flex-col">
+                        <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-4">
+                            <div>
+                                <h3 className="text-lg font-bold text-gray-900">Leave Discussion</h3>
+                                <p className="text-xs text-gray-500">Chat with Admin about this request</p>
+                            </div>
+                            <button
+                                onClick={() => { setShowChallengeModal(false); setChallengeNote(''); }}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <XCircle size={24} />
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto space-y-4 mb-4 p-2">
+                            {/* Initial Rejection Note if exists */}
+                            {leaves.find(l => l.id === selectedLeaveId)?.admin_note && (
+                                <div className="flex justify-start">
+                                    <div className="bg-red-50 text-red-800 p-3 rounded-lg rounded-tl-none max-w-[80%] text-sm">
+                                        <p className="font-bold text-xs mb-1">Admin (Rejection Reason)</p>
+                                        {leaves.find(l => l.id === selectedLeaveId)?.admin_note}
+                                    </div>
+                                </div>
+                            )}
+
+                            {messages.map((msg) => (
+                                <div key={msg.id} className={`flex ${msg.sender_type === 'employee' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`p-3 rounded-lg max-w-[80%] text-sm ${msg.sender_type === 'employee'
+                                        ? 'bg-indigo-600 text-white rounded-tr-none'
+                                        : 'bg-gray-100 text-gray-800 rounded-tl-none'
+                                        }`}>
+                                        <p className="font-bold text-xs mb-1 opacity-75">
+                                            {msg.sender_type === 'employee' ? 'You' : 'Admin'}
+                                        </p>
+                                        {msg.message}
+                                        <p className="text-[10px] mt-1 opacity-50 text-right">
+                                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                            <div ref={messagesEndRef} />
+                        </div>
+
+                        <div className="flex gap-2 pt-2 border-t border-gray-100">
+                            <input
+                                type="text"
+                                className="flex-1 p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                placeholder="Type a message..."
+                                value={challengeNote}
+                                onChange={(e) => setChallengeNote(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && submitChallenge()}
+                            />
+                            <button
+                                onClick={submitChallenge}
+                                className="p-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                                disabled={!challengeNote.trim()}
+                            >
+                                <Send size={20} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
-    )
-}
-        </div >
     );
 };
 
