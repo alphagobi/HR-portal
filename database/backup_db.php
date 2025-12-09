@@ -12,7 +12,7 @@ if (php_sapi_name() !== 'cli' && (!isset($_GET['key']) || $_GET['key'] !== $secr
 // Auto-detect config path (Works for both Local and cPanel)
 $config_paths = [
     __DIR__ . '/../public/api/config.php', // Local structure
-    __DIR__ . '/../api/config.php'        // standard cPanel structure
+    __DIR__ . '/home2/alphagnn/public_html/insidemyfarm.com/api/config.php'        // standard cPanel structure
 ];
 
 $config_loaded = false;
