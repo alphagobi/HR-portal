@@ -20,6 +20,7 @@ import AdminUsers from './pages/admin/AdminUsers';
 import AdminReimbursements from './pages/admin/AdminReimbursements';
 import AdminPolicies from './pages/admin/AdminPolicies';
 import AdminCalendar from './pages/admin/AdminCalendar';
+import AdminBackups from './pages/admin/AdminBackups';
 
 function App() {
   return (
@@ -57,6 +58,7 @@ function App() {
           <Route path="announcements" element={<AdminAnnouncements />} />
           <Route path="calendar" element={<AdminCalendar />} />
           <Route path="policies" element={<AdminPolicies />} />
+          <Route path="backups" element={<AdminBackups />} />
         </Route>
       </Routes>
     </Router>

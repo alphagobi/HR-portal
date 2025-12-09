@@ -12,7 +12,8 @@ import {
     ShieldCheck,
     CheckSquare,
     Megaphone,
-    Users
+    Users,
+    Database
 } from 'lucide-react';
 import { logout, getCurrentUser } from '../services/authService';
 import { getLeaves } from '../services/leaveService';
@@ -52,6 +53,7 @@ const AdminLayout = () => {
         { path: '/admin/reimbursements', icon: DollarSign, label: 'Reimbursements' },
         { path: '/admin/announcements', icon: Megaphone, label: 'Announcements' },
         { path: '/admin/policies', icon: FileText, label: 'Policies' },
+        { path: '/admin/backups', icon: Database, label: 'Backups' },
     ];
 
     const handleLogout = () => {
