@@ -1,17 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, FileText, CheckCircle, Clock, AlertCircle, Trash2, Download, AlertTriangle } from 'lucide-react';
-import { getInvoices, createInvoice, updateInvoiceStatus, getClients } from '../../services/invoiceService';
+import { Plus, Search, FileText, CheckCircle, Clock, AlertCircle, Trash2, Download, AlertTriangle, Users, MapPin, Mail, Phone } from 'lucide-react';
+import { getInvoices, createInvoice, updateInvoiceStatus, getClients, createClient } from '../../services/invoiceService';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const AdminInvoices = () => {
+    // Invoice State
     const [invoices, setInvoices] = useState([]);
-    const [clients, setClients] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [showModal, setShowModal] = useState(false);
+    const [showInvoiceModal, setShowInvoiceModal] = useState(false);
 
-    // Initial State for Form
-    const initialFormState = {
+    // Client State
+    const [clients, setClients] = useState([]);
+    const [showClientModal, setShowClientModal] = useState(false);
+    const [clientSearchTerm, setClientSearchTerm] = useState('');
+    const [clientFormData, setClientFormData] = useState({
+        name: '',
+        address: '',
+        email: '',
+        phone: ''
+    });
+
+    // Invoice Form State
+    const initialInvoiceFormState = {
         client_id: '',
         client_name: '',
         client_address: '',
@@ -24,7 +35,7 @@ const AdminInvoices = () => {
         date: new Date().toISOString().split('T')[0]
     };
 
-    const [formData, setFormData] = useState(initialFormState);
+    const [invoiceFormData, setInvoiceFormData] = useState(initialInvoiceFormState);
     const [calculations, setCalculations] = useState({
         current_invoice_total: 0,
         balance_credit: 0,
@@ -35,11 +46,11 @@ const AdminInvoices = () => {
         fetchData();
     }, []);
 
-    // Auto-calculate totals whenever relevant form data changes
+    // Auto-calculate totals
     useEffect(() => {
-        const currentTotal = formData.items.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
-        const prevBalance = parseFloat(formData.previous_balance) || 0;
-        const payReceived = parseFloat(formData.payment_received) || 0;
+        const currentTotal = invoiceFormData.items.reduce((sum, item) => sum + (parseFloat(item.cost) || 0), 0);
+        const prevBalance = parseFloat(invoiceFormData.previous_balance) || 0;
+        const payReceived = parseFloat(invoiceFormData.payment_received) || 0;
 
         const balanceCredit = payReceived - prevBalance;
         const netPrevious = prevBalance - payReceived;
@@ -51,7 +62,7 @@ const AdminInvoices = () => {
             grand_total: grandTotal
         });
 
-    }, [formData.items, formData.previous_balance, formData.payment_received]);
+    }, [invoiceFormData.items, invoiceFormData.previous_balance, invoiceFormData.payment_received]);
 
     const fetchData = async () => {
         try {
@@ -68,66 +79,64 @@ const AdminInvoices = () => {
         }
     };
 
+    /* --- INVOICE HANDLERS --- */
+
     const handleClientSelect = async (e) => {
         const clientId = e.target.value;
         const selectedClient = clients.find(c => c.id == clientId);
 
         if (selectedClient) {
             let prevBalance = 0;
-
-            // Fetch detailed client info to get last invoice balance
             try {
                 const clientDetails = await getClients(clientId);
-                if (clientDetails.last_invoice) {
-                    if (clientDetails.last_invoice.status !== 'Paid') {
-                        prevBalance = parseFloat(clientDetails.last_invoice.grand_total || 0);
-                    }
+                if (clientDetails.last_invoice && clientDetails.last_invoice.status !== 'Paid') {
+                    prevBalance = parseFloat(clientDetails.last_invoice.grand_total || 0);
                 }
             } catch (err) {
                 console.error("Failed to fetch client details for balance", err);
             }
 
-            setFormData({
-                ...formData,
+            setInvoiceFormData({
+                ...invoiceFormData,
                 client_id: clientId,
                 client_name: selectedClient.name,
                 client_address: selectedClient.address || '',
                 previous_balance: prevBalance
             });
         } else {
-            setFormData({ ...formData, client_id: '', client_name: '', client_address: '', previous_balance: 0 });
+            setInvoiceFormData({ ...invoiceFormData, client_id: '', client_name: '', client_address: '', previous_balance: 0 });
         }
     };
 
     const handleAddItem = () => {
-        setFormData({
-            ...formData,
-            items: [...formData.items, { description: '', quantity: 1, duration: '1 Month', cost: 0 }]
+        setInvoiceFormData({
+            ...invoiceFormData,
+            items: [...invoiceFormData.items, { description: '', quantity: 1, duration: '1 Month', cost: 0 }]
         });
     };
 
     const handleRemoveItem = (index) => {
-        const newItems = formData.items.filter((_, i) => i !== index);
-        setFormData({ ...formData, items: newItems });
+        const newItems = invoiceFormData.items.filter((_, i) => i !== index);
+        setInvoiceFormData({ ...invoiceFormData, items: newItems });
     };
 
     const handleItemChange = (index, field, value) => {
-        const newItems = [...formData.items];
+        const newItems = [...invoiceFormData.items];
         newItems[index][field] = value;
-        setFormData({ ...formData, items: newItems });
+        setInvoiceFormData({ ...invoiceFormData, items: newItems });
     };
 
-    const handleSubmit = async (e) => {
+    const handleInvoiceSubmit = async (e) => {
         e.preventDefault();
         try {
             const payload = {
-                ...formData,
+                ...invoiceFormData,
                 amount: calculations.current_invoice_total,
                 grand_total: calculations.grand_total
             };
             await createInvoice(payload);
-            setShowModal(false);
-            setFormData(initialFormState);
+            setShowInvoiceModal(false);
+            setInvoiceFormData(initialInvoiceFormState);
             fetchData();
         } catch (error) {
             console.error("Error creating invoice:", error);
@@ -185,7 +194,6 @@ const AdminInvoices = () => {
                 headStyles: { fillColor: [66, 66, 66] }
             });
 
-            // Calculate finalY safely - jspdf-autotable modifies doc.lastAutoTable
             const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 120;
 
             // Payment Summary
@@ -230,107 +238,205 @@ const AdminInvoices = () => {
         }
     };
 
+    /* --- CLIENT HANDLERS --- */
+
+    const handleClientSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            await createClient(clientFormData);
+            setShowClientModal(false);
+            setClientFormData({ name: '', address: '', email: '', phone: '' });
+            fetchData(); // Refresh both lists
+        } catch (error) {
+            console.error("Error creating client:", error);
+            alert("Failed to create client");
+        }
+    };
+
+    const filteredClients = clients.filter(client =>
+        client.name.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+        (client.email && client.email.toLowerCase().includes(clientSearchTerm.toLowerCase()))
+    );
+
     return (
-        <div className="p-6 max-w-7xl mx-auto">
-            <div className="flex justify-between items-center mb-6">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Invoices</h1>
-                    <p className="text-gray-500">Manage client invoices and payments</p>
-                </div>
-                <button
-                    onClick={() => setShowModal(true)}
-                    className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
-                >
-                    <Plus size={20} />
-                    New Invoice
-                </button>
-            </div>
+        <div className="p-6 max-w-7xl mx-auto space-y-10">
 
-            {/* Invoices List */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="bg-gray-50 border-b border-gray-100">
-                                <th className="px-6 py-4 font-semibold text-gray-600">Client</th>
-                                <th className="px-6 py-4 font-semibold text-gray-600">Date</th>
-                                <th className="px-6 py-4 font-semibold text-gray-600">Overview</th>
-                                <th className="px-6 py-4 font-semibold text-gray-600">Status</th>
-                                <th className="px-6 py-4 font-semibold text-gray-600">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {isLoading ? (
-                                <tr>
-                                    <td colSpan="5" className="px-6 py-8 text-center text-gray-500">Loading invoices...</td>
+            {/* --- INVOICES SECTION --- */}
+            <section>
+                <div className="flex justify-between items-center mb-6">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">Invoices</h1>
+                        <p className="text-gray-500">Manage client invoices and payments</p>
+                    </div>
+                    <button
+                        onClick={() => setShowInvoiceModal(true)}
+                        className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+                    >
+                        <Plus size={20} />
+                        New Invoice
+                    </button>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr className="bg-gray-50 border-b border-gray-100">
+                                    <th className="px-6 py-4 font-semibold text-gray-600">Client</th>
+                                    <th className="px-6 py-4 font-semibold text-gray-600">Date</th>
+                                    <th className="px-6 py-4 font-semibold text-gray-600">Overview</th>
+                                    <th className="px-6 py-4 font-semibold text-gray-600">Status</th>
+                                    <th className="px-6 py-4 font-semibold text-gray-600">Actions</th>
                                 </tr>
-                            ) : invoices.length === 0 ? (
-                                <tr>
-                                    <td colSpan="5" className="px-6 py-8 text-center text-gray-500">No invoices found</td>
-                                </tr>
-                            ) : (
-                                invoices.map((invoice) => (
-                                    <tr key={invoice.id} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
-                                                    <FileText size={16} />
-                                                </div>
-                                                <div>
-                                                    <div className="font-medium text-gray-900">{invoice.client_name}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-gray-600">
-                                            {new Date(invoice.date).toLocaleDateString()}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="text-sm">
-                                                <div className="flex justify-between w-40">
-                                                    <span className="text-gray-500">Current:</span>
-                                                    <span className="font-medium">${parseFloat(invoice.amount).toFixed(0)}</span>
-                                                </div>
-                                                <div className="flex justify-between w-40">
-                                                    <span className="text-gray-500">Total:</span>
-                                                    <span className="font-bold text-gray-900">${parseFloat(invoice.grand_total).toFixed(0)}</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <select
-                                                value={invoice.status}
-                                                onChange={(e) => handleStatusUpdate(invoice.id, e.target.value)}
-                                                className={`text-xs border-0 rounded-full px-3 py-1 font-medium ${getStatusColor(invoice.status)} focus:ring-0 cursor-pointer`}
-                                            >
-                                                <option value="Pending">Pending</option>
-                                                <option value="Partially Paid">Partially Paid</option>
-                                                <option value="Paid">Paid</option>
-                                                <option value="Overdue">Overdue</option>
-                                            </select>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <button
-                                                onClick={() => generatePDF(invoice)}
-                                                className="text-gray-400 hover:text-indigo-600 transition-colors"
-                                                title="Download PDF"
-                                            >
-                                                <Download size={18} />
-                                            </button>
-                                        </td>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {isLoading ? (
+                                    <tr>
+                                        <td colSpan="5" className="px-6 py-8 text-center text-gray-500">Loading data...</td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                ) : invoices.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="5" className="px-6 py-8 text-center text-gray-500">No invoices found</td>
+                                    </tr>
+                                ) : (
+                                    invoices.map((invoice) => (
+                                        <tr key={invoice.id} className="hover:bg-gray-50 transition-colors">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
+                                                        <FileText size={16} />
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-medium text-gray-900">{invoice.client_name}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-gray-600">
+                                                {new Date(invoice.date).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="text-sm">
+                                                    <div className="flex justify-between w-40">
+                                                        <span className="text-gray-500">Current:</span>
+                                                        <span className="font-medium">${parseFloat(invoice.amount).toFixed(0)}</span>
+                                                    </div>
+                                                    <div className="flex justify-between w-40">
+                                                        <span className="text-gray-500">Total:</span>
+                                                        <span className="font-bold text-gray-900">${parseFloat(invoice.grand_total).toFixed(0)}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <select
+                                                    value={invoice.status}
+                                                    onChange={(e) => handleStatusUpdate(invoice.id, e.target.value)}
+                                                    className={`text-xs border-0 rounded-full px-3 py-1 font-medium ${getStatusColor(invoice.status)} focus:ring-0 cursor-pointer`}
+                                                >
+                                                    <option value="Pending">Pending</option>
+                                                    <option value="Partially Paid">Partially Paid</option>
+                                                    <option value="Paid">Paid</option>
+                                                    <option value="Overdue">Overdue</option>
+                                                </select>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <button
+                                                    onClick={() => generatePDF(invoice)}
+                                                    className="text-gray-400 hover:text-indigo-600 transition-colors"
+                                                    title="Download PDF"
+                                                >
+                                                    <Download size={18} />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
+            </section>
 
-            {/* Create Modal */}
-            {showModal && (
+            <hr className="border-gray-200" />
+
+            {/* --- CLIENTS SECTION --- */}
+            <section>
+                <div className="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 className="text-2xl font-bold text-gray-900">Clients</h2>
+                        <p className="text-gray-500">Manage your client base</p>
+                    </div>
+                    <button
+                        onClick={() => setShowClientModal(true)}
+                        className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                        <Plus size={20} />
+                        Add Client
+                    </button>
+                </div>
+
+                <div className="mb-6">
+                    <div className="relative max-w-md">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                        <input
+                            type="text"
+                            placeholder="Search clients..."
+                            className="w-full pl-10 pr-4 py-2 rounded-lg border-gray-200 focus:ring-indigo-500 focus:border-indigo-500 ps-10"
+                            value={clientSearchTerm}
+                            onChange={(e) => setClientSearchTerm(e.target.value)}
+                        />
+                    </div>
+                </div>
+
+                {isLoading ? (
+                    <div className="text-center py-12 text-gray-500">Loading clients...</div>
+                ) : filteredClients.length === 0 ? (
+                    <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
+                        <Users size={48} className="mx-auto text-gray-300 mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900">No clients found</h3>
+                        <p className="text-gray-500 mt-1">Get started by adding your first client.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredClients.map((client) => (
+                            <div key={client.id} className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                                <div className="flex items-start justify-between mb-4">
+                                    <div className="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 font-bold text-xl">
+                                        {client.name.charAt(0).toUpperCase()}
+                                    </div>
+                                </div>
+                                <h3 className="text-lg font-bold text-gray-900 mb-2">{client.name}</h3>
+                                <div className="space-y-2 text-sm text-gray-600">
+                                    {client.address && (
+                                        <div className="flex items-start gap-2">
+                                            <MapPin size={16} className="mt-0.5" />
+                                            <span>{client.address}</span>
+                                        </div>
+                                    )}
+                                    {client.email && (
+                                        <div className="flex items-center gap-2">
+                                            <Mail size={16} />
+                                            <a href={`mailto:${client.email}`} className="hover:text-indigo-600">{client.email}</a>
+                                        </div>
+                                    )}
+                                    {client.phone && (
+                                        <div className="flex items-center gap-2">
+                                            <Phone size={16} />
+                                            <span>{client.phone}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </section>
+
+            {/* --- INVOICE CREATE MODAL --- */}
+            {showInvoiceModal && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6">
                         <h2 className="text-xl font-bold text-gray-900 mb-6">Create New Invoice</h2>
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form onSubmit={handleInvoiceSubmit} className="space-y-6">
 
                             {/* Client & Date Section */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -340,7 +446,7 @@ const AdminInvoices = () => {
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Select Client</label>
                                         <select
                                             className="w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                                            value={formData.client_id}
+                                            value={invoiceFormData.client_id}
                                             onChange={handleClientSelect}
                                         >
                                             <option value="">Select a client...</option>
@@ -350,13 +456,13 @@ const AdminInvoices = () => {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Client Name (Override if needed)</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Client Name (Override)</label>
                                         <input
                                             type="text"
                                             required
                                             className="w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                                            value={formData.client_name}
-                                            onChange={(e) => setFormData({ ...formData, client_name: e.target.value })}
+                                            value={invoiceFormData.client_name}
+                                            onChange={(e) => setInvoiceFormData({ ...invoiceFormData, client_name: e.target.value })}
                                         />
                                     </div>
                                     <div>
@@ -364,8 +470,8 @@ const AdminInvoices = () => {
                                         <textarea
                                             rows="3"
                                             className="w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                                            value={formData.client_address}
-                                            onChange={(e) => setFormData({ ...formData, client_address: e.target.value })}
+                                            value={invoiceFormData.client_address}
+                                            onChange={(e) => setInvoiceFormData({ ...invoiceFormData, client_address: e.target.value })}
                                         />
                                     </div>
                                 </div>
@@ -377,8 +483,8 @@ const AdminInvoices = () => {
                                             <input
                                                 type="date"
                                                 className="w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                                                value={formData.billing_period_start}
-                                                onChange={(e) => setFormData({ ...formData, billing_period_start: e.target.value })}
+                                                value={invoiceFormData.billing_period_start}
+                                                onChange={(e) => setInvoiceFormData({ ...invoiceFormData, billing_period_start: e.target.value })}
                                             />
                                         </div>
                                         <div>
@@ -386,8 +492,8 @@ const AdminInvoices = () => {
                                             <input
                                                 type="date"
                                                 className="w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                                                value={formData.billing_period_end}
-                                                onChange={(e) => setFormData({ ...formData, billing_period_end: e.target.value })}
+                                                value={invoiceFormData.billing_period_end}
+                                                onChange={(e) => setInvoiceFormData({ ...invoiceFormData, billing_period_end: e.target.value })}
                                             />
                                         </div>
                                     </div>
@@ -397,14 +503,14 @@ const AdminInvoices = () => {
                                             type="date"
                                             required
                                             className="w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                                            value={formData.date}
-                                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                            value={invoiceFormData.date}
+                                            onChange={(e) => setInvoiceFormData({ ...invoiceFormData, date: e.target.value })}
                                         />
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Line Items - Same as before */}
+                            {/* Line Items */}
                             <div>
                                 <div className="flex justify-between items-center mb-2 border-b pb-2">
                                     <h3 className="font-semibold text-gray-700">Resources Charges</h3>
@@ -413,7 +519,7 @@ const AdminInvoices = () => {
                                     </button>
                                 </div>
                                 <div className="space-y-3">
-                                    {formData.items.map((item, index) => (
+                                    {invoiceFormData.items.map((item, index) => (
                                         <div key={index} className="flex gap-4 items-start bg-gray-50 p-3 rounded-lg">
                                             <div className="flex-1">
                                                 <input
@@ -473,8 +579,8 @@ const AdminInvoices = () => {
                                         <input
                                             type="number"
                                             className="w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                                            value={formData.previous_balance}
-                                            onChange={(e) => setFormData({ ...formData, previous_balance: e.target.value })}
+                                            value={invoiceFormData.previous_balance}
+                                            onChange={(e) => setInvoiceFormData({ ...invoiceFormData, previous_balance: e.target.value })}
                                         />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
@@ -483,8 +589,8 @@ const AdminInvoices = () => {
                                             <input
                                                 type="number"
                                                 className="w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                                                value={formData.payment_received}
-                                                onChange={(e) => setFormData({ ...formData, payment_received: e.target.value })}
+                                                value={invoiceFormData.payment_received}
+                                                onChange={(e) => setInvoiceFormData({ ...invoiceFormData, payment_received: e.target.value })}
                                             />
                                         </div>
                                         <div>
@@ -492,8 +598,8 @@ const AdminInvoices = () => {
                                             <input
                                                 type="date"
                                                 className="w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
-                                                value={formData.payment_date}
-                                                onChange={(e) => setFormData({ ...formData, payment_date: e.target.value })}
+                                                value={invoiceFormData.payment_date}
+                                                onChange={(e) => setInvoiceFormData({ ...invoiceFormData, payment_date: e.target.value })}
                                             />
                                         </div>
                                     </div>
@@ -502,11 +608,11 @@ const AdminInvoices = () => {
                                 <div className="mt-4 flex flex-col items-end gap-1">
                                     <div className="flex justify-between w-64 text-sm">
                                         <span className="text-gray-600">Previous Balance:</span>
-                                        <span>${parseFloat(formData.previous_balance || 0).toFixed(2)}</span>
+                                        <span>${parseFloat(invoiceFormData.previous_balance || 0).toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between w-64 text-sm">
                                         <span className="text-gray-600">Payment Received:</span>
-                                        <span className="text-red-600">-${parseFloat(formData.payment_received || 0).toFixed(2)}</span>
+                                        <span className="text-red-600">-${parseFloat(invoiceFormData.payment_received || 0).toFixed(2)}</span>
                                     </div>
                                     {calculations.balance_credit > 0 && (
                                         <div className="flex justify-between w-64 text-sm font-medium text-green-700">
@@ -524,7 +630,7 @@ const AdminInvoices = () => {
                             <div className="flex gap-3 mt-6 pt-4 border-t">
                                 <button
                                     type="button"
-                                    onClick={() => setShowModal(false)}
+                                    onClick={() => setShowInvoiceModal(false)}
                                     className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
                                 >
                                     Cancel
@@ -534,6 +640,69 @@ const AdminInvoices = () => {
                                     className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
                                 >
                                     Generate Invoice
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* --- CLIENT CREATE MODAL --- */}
+            {showClientModal && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">Add New Client</h2>
+                        <form onSubmit={handleClientSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+                                    value={clientFormData.name}
+                                    onChange={(e) => setClientFormData({ ...clientFormData, name: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                <textarea
+                                    rows="3"
+                                    className="w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+                                    value={clientFormData.address}
+                                    onChange={(e) => setClientFormData({ ...clientFormData, address: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <input
+                                    type="email"
+                                    className="w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+                                    value={clientFormData.email}
+                                    onChange={(e) => setClientFormData({ ...clientFormData, email: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                <input
+                                    type="text"
+                                    className="w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+                                    value={clientFormData.phone}
+                                    onChange={(e) => setClientFormData({ ...clientFormData, phone: e.target.value })}
+                                />
+                            </div>
+                            <div className="flex gap-3 mt-6">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowClientModal(false)}
+                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                                >
+                                    Create Client
                                 </button>
                             </div>
                         </form>
