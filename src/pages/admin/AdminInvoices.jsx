@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Search, FileText, CheckCircle, Clock, AlertCircle, Trash2, Download, AlertTriangle } from 'lucide-react';
 import { getInvoices, createInvoice, updateInvoiceStatus, getClients } from '../../services/invoiceService';
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const AdminInvoices = () => {
     const [invoices, setInvoices] = useState([]);
@@ -177,7 +177,7 @@ const AdminInvoices = () => {
                 ])
                 : [];
 
-            doc.autoTable({
+            autoTable(doc, {
                 startY: 70,
                 head: [tableColumn],
                 body: tableRows,
@@ -185,7 +185,8 @@ const AdminInvoices = () => {
                 headStyles: { fillColor: [66, 66, 66] }
             });
 
-            const finalY = doc.lastAutoTable.finalY + 10;
+            // Calculate finalY safely - jspdf-autotable modifies doc.lastAutoTable
+            const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 120;
 
             // Payment Summary
             doc.text("Payment Summary:", 14, finalY);
@@ -202,7 +203,7 @@ const AdminInvoices = () => {
                 ["Grand Total Payable", `$${grandTotal.toFixed(2)}`]
             ];
 
-            doc.autoTable({
+            autoTable(doc, {
                 startY: finalY + 5,
                 body: summaryData,
                 theme: 'plain',
@@ -215,7 +216,7 @@ const AdminInvoices = () => {
             doc.save(`Invoice_${invoice.client_name}_${invoice.date}.pdf`);
         } catch (error) {
             console.error("PDF Generation Error:", error);
-            alert("Failed to generate PDF. Please checks logs.");
+            alert("Failed to generate PDF: " + error.message);
         }
     };
 
