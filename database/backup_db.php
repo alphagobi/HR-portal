@@ -9,10 +9,27 @@ if (php_sapi_name() !== 'cli' && (!isset($_GET['key']) || $_GET['key'] !== $secr
 }
 
 // 1. Configuration
-require_once '../public/api/config.php'; // Get DB credentials ($host, $username, $password, $db_name)
+// Auto-detect config path (Works for both Local and cPanel)
+$config_paths = [
+    __DIR__ . '/../public/api/config.php', // Local structure
+    __DIR__ . '/../api/config.php'        // standard cPanel structure
+];
 
-$to_email = 'admin@yourdomain.com'; // <--- CHANGE THIS TO YOUR EMAIL
-$from_email = 'noreply@' . $_SERVER['SERVER_NAME']; // Sender email
+$config_loaded = false;
+foreach ($config_paths as $path) {
+    if (file_exists($path)) {
+        require_once $path;
+        $config_loaded = true;
+        break;
+    }
+}
+
+if (!$config_loaded) {
+    die("Error: Could not find config.php. Please check file structure.");
+}
+
+$to_email = 'aravinth@alphagobi.com'; // <--- CHANGE THIS TO YOUR EMAIL
+$from_email = 'reports@' . $_SERVER['SERVER_NAME']; // Sender email
 $zip_password = 'YourStrongPassword123!'; // <--- SET YOUR ZIP PASSWORD
 
 $backup_dir = __DIR__ . '/temp_backups'; // Temp folder
