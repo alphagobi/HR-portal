@@ -50,6 +50,7 @@ const AdminLayout = () => {
         { path: '/admin/leaves', icon: CheckSquare, label: 'Leave Approvals', badge: unreadLeaves },
         { path: '/admin/calendar', icon: Calendar, label: 'Calendar' },
         { path: '/admin/reimbursements', icon: DollarSign, label: 'Reimbursements' },
+        { path: '/admin/invoices', icon: FileText, label: 'Invoices' },
         { path: '/admin/announcements', icon: Megaphone, label: 'Announcements' },
         { path: '/admin/policies', icon: FileText, label: 'Policies' },
     ];
