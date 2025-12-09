@@ -45,7 +45,8 @@ const AdminLayout = () => {
 
     const navItems = [
         { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
-        { path: '/admin/users', icon: Users, label: 'Users' },
+        { path: '/admin/clients', icon: Users, label: 'Clients' },
+        { path: '/admin/users', icon: Users, label: 'Employees' },
         { path: '/admin/timesheets', icon: Clock, label: 'Timesheets' },
         { path: '/admin/leaves', icon: CheckSquare, label: 'Leave Approvals', badge: unreadLeaves },
         { path: '/admin/calendar', icon: Calendar, label: 'Calendar' },

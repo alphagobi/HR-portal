@@ -25,3 +25,22 @@ export const updateInvoiceStatus = async (id, status) => {
     if (!response.ok) throw new Error('Failed to update invoice status');
     return response.json();
 };
+
+const CLIENTS_API_URL = '/api/clients.php';
+
+export const getClients = async (id = null) => {
+    const url = id ? `${CLIENTS_API_URL}?id=${id}` : CLIENTS_API_URL;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch clients');
+    return response.json();
+};
+
+export const createClient = async (clientData) => {
+    const response = await fetch(CLIENTS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(clientData),
+    });
+    if (!response.ok) throw new Error('Failed to create client');
+    return response.json();
+};

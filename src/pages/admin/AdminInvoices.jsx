@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, FileText, CheckCircle, Clock, AlertCircle, Trash2, Download } from 'lucide-react';
-import { getInvoices, createInvoice, updateInvoiceStatus } from '../../services/invoiceService';
+import { Plus, Search, FileText, CheckCircle, Clock, AlertCircle, Trash2, Download, AlertTriangle } from 'lucide-react';
+import { getInvoices, createInvoice, updateInvoiceStatus, getClients } from '../../services/invoiceService';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 const AdminInvoices = () => {
     const [invoices, setInvoices] = useState([]);
+    const [clients, setClients] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
 
     // Initial State for Form
     const initialFormState = {
+        client_id: '',
         client_name: '',
         client_address: '',
         billing_period_start: '',
@@ -39,31 +41,13 @@ const AdminInvoices = () => {
         const prevBalance = parseFloat(formData.previous_balance) || 0;
         const payReceived = parseFloat(formData.payment_received) || 0;
 
-        // Logic based on requirements:
-        // Current Invoice = Sum of items
-        // Balance (Credit) = Payment Received - Previous Balance (This seems to be the logic in the image for "Balance (Credit)", 
-        //   but typically Balance is what is OWED. 
-        //   Looking at image 2: Prev Bal: 70k, Pay Rec: 88k, Balance (Credit): 17k. So yes, (Pay - Prev).
-        //   Wait, generally Credit means they overpaid.
-
         const balanceCredit = payReceived - prevBalance;
-
-        // Grand Total logic from Image 2: 
-        // Formula seems to be: Current Invoice - Credit?
-        // Image 2: Current Invoice (26400) - Credit (17144) = 9256. Correct.
-        // Image 1: Prev Bal (9256) + Current (26400) = 35656. (No payment received). Correct.
-
-        // So generalized formula:
-        // Net Previous = Prev Balance - Payment Received.
-        // If Net Previous is positive (Still owe money): Grand Total = Net Previous + Current.
-        // If Net Previous is negative (Credit): Grand Total = Current + Net Previous (which subtracts the credit).
-
         const netPrevious = prevBalance - payReceived;
         const grandTotal = currentTotal + netPrevious;
 
         setCalculations({
             current_invoice_total: currentTotal,
-            balance_credit: balanceCredit, // Positive means credit, Negative means debt remaining from prev
+            balance_credit: balanceCredit,
             grand_total: grandTotal
         });
 
@@ -71,12 +55,47 @@ const AdminInvoices = () => {
 
     const fetchData = async () => {
         try {
-            const data = await getInvoices();
-            setInvoices(data);
+            const [invoicesData, clientsData] = await Promise.all([
+                getInvoices(),
+                getClients()
+            ]);
+            setInvoices(invoicesData);
+            setClients(clientsData);
         } catch (error) {
-            console.error("Error fetching invoices:", error);
+            console.error("Error fetching data:", error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleClientSelect = async (e) => {
+        const clientId = e.target.value;
+        const selectedClient = clients.find(c => c.id == clientId);
+
+        if (selectedClient) {
+            let prevBalance = 0;
+
+            // Fetch detailed client info to get last invoice balance
+            try {
+                const clientDetails = await getClients(clientId);
+                if (clientDetails.last_invoice) {
+                    if (clientDetails.last_invoice.status !== 'Paid') {
+                        prevBalance = parseFloat(clientDetails.last_invoice.grand_total || 0);
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to fetch client details for balance", err);
+            }
+
+            setFormData({
+                ...formData,
+                client_id: clientId,
+                client_name: selectedClient.name,
+                client_address: selectedClient.address || '',
+                previous_balance: prevBalance
+            });
+        } else {
+            setFormData({ ...formData, client_id: '', client_name: '', client_address: '', previous_balance: 0 });
         }
     };
 
@@ -103,7 +122,7 @@ const AdminInvoices = () => {
         try {
             const payload = {
                 ...formData,
-                amount: calculations.current_invoice_total, // Main amount is current month charges
+                amount: calculations.current_invoice_total,
                 grand_total: calculations.grand_total
             };
             await createInvoice(payload);
@@ -134,7 +153,7 @@ const AdminInvoices = () => {
 
         doc.setFontSize(10);
         doc.text("AlphaGobi", 14, 30);
-        doc.text("123 Tech Park, Innovation Way", 14, 35); // Mock Address
+        doc.text("123 Tech Park, Innovation Way", 14, 35);
 
         // Client Details
         doc.text(`To: ${invoice.client_name}`, 14, 50);
@@ -149,7 +168,12 @@ const AdminInvoices = () => {
         // Resources Table
         const tableColumn = ["Description", "No. of Resources", "Duration", "Cost"];
         const tableRows = invoice.items
-            ? invoice.items.map(item => [item.description, item.quantity, item.duration, `$${parseFloat(item.cost).toFixed(2)}`])
+            ? invoice.items.map(item => [
+                item.description || '',
+                item.quantity || 1,
+                item.duration || '',
+                `$${parseFloat(item.cost || 0).toFixed(2)}`
+            ])
             : [];
 
         doc.autoTable({
@@ -165,7 +189,6 @@ const AdminInvoices = () => {
         // Payment Summary
         doc.text("Payment Summary:", 14, finalY);
 
-        // Calculate dynamic values for PDF (since they are stored in DB)
         const prevBal = parseFloat(invoice.previous_balance || 0);
         const payRec = parseFloat(invoice.payment_received || 0);
         const currentTotal = parseFloat(invoice.amount || 0);
@@ -174,7 +197,6 @@ const AdminInvoices = () => {
         const summaryData = [
             ["Previous Balance", `$${prevBal.toFixed(2)}`],
             [`Payment Received (${invoice.payment_date || '-'})`, `$${payRec.toFixed(2)}`],
-            // Optional: Show Credit line if payRec > prevBal
             ["Current Invoice", `$${currentTotal.toFixed(2)}`],
             ["Grand Total Payable", `$${grandTotal.toFixed(2)}`]
         ];
@@ -196,6 +218,7 @@ const AdminInvoices = () => {
         switch (status) {
             case 'Paid': return 'text-green-600 bg-green-50';
             case 'Pending': return 'text-yellow-600 bg-yellow-50';
+            case 'Partially Paid': return 'text-orange-600 bg-orange-50';
             case 'Overdue': return 'text-red-600 bg-red-50';
             default: return 'text-gray-600 bg-gray-50';
         }
@@ -274,6 +297,7 @@ const AdminInvoices = () => {
                                                 className={`text-xs border-0 rounded-full px-3 py-1 font-medium ${getStatusColor(invoice.status)} focus:ring-0 cursor-pointer`}
                                             >
                                                 <option value="Pending">Pending</option>
+                                                <option value="Partially Paid">Partially Paid</option>
                                                 <option value="Paid">Paid</option>
                                                 <option value="Overdue">Overdue</option>
                                             </select>
@@ -307,7 +331,20 @@ const AdminInvoices = () => {
                                 <div className="space-y-4">
                                     <h3 className="font-semibold text-gray-700 border-b pb-2">Client Details</h3>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Client Name</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Select Client</label>
+                                        <select
+                                            className="w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"
+                                            value={formData.client_id}
+                                            onChange={handleClientSelect}
+                                        >
+                                            <option value="">Select a client...</option>
+                                            {clients.map(client => (
+                                                <option key={client.id} value={client.id}>{client.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Client Name (Override if needed)</label>
                                         <input
                                             type="text"
                                             required
@@ -361,7 +398,7 @@ const AdminInvoices = () => {
                                 </div>
                             </div>
 
-                            {/* Line Items */}
+                            {/* Line Items - Same as before */}
                             <div>
                                 <div className="flex justify-between items-center mb-2 border-b pb-2">
                                     <h3 className="font-semibold text-gray-700">Resources Charges</h3>
@@ -426,7 +463,7 @@ const AdminInvoices = () => {
                                 <h3 className="font-semibold text-indigo-900 mb-3 border-b border-indigo-200 pb-2">Payment Summary</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Previous Balance</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Previous Balance (Auto-filled)</label>
                                         <input
                                             type="number"
                                             className="w-full rounded-lg border-gray-300 focus:ring-indigo-500 focus:border-indigo-500"

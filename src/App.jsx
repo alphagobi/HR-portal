@@ -21,6 +21,7 @@ import AdminReimbursements from './pages/admin/AdminReimbursements';
 import AdminPolicies from './pages/admin/AdminPolicies';
 import AdminCalendar from './pages/admin/AdminCalendar';
 import AdminInvoices from './pages/admin/AdminInvoices';
+import AdminClients from './pages/admin/AdminClients';
 
 function App() {
   return (
@@ -59,6 +60,7 @@ function App() {
           <Route path="calendar" element={<AdminCalendar />} />
           <Route path="policies" element={<AdminPolicies />} />
           <Route path="invoices" element={<AdminInvoices />} />
+          <Route path="clients" element={<AdminClients />} />
         </Route>
       </Routes>
     </Router>
