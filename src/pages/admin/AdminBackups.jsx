@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { Database, AlertCircle, CheckCircle, Loader, Terminal } from 'lucide-react';
-import { useAuth } from '../../components/Layout'; // Assuming useAuth is exported from here or similar context
+import { getCurrentUser } from '../../services/authService';
 
 const API_URL = '/api/trigger_backup.php';
 
 const AdminBackups = ({ userId }) => {
-    // If userId not passed as prop, try to get from local storage or context if available
-    // For this implementation, we assume userId is passed or retrieved from localStorage
-    const currentUserId = userId || JSON.parse(localStorage.getItem('user'))?.id;
+    // If userId not passed as prop, get from auth service
+    const currentUserId = userId || getCurrentUser()?.id;
 
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
@@ -67,8 +66,8 @@ const AdminBackups = ({ userId }) => {
                         onClick={handleRunBackup}
                         disabled={loading}
                         className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors ${loading
-                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg'
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg'
                             }`}
                     >
                         {loading ? (
