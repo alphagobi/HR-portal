@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, FileText, CheckCircle, Clock, AlertCircle, Trash2, Download, AlertTriangle } from 'lucide-react';
 import { getInvoices, createInvoice, updateInvoiceStatus, getClients } from '../../services/invoiceService';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 
 const AdminInvoices = () => {
@@ -145,73 +145,78 @@ const AdminInvoices = () => {
     };
 
     const generatePDF = (invoice) => {
-        const doc = new jsPDF();
+        try {
+            const doc = new jsPDF();
 
-        // Header
-        doc.setFontSize(22);
-        doc.text("INVOICE", 105, 20, { align: "center" });
+            // Header
+            doc.setFontSize(22);
+            doc.text("INVOICE", 105, 20, { align: "center" });
 
-        doc.setFontSize(10);
-        doc.text("AlphaGobi", 14, 30);
-        doc.text("123 Tech Park, Innovation Way", 14, 35);
+            doc.setFontSize(10);
+            doc.text("AlphaGobi", 14, 30);
+            doc.text("123 Tech Park, Innovation Way", 14, 35);
 
-        // Client Details
-        doc.text(`To: ${invoice.client_name}`, 14, 50);
-        if (invoice.client_address) {
-            const splitAddress = doc.splitTextToSize(invoice.client_address, 80);
-            doc.text(splitAddress, 14, 55);
-        }
-
-        doc.text(`Invoice Date: ${invoice.date}`, 140, 50);
-        doc.text(`Billing Period: ${invoice.billing_period_start || 'N/A'} to ${invoice.billing_period_end || 'N/A'}`, 140, 55);
-
-        // Resources Table
-        const tableColumn = ["Description", "No. of Resources", "Duration", "Cost"];
-        const tableRows = invoice.items
-            ? invoice.items.map(item => [
-                item.description || '',
-                item.quantity || 1,
-                item.duration || '',
-                `$${parseFloat(item.cost || 0).toFixed(2)}`
-            ])
-            : [];
-
-        doc.autoTable({
-            startY: 70,
-            head: [tableColumn],
-            body: tableRows,
-            theme: 'grid',
-            headStyles: { fillColor: [66, 66, 66] }
-        });
-
-        const finalY = doc.lastAutoTable.finalY + 10;
-
-        // Payment Summary
-        doc.text("Payment Summary:", 14, finalY);
-
-        const prevBal = parseFloat(invoice.previous_balance || 0);
-        const payRec = parseFloat(invoice.payment_received || 0);
-        const currentTotal = parseFloat(invoice.amount || 0);
-        const grandTotal = parseFloat(invoice.grand_total || 0);
-
-        const summaryData = [
-            ["Previous Balance", `$${prevBal.toFixed(2)}`],
-            [`Payment Received (${invoice.payment_date || '-'})`, `$${payRec.toFixed(2)}`],
-            ["Current Invoice", `$${currentTotal.toFixed(2)}`],
-            ["Grand Total Payable", `$${grandTotal.toFixed(2)}`]
-        ];
-
-        doc.autoTable({
-            startY: finalY + 5,
-            body: summaryData,
-            theme: 'plain',
-            columnStyles: {
-                0: { cellWidth: 120, halign: 'right', fontStyle: 'bold' },
-                1: { cellWidth: 60, halign: 'right' }
+            // Client Details
+            doc.text(`To: ${invoice.client_name}`, 14, 50);
+            if (invoice.client_address) {
+                const splitAddress = doc.splitTextToSize(invoice.client_address, 80);
+                doc.text(splitAddress, 14, 55);
             }
-        });
 
-        doc.save(`Invoice_${invoice.client_name}_${invoice.date}.pdf`);
+            doc.text(`Invoice Date: ${invoice.date}`, 140, 50);
+            doc.text(`Billing Period: ${invoice.billing_period_start || 'N/A'} to ${invoice.billing_period_end || 'N/A'}`, 140, 55);
+
+            // Resources Table
+            const tableColumn = ["Description", "No. of Resources", "Duration", "Cost"];
+            const tableRows = invoice.items
+                ? invoice.items.map(item => [
+                    item.description || '',
+                    item.quantity || 1,
+                    item.duration || '',
+                    `$${parseFloat(item.cost || 0).toFixed(2)}`
+                ])
+                : [];
+
+            doc.autoTable({
+                startY: 70,
+                head: [tableColumn],
+                body: tableRows,
+                theme: 'grid',
+                headStyles: { fillColor: [66, 66, 66] }
+            });
+
+            const finalY = doc.lastAutoTable.finalY + 10;
+
+            // Payment Summary
+            doc.text("Payment Summary:", 14, finalY);
+
+            const prevBal = parseFloat(invoice.previous_balance || 0);
+            const payRec = parseFloat(invoice.payment_received || 0);
+            const currentTotal = parseFloat(invoice.amount || 0);
+            const grandTotal = parseFloat(invoice.grand_total || 0);
+
+            const summaryData = [
+                ["Previous Balance", `$${prevBal.toFixed(2)}`],
+                [`Payment Received (${invoice.payment_date || '-'})`, `$${payRec.toFixed(2)}`],
+                ["Current Invoice", `$${currentTotal.toFixed(2)}`],
+                ["Grand Total Payable", `$${grandTotal.toFixed(2)}`]
+            ];
+
+            doc.autoTable({
+                startY: finalY + 5,
+                body: summaryData,
+                theme: 'plain',
+                columnStyles: {
+                    0: { cellWidth: 120, halign: 'right', fontStyle: 'bold' },
+                    1: { cellWidth: 60, halign: 'right' }
+                }
+            });
+
+            doc.save(`Invoice_${invoice.client_name}_${invoice.date}.pdf`);
+        } catch (error) {
+            console.error("PDF Generation Error:", error);
+            alert("Failed to generate PDF. Please checks logs.");
+        }
     };
 
     const getStatusColor = (status) => {
