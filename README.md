@@ -1,6 +1,9 @@
 # React + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This- `/public`: Publicly accessible files (entries point for APIs)
+- `/src`: React source files
+- `/database`: Database schema and maintenance scripts
+- `/android_app`: Android project filesng in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
 

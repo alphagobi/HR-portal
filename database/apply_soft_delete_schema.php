@@ -1,5 +1,5 @@
 <?php
-require_once 'public/api/config.php';
+require_once '../public/api/config.php';
 
 try {
     $pdo->exec("ALTER TABLE timesheet_entries ADD COLUMN is_deleted BOOLEAN DEFAULT FALSE");

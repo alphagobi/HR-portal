@@ -1,5 +1,5 @@
 <?php
-require_once 'public/api/config.php';
+require_once '../public/api/config.php';
 
 try {
     // Remove planned_time if it exists (might fail if not exists, but we can ignore or check)

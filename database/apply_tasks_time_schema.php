@@ -1,5 +1,5 @@
 <?php
-require_once 'public/api/config.php';
+require_once '../public/api/config.php';
 
 try {
     $sql = "ALTER TABLE planned_tasks ADD COLUMN planned_time VARCHAR(10) DEFAULT NULL";

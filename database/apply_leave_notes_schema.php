@@ -1,5 +1,5 @@
 <?php
-require_once 'public/api/config.php';
+require_once '../public/api/config.php';
 
 try {
     // Add admin_note column

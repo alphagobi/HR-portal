@@ -1,4 +1,5 @@
 -- Database Schema for HR Portal
+-- Updated 2025-12-09
 
 CREATE DATABASE IF NOT EXISTS alphagnn_hr_portal;
 USE alphagnn_hr_portal;
@@ -8,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL, -- In production, this should be hashed
+    password VARCHAR(255) NOT NULL,
     role ENUM('admin', 'employee') DEFAULT 'employee',
     department VARCHAR(100),
     designation VARCHAR(100),
@@ -16,7 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert Default Users (Password is 'password' for demo purposes)
+-- Insert Default Users
 INSERT INTO users (name, email, password, role, department, designation) VALUES 
 ('Admin User', 'admin@company.com', 'admin123', 'admin', 'Management', 'System Administrator'),
 ('John Doe', 'john@company.com', 'user123', 'employee', 'Engineering', 'Frontend Developer'),
@@ -42,19 +43,16 @@ CREATE TABLE IF NOT EXISTS timesheets (
 CREATE TABLE IF NOT EXISTS timesheet_entries (
     id INT AUTO_INCREMENT PRIMARY KEY,
     timesheet_id INT NOT NULL,
-    start_time VARCHAR(10), -- Storing as string HH:MM for simplicity matching frontend
+    start_time VARCHAR(10),
     end_time VARCHAR(10),
     description TEXT,
     project VARCHAR(100) DEFAULT 'General',
-    duration DECIMAL(5,2), -- Calculated hours
+    duration DECIMAL(5,2),
     is_edited BOOLEAN DEFAULT FALSE,
     is_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (timesheet_id) REFERENCES timesheets(id) ON DELETE CASCADE
 );
-
--- Add is_edited column if not exists (handled via migration script usually, but documenting here)
--- ALTER TABLE timesheet_entries ADD COLUMN is_edited BOOLEAN DEFAULT FALSE;
 
 -- Timesheet Entry History
 CREATE TABLE IF NOT EXISTS timesheet_entry_history (
@@ -71,13 +69,40 @@ CREATE TABLE IF NOT EXISTS timesheet_entry_history (
 CREATE TABLE IF NOT EXISTS leaves (
     id INT AUTO_INCREMENT PRIMARY KEY,
     employee_id INT NOT NULL,
-    type VARCHAR(50) NOT NULL, -- 'Sick Leave', 'Casual Leave', etc.
+    type VARCHAR(50) NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     reason TEXT,
     status ENUM('Pending', 'Approved', 'Rejected') DEFAULT 'Pending',
+    admin_note TEXT,
+    employee_note TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (employee_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Leave Types (Limits)
+CREATE TABLE IF NOT EXISTS leave_types (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    max_days INT NOT NULL,
+    description TEXT
+);
+
+INSERT INTO leave_types (name, max_days, description) VALUES 
+('Sick Leave', 10, 'Health related leaves'),
+('Casual Leave', 12, 'Personal matters'),
+('Privilege Leave', 15, 'Long vacations'),
+('Maternity Leave', 180, 'Maternity related');
+
+-- Leave Chats
+CREATE TABLE IF NOT EXISTS leave_chats (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    leave_id INT NOT NULL,
+    sender_id INT NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (leave_id) REFERENCES leaves(id) ON DELETE CASCADE,
+    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Reimbursements
@@ -102,6 +127,30 @@ CREATE TABLE IF NOT EXISTS announcements (
     created_by INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- Planned Tasks (Task Planner)
+CREATE TABLE IF NOT EXISTS planned_tasks (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    task_content TEXT NOT NULL,
+    planned_date DATE NOT NULL,
+    is_completed BOOLEAN DEFAULT FALSE,
+    start_time VARCHAR(10) DEFAULT NULL,
+    end_time VARCHAR(10) DEFAULT NULL,
+    related_entry_id INT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Policies
+CREATE TABLE IF NOT EXISTS policies (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    category VARCHAR(100),
+    effective_date DATE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Activities Log
