@@ -9,24 +9,8 @@ if (php_sapi_name() !== 'cli' && (!isset($_GET['key']) || $_GET['key'] !== $secr
 }
 
 // 1. Configuration
-// Auto-detect config path (Works for both Local and cPanel)
-$config_paths = [
-    __DIR__ . '/../public/api/config.php', // Local structure
-    __DIR__ . '/home2/alphagnn/public_html/insidemyfarm.com/api/config.php'        // standard cPanel structure
-];
-
-$config_loaded = false;
-foreach ($config_paths as $path) {
-    if (file_exists($path)) {
-        require_once $path;
-        $config_loaded = true;
-        break;
-    }
-}
-
-if (!$config_loaded) {
-    die("Error: Could not find config.php. Please check file structure.");
-}
+// Since we are now in the API folder, config.php is right here.
+require_once __DIR__ . '/config.php';
 
 $to_email = 'aravinth@alphagobi.com'; // <--- CHANGE THIS TO YOUR EMAIL
 $from_email = 'reports@' . $_SERVER['SERVER_NAME']; // Sender email

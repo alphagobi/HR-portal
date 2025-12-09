@@ -1,4 +1,0 @@
-# Deny all web access to this folder
-# These scripts should only be run via Command Line (CLI) or cron jobs.
-Order Deny,Allow
-Deny from all
