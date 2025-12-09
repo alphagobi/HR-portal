@@ -31,7 +31,8 @@ try {
     // Check multiple locations
     $possiblePaths = [
         realpath(__DIR__ . '/../../database/backup_db.php'), // Local / Repo structure
-        realpath(__DIR__ . '/../database/backup_db.php')   // cPanel structure (api and database are siblings)
+        realpath(__DIR__ . '/../database/backup_db.php'),   // cPanel structure (api and database are siblings)
+        '/home2/alphagnn/public_html/insidemyfarm.com/database/backup_db.php' // Explicit cPanel Path
     ];
 
     $backupScript = null;
@@ -69,7 +70,10 @@ try {
 
     } else {
          http_response_code(500);
-         echo json_encode(['error' => 'Backup script not found on server at ' . $backupScript]);
+         // Return checked paths for debugging
+         echo json_encode([
+            'error' => 'Backup script not found. Checked paths: ' . implode(', ', array_filter($possiblePaths)) . ' | Current Dir: ' . __DIR__
+         ]);
     }
 
 } catch (PDOException $e) {
