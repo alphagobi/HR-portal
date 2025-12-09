@@ -28,8 +28,19 @@ try {
     }
 
     // Path to backup script
-    // public/api/trigger_backup.php -> ../../database/backup_db.php
-    $backupScript = realpath(__DIR__ . '/../../database/backup_db.php');
+    // Check multiple locations
+    $possiblePaths = [
+        realpath(__DIR__ . '/../../database/backup_db.php'), // Local / Repo structure
+        realpath(__DIR__ . '/../database/backup_db.php')   // cPanel structure (api and database are siblings)
+    ];
+
+    $backupScript = null;
+    foreach ($possiblePaths as $path) {
+        if ($path && file_exists($path)) {
+            $backupScript = $path;
+            break;
+        }
+    }
 
     if ($backupScript && file_exists($backupScript)) {
         // Execute via PHP CLI
