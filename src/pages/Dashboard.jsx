@@ -261,9 +261,11 @@ const Dashboard = () => {
             console.log("Saved successfully");
         } catch (error) {
             console.error(error);
-            const msg = error.response?.data?.message || "Failed to save framework allocations.";
+            const msg = error.response?.data?.message || "Failed to submit.";
             const debug = error.response?.data?.error || "";
-            alert(`${msg} ${debug}`);
+            const status = error.response?.status || "Unknown Status";
+            const errMsg = error.message || "Unknown Error";
+            alert(`Error: ${msg}\nServer Details: ${debug}\nStatus: ${status}\nTechnical: ${errMsg}`);
         }
     };
 
