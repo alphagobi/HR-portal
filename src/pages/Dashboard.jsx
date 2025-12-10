@@ -74,6 +74,26 @@ const Dashboard = () => {
         return 'bg-green-500';
     };
 
+    const getTaskCounts = () => {
+        let overdue = 0;
+        let dueToday = 0;
+        let future = 0;
+
+        const todayDate = new Date(today);
+        todayDate.setHours(0, 0, 0, 0);
+
+        tasks.forEach(t => {
+            const taskDate = new Date(t.planned_date);
+            taskDate.setHours(0, 0, 0, 0);
+
+            if (taskDate.getTime() < todayDate.getTime()) overdue++;
+            else if (taskDate.getTime() === todayDate.getTime()) dueToday++;
+            else future++;
+        });
+
+        return { overdue, dueToday, future };
+    };
+
     const toggleTaskExpand = (task) => {
         if (expandedTaskId === task.id) {
             setExpandedTaskId(null);
@@ -130,6 +150,8 @@ const Dashboard = () => {
         }
     };
 
+    const counts = getTaskCounts();
+
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-8">
             <div>
@@ -156,21 +178,34 @@ const Dashboard = () => {
 
                     {/* Widget 2: Logged Today */}
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 min-h-[200px]">
-                        <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
-                            <Clock size={18} className="text-green-600" />
-                            Logged Today
-                        </h2>
+                        <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2">
+                            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                                <Clock size={18} className="text-indigo-600" />
+                                Logged Today
+                            </h2>
+                            <span className="text-sm font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-md">
+                                {loggedEntries.reduce((acc, curr) => acc + parseFloat(curr.duration || 0), 0).toFixed(2)} hrs
+                            </span>
+                        </div>
                         <div className="space-y-3">
                             {loggedEntries.length === 0 ? (
-                                <p className="text-sm text-gray-400 italic text-center py-2">No work logged yet today.</p>
+                                <div className="text-center py-6">
+                                    <Clock size={32} className="mx-auto text-gray-200 mb-2" />
+                                    <p className="text-sm text-gray-400 italic">No work logged yet.</p>
+                                </div>
                             ) : (
                                 loggedEntries.map((entry, index) => (
-                                    <div key={index} className="flex items-start gap-3 text-sm">
-                                        <div className="mt-1.5 w-1.5 h-1.5 bg-green-500 rounded-full flex-shrink-0"></div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-medium text-gray-900 truncate">{entry.description || "Work Logged"}</p>
+                                    <div key={index} className="flex justify-between items-center text-sm group hover:bg-gray-50 p-2 rounded-lg -mx-2 transition-colors">
+                                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                                            <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full flex-shrink-0 group-hover:bg-indigo-600 transition-colors"></div>
+                                            <span className="font-medium text-gray-700 truncate group-hover:text-gray-900 transition-colors">
+                                                {entry.description || "Work Logged"}
+                                            </span>
                                         </div>
-                                        <span className="text-xs font-semibold text-gray-500">{entry.duration}h</span>
+                                        <div className="flex items-center gap-1.5 pl-3">
+                                            <span className="font-bold text-gray-900">{entry.duration}</span>
+                                            <span className="text-xs text-gray-500 font-medium">hrs</span>
+                                        </div>
                                     </div>
                                 ))
                             )}
@@ -184,9 +219,20 @@ const Dashboard = () => {
                         {/* Fixed height to match approx height of left column items (280 + 200 + 24 gap = 504) */}
                         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
                             <h2 className="text-lg font-bold text-gray-900">Your Tasks</h2>
-                            <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
-                                {tasks.length} Pending
-                            </span>
+                            <div className="flex gap-2">
+                                {/* Red - Overdue */}
+                                <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.overdue > 0 ? 'text-red-700 bg-red-100' : 'text-gray-400 bg-gray-50'}`}>
+                                    {counts.overdue} Red
+                                </span>
+                                {/* Yellow - Due Today */}
+                                <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.dueToday > 0 ? 'text-yellow-700 bg-yellow-100' : 'text-gray-400 bg-gray-50'}`}>
+                                    {counts.dueToday} Yellow
+                                </span>
+                                {/* Green - Future */}
+                                <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.future > 0 ? 'text-green-700 bg-green-100' : 'text-gray-400 bg-gray-50'}`}>
+                                    {counts.future} Green
+                                </span>
+                            </div>
                         </div>
 
                         {/* Task List Header */}
@@ -210,7 +256,7 @@ const Dashboard = () => {
                                             >
                                                 <div className="col-span-6 flex items-center gap-3 overflow-hidden">
                                                     <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getStatusDotColor(task.planned_date)}`}></div>
-                                                    <span className={`truncate text-sm font-semibold ${getTaskTextColor(task.planned_date)}`}>
+                                                    <span className={`truncate text-sm font-bold ${getTaskTextColor(task.planned_date)}`}>
                                                         {task.task_content}
                                                     </span>
                                                 </div>
