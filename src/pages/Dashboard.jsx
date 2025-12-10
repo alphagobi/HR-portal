@@ -137,40 +137,40 @@ const Dashboard = () => {
                 <p className="text-gray-500">Your dashboard overview.</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 {/* Left Column (4/12 width) - Framework & Logged Tasks */}
-                <div className="lg:col-span-4 space-y-8">
+                <div className="lg:col-span-4 space-y-6">
                     {/* Widget 1: Framework Percentage */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center min-h-[250px]">
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center h-[280px]">
                         <div className="relative w-40 h-40">
                             <svg className="w-full h-full" viewBox="0 0 100 100">
-                                <circle className="text-gray-100 stroke-current" strokeWidth="10" cx="50" cy="50" r="40" fill="transparent"></circle>
-                                <circle className="text-indigo-600 stroke-current" strokeWidth="10" strokeLinecap="round" cx="50" cy="50" r="40" fill="transparent" strokeDasharray="251.2" strokeDashoffset="62.8" transform="rotate(-90 50 50)"></circle>
+                                <circle className="text-gray-100 stroke-current" strokeWidth="8" cx="50" cy="50" r="40" fill="transparent"></circle>
+                                <circle className="text-indigo-600 stroke-current" strokeWidth="8" strokeLinecap="round" cx="50" cy="50" r="40" fill="transparent" strokeDasharray="251.2" strokeDashoffset="62.8" transform="rotate(-90 50 50)"></circle>
                             </svg>
                             <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                <span className="text-3xl font-bold text-gray-900">75%</span>
+                                <span className="text-4xl font-bold text-gray-900">75%</span>
                                 <span className="text-xs text-gray-500 uppercase tracking-wider mt-1">Framework</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Widget 2: Logged Today */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 min-h-[250px] overflow-hidden">
-                        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                            <Clock size={20} className="text-green-600" />
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 min-h-[200px]">
+                        <h2 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <Clock size={18} className="text-green-600" />
                             Logged Today
                         </h2>
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                             {loggedEntries.length === 0 ? (
-                                <p className="text-sm text-gray-400 italic text-center py-4">No work logged yet today.</p>
+                                <p className="text-sm text-gray-400 italic text-center py-2">No work logged yet today.</p>
                             ) : (
                                 loggedEntries.map((entry, index) => (
                                     <div key={index} className="flex items-start gap-3 text-sm">
-                                        <div className="mt-1.5 w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
-                                        <div>
-                                            <p className="font-medium text-gray-900">{entry.description || "Work Logged"}</p>
-                                            <p className="text-xs text-gray-500">{entry.duration} hrs</p>
+                                        <div className="mt-1.5 w-1.5 h-1.5 bg-green-500 rounded-full flex-shrink-0"></div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-gray-900 truncate">{entry.description || "Work Logged"}</p>
                                         </div>
+                                        <span className="text-xs font-semibold text-gray-500">{entry.duration}h</span>
                                     </div>
                                 ))
                             )}
@@ -180,8 +180,9 @@ const Dashboard = () => {
 
                 {/* Right Column (8/12 width) - Tasks List */}
                 <div className="lg:col-span-8">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 min-h-[500px] flex flex-col">
-                        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[504px]">
+                        {/* Fixed height to match approx height of left column items (280 + 200 + 24 gap = 504) */}
+                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
                             <h2 className="text-lg font-bold text-gray-900">Your Tasks</h2>
                             <span className="text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
                                 {tasks.length} Pending
@@ -189,79 +190,81 @@ const Dashboard = () => {
                         </div>
 
                         {/* Task List Header */}
-                        <div className="px-6 py-3 bg-gray-50/50 border-b border-gray-100 grid grid-cols-12 gap-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <div className="px-6 py-3 bg-gray-50/50 border-b border-gray-100 grid grid-cols-12 gap-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
                             <div className="col-span-6">Task</div>
                             <div className="col-span-3 text-right">ETA</div>
                             <div className="col-span-3 text-right">Due Date</div>
                         </div>
 
-                        <div className="flex-1 p-6 space-y-4 overflow-y-auto">
+                        <div className="flex-1 overflow-y-auto">
                             {tasks.length === 0 ? (
                                 <p className="text-center text-gray-400 py-10">All caught up!</p>
                             ) : (
-                                tasks.map(task => (
-                                    <div key={task.id} className="group border-b border-dashed border-gray-100 pb-4 last:border-0 last:pb-0">
-                                        {/* Task Row */}
-                                        <div
-                                            className="grid grid-cols-12 gap-4 items-center cursor-pointer hover:bg-gray-50 -mx-2 px-2 py-2 rounded-lg transition-colors"
-                                            onClick={() => toggleTaskExpand(task)}
-                                        >
-                                            <div className="col-span-6 flex items-center gap-3 overflow-hidden">
-                                                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusDotColor(task.planned_date)}`}></div>
-                                                <span className={`truncate text-sm ${getTaskTextColor(task.planned_date)}`}>
-                                                    {task.task_content}
-                                                </span>
+                                <div className="divide-y divide-gray-50">
+                                    {tasks.map(task => (
+                                        <div key={task.id} className="group hover:bg-gray-50 transition-colors">
+                                            {/* Task Row */}
+                                            <div
+                                                className="grid grid-cols-12 gap-4 items-center cursor-pointer px-6 py-3"
+                                                onClick={() => toggleTaskExpand(task)}
+                                            >
+                                                <div className="col-span-6 flex items-center gap-3 overflow-hidden">
+                                                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getStatusDotColor(task.planned_date)}`}></div>
+                                                    <span className={`truncate text-sm font-semibold ${getTaskTextColor(task.planned_date)}`}>
+                                                        {task.task_content}
+                                                    </span>
+                                                </div>
+                                                <div className="col-span-3 text-right text-xs font-medium text-gray-500">
+                                                    {task.eta ? `${task.eta}m` : '-'}
+                                                </div>
+                                                <div className="col-span-3 text-right text-xs font-medium text-gray-500">
+                                                    {new Date(task.planned_date).toLocaleDateString()}
+                                                </div>
                                             </div>
-                                            <div className="col-span-3 text-right text-sm text-gray-500">
-                                                {task.eta ? `${task.eta}m` : '-'}
-                                            </div>
-                                            <div className="col-span-3 text-right text-sm text-gray-500">
-                                                {new Date(task.planned_date).toLocaleDateString()}
-                                            </div>
-                                        </div>
 
-                                        {/* Dropdown Content */}
-                                        {expandedTaskId === task.id && (
-                                            <div className="mt-2 pl-4 border-l-2 border-indigo-100 ml-2">
-                                                <form onSubmit={(e) => handleLogWork(e, task)} className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 space-y-3">
-                                                    <div className="flex items-center justify-between">
-                                                        <h4 className="text-xs font-semibold text-gray-500 uppercase">Log Completion</h4>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-4">
+                                            {/* Dropdown Content */}
+                                            {expandedTaskId === task.id && (
+                                                <div className="px-6 pb-4 bg-gray-50/50 border-t border-gray-100">
+                                                    <form onSubmit={(e) => handleLogWork(e, task)} className="mt-4 space-y-3 max-w-lg">
+                                                        <div className="flex items-center justify-between">
+                                                            <h4 className="text-xs font-bold text-gray-500 uppercase">Log Task Completion</h4>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div>
+                                                                <label className="block text-xs font-medium text-gray-700 mb-1">Time Spent (Mins)</label>
+                                                                <input
+                                                                    type="number"
+                                                                    required
+                                                                    placeholder="e.g. 60"
+                                                                    className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white"
+                                                                    value={logForm.duration}
+                                                                    onChange={(e) => setLogForm(prev => ({ ...prev, duration: e.target.value }))}
+                                                                />
+                                                            </div>
+                                                            <div className="flex items-end">
+                                                                <button
+                                                                    type="submit"
+                                                                    disabled={isSubmitting}
+                                                                    className="w-full text-sm bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors font-medium shadow-sm"
+                                                                >
+                                                                    {isSubmitting ? 'Saving...' : 'Log & Complete'}
+                                                                </button>
+                                                            </div>
+                                                        </div>
                                                         <div>
-                                                            <label className="block text-xs font-medium text-gray-700 mb-1">Time Spent (Mins)</label>
-                                                            <input
-                                                                type="number"
-                                                                required
-                                                                placeholder="e.g. 60"
-                                                                className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white"
-                                                                value={logForm.duration}
-                                                                onChange={(e) => setLogForm(prev => ({ ...prev, duration: e.target.value }))}
+                                                            <textarea
+                                                                placeholder="Remarks (Optional)"
+                                                                className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white h-16 resize-none"
+                                                                value={logForm.remarks}
+                                                                onChange={(e) => setLogForm(prev => ({ ...prev, remarks: e.target.value }))}
                                                             />
                                                         </div>
-                                                        <div className="flex items-end">
-                                                            <button
-                                                                type="submit"
-                                                                disabled={isSubmitting}
-                                                                className="w-full text-sm bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors font-medium shadow-sm"
-                                                            >
-                                                                {isSubmitting ? 'Saving...' : 'Log & Complete'}
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <textarea
-                                                            placeholder="Remarks (Optional)"
-                                                            className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white h-16 resize-none"
-                                                            value={logForm.remarks}
-                                                            onChange={(e) => setLogForm(prev => ({ ...prev, remarks: e.target.value }))}
-                                                        />
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))
+                                                    </form>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
                             )}
                         </div>
                     </div>
