@@ -33,10 +33,10 @@ export const getTaskStatusColor = (plannedDate, isCompleted = false) => {
         };
     } else if (taskDate.getTime() === todayDate.getTime()) {
         return {
-            bg: 'bg-yellow-100',
-            text: 'text-yellow-700',
-            border: 'border-yellow-200',
-            dot: 'bg-yellow-500' // Due Today
+            bg: 'bg-[#FFFF00]/10',
+            text: 'text-[#bfbf00]', // Darker shade for readability
+            border: 'border-[#FFFF00]/50',
+            dot: 'bg-[#FFFF00] border border-gray-200' // Requested Yellow with border for visibility
         };
     } else {
         return {
