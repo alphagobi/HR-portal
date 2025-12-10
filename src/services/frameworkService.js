@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8000/api/frameworks.php';
+const API_URL = '/api/frameworks.php';
 
 export const getFrameworkAllocations = async (userId) => {
     try {
