@@ -31,6 +31,46 @@ if ($method == 'GET') {
         http_response_code(400);
         echo json_encode(array("message" => "Missing user_id parameter."));
     }
+} elseif ($method == 'POST') {
+    $data = json_decode(file_get_contents("php://input"));
+
+    if (isset($data->user_id) && isset($data->allocations)) {
+        $user_id = $data->user_id;
+        $allocations = $data->allocations;
+
+        try {
+            $db->beginTransaction();
+
+            // 1. Delete existing allocations for this user
+            $query = "DELETE FROM work_allocations WHERE user_id = :user_id";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(":user_id", $user_id);
+            $stmt->execute();
+
+            // 2. Insert new allocations with position
+            $query = "INSERT INTO work_allocations (user_id, category_name, percentage, position) VALUES (:user_id, :category_name, :percentage, :position)";
+            $stmt = $db->prepare($query);
+
+            foreach ($allocations as $index => $allocation) {
+                $stmt->bindParam(":user_id", $user_id);
+                $stmt->bindParam(":category_name", $allocation->category_name);
+                $stmt->bindParam(":percentage", $allocation->percentage);
+                $stmt->bindParam(":position", $index); // Use array index as position
+                $stmt->execute();
+            }
+
+            $db->commit();
+            echo json_encode(array("message" => "Allocations updated successfully."));
+
+        } catch (Exception $e) {
+            $db->rollBack();
+            http_response_code(500);
+            echo json_encode(array("message" => "Failed to update allocations.", "error" => $e->getMessage()));
+        }
+    } else {
+        http_response_code(400);
+        echo json_encode(array("message" => "Incomplete data."));
+    }
 } else {
     http_response_code(405);
     echo json_encode(array("message" => "Method not allowed."));

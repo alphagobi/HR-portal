@@ -10,4 +10,15 @@ export const getFrameworkAllocations = async (userId) => {
         console.error("Error fetching framework allocations:", error);
         throw error;
     }
-};
+    export const saveFrameworkAllocations = async (userId, allocations) => {
+        try {
+            const response = await axios.post(API_URL, {
+                user_id: userId,
+                allocations: allocations
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Error saving framework allocations:", error);
+            throw error;
+        }
+    };

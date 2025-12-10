@@ -4,7 +4,11 @@ import { getTasks, updateTask, createTask } from '../services/taskService';
 import { saveTimesheet, getTimesheets } from '../services/timesheetService';
 import { getFrameworkAllocations } from '../services/frameworkService';
 import { getCurrentUser } from '../services/authService';
-import { Clock, CheckCircle, ChevronDown, ChevronUp, Calendar, Plus } from 'lucide-react';
+import { Clock, CheckCircle, ChevronDown, ChevronUp, Calendar, Plus, Pencil, X, Save, GripVertical, Trash2 } from 'lucide-react';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { saveFrameworkAllocations } from '../services/frameworkService';
 
 const Dashboard = () => {
     const location = useLocation();
@@ -15,6 +19,8 @@ const Dashboard = () => {
     const [loggedEntries, setLoggedEntries] = useState([]);
     const [allocations, setAllocations] = useState([]);
     const [frameworkTotal, setFrameworkTotal] = useState(0);
+    const [isEditingFramework, setIsEditingFramework] = useState(false);
+    const [tempAllocations, setTempAllocations] = useState([]);
 
     // Logging State (Dropdown/Inline)
     const [expandedTaskId, setExpandedTaskId] = useState(null);
@@ -23,6 +29,14 @@ const Dashboard = () => {
         remarks: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Draggable Sensor Setup
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
     const user = getCurrentUser();
     const today = new Date().toISOString().split('T')[0];
@@ -50,9 +64,12 @@ const Dashboard = () => {
 
             // 3. Fetch Framework Allocations
             const frameworkData = await getFrameworkAllocations(user.id);
-            setAllocations(frameworkData || []);
+            // Sort by position if available
+            const sortedData = (frameworkData || []).sort((a, b) => (a.position - b.position));
+            setAllocations(sortedData);
+            setTempAllocations(sortedData); // Initialize temp state for editing
 
-            const total = (frameworkData || []).reduce((sum, item) => sum + parseInt(item.percentage), 0);
+            const total = sortedData.reduce((sum, item) => sum + parseInt(item.percentage), 0);
             setFrameworkTotal(total);
 
         } catch (error) {
@@ -160,6 +177,90 @@ const Dashboard = () => {
         }
     };
 
+    // --- Framework Editing Logic ---
+    const handleDragEnd = (event) => {
+        const { active, over } = event;
+        if (active.id !== over.id) {
+            setTempAllocations((items) => {
+                const oldIndex = items.findIndex((item) => item.id === active.id || item.tempId === active.id);
+                const newIndex = items.findIndex((item) => item.id === over.id || item.tempId === over.id);
+                return arrayMove(items, oldIndex, newIndex);
+            });
+        }
+    };
+
+    const handleAddAllocation = () => {
+        setTempAllocations([...tempAllocations, {
+            tempId: Date.now(), // Temporary ID for new items
+            category_name: 'New Allocation',
+            percentage: 0,
+            isNew: true
+        }]);
+    };
+
+    const handleRemoveAllocation = (index) => {
+        const newAllocations = [...tempAllocations];
+        newAllocations.splice(index, 1);
+        setTempAllocations(newAllocations);
+    };
+
+    const handleUpdateAllocation = (index, field, value) => {
+        const newAllocations = [...tempAllocations];
+        newAllocations[index][field] = value;
+        setTempAllocations(newAllocations);
+    };
+
+    const handleSaveFramework = async () => {
+        try {
+            await saveFrameworkAllocations(user.id, tempAllocations);
+            setAllocations(tempAllocations);
+            const total = tempAllocations.reduce((sum, item) => sum + parseInt(item.percentage || 0), 0);
+            setFrameworkTotal(total);
+            setIsEditingFramework(false);
+            console.log("Saved successfully");
+        } catch (error) {
+            alert("Failed to save framework allocations.");
+            console.error(error);
+        }
+    };
+
+    // --- Sortable Item Component ---
+    const SortableItem = ({ id, item, index, onRemove, onUpdate }) => {
+        const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: id });
+
+        const style = {
+            transform: CSS.Transform.toString(transform),
+            transition,
+        };
+
+        return (
+            <div ref={setNodeRef} style={style} className="flex items-center gap-2 mb-2 bg-gray-50 p-2 rounded-md border border-gray-100 group">
+                <div {...attributes} {...listeners} className="cursor-grab text-gray-400 hover:text-gray-600">
+                    <GripVertical size={16} />
+                </div>
+                <input
+                    type="text"
+                    value={item.category_name}
+                    onChange={(e) => onUpdate(index, 'category_name', e.target.value)}
+                    className="flex-1 text-sm bg-transparent border-none focus:ring-0 p-0 font-medium text-gray-700"
+                    placeholder="Category Name"
+                />
+                <div className="flex items-center gap-1 bg-white px-2 py-1 rounded border border-gray-200">
+                    <input
+                        type="number"
+                        value={item.percentage}
+                        onChange={(e) => onUpdate(index, 'percentage', parseInt(e.target.value) || 0)}
+                        className="w-8 text-sm bg-transparent border-none focus:ring-0 p-0 text-right font-bold text-indigo-600"
+                    />
+                    <span className="text-xs text-gray-400">%</span>
+                </div>
+                <button onClick={() => onRemove(index)} className="text-gray-400 hover:text-red-500 transition-colors">
+                    <Trash2 size={16} />
+                </button>
+            </div>
+        );
+    };
+
     // --- Framework Chart Logic ---
     const renderDoughnutSegments = () => {
         let cumulativePercent = 0;
@@ -227,21 +328,78 @@ const Dashboard = () => {
                                 <span className="text-xs text-gray-500 uppercase tracking-wider mt-1">Planned</span>
                             </div>
                         </div>
-                        {/* Legend */}
-                        <div className="flex flex-wrap justify-center gap-3 mt-4">
-                            {allocations.map((item, idx) => (
-                                <div key={idx} className="flex items-center gap-1.5 text-xs">
-                                    <div className={`w-2 h-2 rounded-full ${['bg-indigo-600', 'bg-purple-500', 'bg-blue-400', 'bg-teal-400', 'bg-orange-400'][idx % 5]}`}></div>
-                                    <span className="text-gray-600 font-medium">{item.category_name} ({item.percentage}%)</span>
+                        {/* Legend / Edit List */}
+                        {!isEditingFramework ? (
+                            <div className="w-full mt-6">
+                                <div className="flex justify-between items-center mb-3 px-2">
+                                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Allocations</h4>
+                                    <button onClick={() => setIsEditingFramework(true)} className="text-gray-400 hover:text-indigo-600 transition-colors">
+                                        <Pencil size={14} />
+                                    </button>
                                 </div>
-                            ))}
-                            {frameworkTotal < 100 && (
-                                <div className="flex items-center gap-1.5 text-xs">
-                                    <div className="w-2 h-2 rounded-full bg-gray-200"></div>
-                                    <span className="text-gray-400 font-medium">Unplanned ({100 - frameworkTotal}%)</span>
+                                <div className="space-y-2 max-h-[140px] overflow-y-auto px-2">
+                                    {allocations.map((item, idx) => (
+                                        <div key={idx} className="flex justify-between items-center text-sm">
+                                            <div className="flex items-center gap-2">
+                                                <div className={`w-2 h-2 rounded-full ${['bg-indigo-600', 'bg-purple-500', 'bg-blue-400', 'bg-teal-400', 'bg-orange-400'][idx % 5]}`}></div>
+                                                <span className="text-gray-600 font-medium">{item.category_name}</span>
+                                            </div>
+                                            <span className="font-bold text-gray-900">{item.percentage}%</span>
+                                        </div>
+                                    ))}
+                                    {frameworkTotal < 100 && (
+                                        <div className="flex justify-between items-center text-sm border-t border-dashed border-gray-200 pt-2 mt-1">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-2 h-2 rounded-full bg-gray-300"></div>
+                                                <span className="text-gray-400 font-medium italic">Unplanned</span>
+                                            </div>
+                                            <span className="font-bold text-gray-400">{100 - frameworkTotal}%</span>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
+                            </div>
+                        ) : (
+                            <div className="w-full mt-4 bg-white z-10">
+                                <div className="flex justify-between items-center mb-3">
+                                    <h4 className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Edit Mode</h4>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => handleSaveFramework()} className="text-green-600 hover:text-green-700">
+                                            <Save size={16} />
+                                        </button>
+                                        <button onClick={() => { setIsEditingFramework(false); setTempAllocations(allocations); }} className="text-red-400 hover:text-red-500">
+                                            <X size={16} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                                    <SortableContext items={tempAllocations.map(i => i.id || i.tempId)} strategy={verticalListSortingStrategy}>
+                                        <div className="mb-3 max-h-[180px] overflow-y-auto">
+                                            {tempAllocations.map((item, index) => (
+                                                <SortableItem
+                                                    key={item.id || item.tempId}
+                                                    id={item.id || item.tempId}
+                                                    item={item}
+                                                    index={index}
+                                                    onRemove={handleRemoveAllocation}
+                                                    onUpdate={handleUpdateAllocation}
+                                                />
+                                            ))}
+                                        </div>
+                                    </SortableContext>
+                                </DndContext>
+
+                                <button onClick={handleAddAllocation} className="w-full flex items-center justify-center gap-1 text-xs text-indigo-600 bg-indigo-50 py-2 rounded-md hover:bg-indigo-100 transition-colors font-medium">
+                                    <Plus size={14} /> Add Category
+                                </button>
+
+                                <div className="mt-3 text-right text-xs text-gray-400">
+                                    Total: <span className={tempAllocations.reduce((sum, i) => sum + (parseInt(i.percentage) || 0), 0) > 100 ? "text-red-500 font-bold" : "text-gray-700 font-bold"}>
+                                        {tempAllocations.reduce((sum, i) => sum + (parseInt(i.percentage) || 0), 0)}%
+                                    </span>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Widget 2: Logged Today */}
