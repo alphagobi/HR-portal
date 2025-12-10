@@ -176,15 +176,15 @@ const Timesheet = () => {
                                                     <span className="font-medium text-gray-900">{entry.duration} hrs</span>
                                                 </div>
                                             </div>
-                                        </div>
-                                );
+                                        );
                                     })}
+
+                                </div>
                             </div>
-                            </div>
-                ))}
-            </div>
+                        ))}
+                    </div>
                 )}
-        </div>
+            </div>
         </div >
     );
 };
