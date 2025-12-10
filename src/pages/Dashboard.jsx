@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { getTasks, updateTask, createTask } from '../services/taskService';
 import { saveTimesheet, getTimesheets } from '../services/timesheetService';
+import { getFrameworkAllocations } from '../services/frameworkService';
 import { getCurrentUser } from '../services/authService';
 import { Clock, CheckCircle, ChevronDown, ChevronUp, Calendar, Plus } from 'lucide-react';
 
@@ -12,6 +13,8 @@ const Dashboard = () => {
     // Tasks State
     const [tasks, setTasks] = useState([]);
     const [loggedEntries, setLoggedEntries] = useState([]);
+    const [allocations, setAllocations] = useState([]);
+    const [frameworkTotal, setFrameworkTotal] = useState(0);
 
     // Logging State (Dropdown/Inline)
     const [expandedTaskId, setExpandedTaskId] = useState(null);
@@ -40,10 +43,17 @@ const Dashboard = () => {
             pendingTasks.sort((a, b) => new Date(a.planned_date) - new Date(b.planned_date));
             setTasks(pendingTasks);
 
-            // 2. Fetch Today's Logged Entries (for the new widget)
+            // 2. Fetch Today's Logged Entries
             const timesheetsData = await getTimesheets(user.id);
             const todaySheet = timesheetsData.find(t => t.date === today);
             setLoggedEntries(todaySheet ? todaySheet.entries.filter(e => e.is_deleted != 1) : []);
+
+            // 3. Fetch Framework Allocations
+            const frameworkData = await getFrameworkAllocations(user.id);
+            setAllocations(frameworkData || []);
+
+            const total = (frameworkData || []).reduce((sum, item) => sum + parseInt(item.percentage), 0);
+            setFrameworkTotal(total);
 
         } catch (error) {
             console.error("Failed to fetch dashboard data", error);
@@ -150,7 +160,46 @@ const Dashboard = () => {
         }
     };
 
-    const counts = getTaskCounts();
+    // --- Framework Chart Logic ---
+    const renderDoughnutSegments = () => {
+        let cumulativePercent = 0;
+        const radius = 40;
+        const circumference = 2 * Math.PI * radius; // ~251.2
+
+        // Prepare data: existing allocations + unplanned if < 100
+        const data = [...allocations];
+        if (frameworkTotal < 100) {
+            data.push({ category_name: 'Unplanned', percentage: 100 - frameworkTotal, color: 'text-gray-200' });
+        }
+
+        // Color palette for dynamic segments
+        const colors = ['text-indigo-600', 'text-purple-500', 'text-blue-400', 'text-teal-400', 'text-orange-400'];
+
+        return data.map((item, index) => {
+            const percent = parseInt(item.percentage);
+            const offset = circumference - (percent / 100) * circumference;
+            const rotation = (cumulativePercent / 100) * 360 - 90; // Start from top (-90deg)
+            const colorClass = item.category_name === 'Unplanned' ? item.color : colors[index % colors.length];
+
+            const segment = (
+                <circle
+                    key={index}
+                    className={`${colorClass} stroke-current transition-all duration-500 ease-out`}
+                    strokeWidth="10"
+                    strokeLinecap="round" // Optional: makes ends round, might look weird for contiguous
+                    cx="50"
+                    cy="50"
+                    r={radius}
+                    fill="transparent"
+                    strokeDasharray={`${(percent / 100) * circumference} ${circumference}`}
+                    transform={`rotate(${rotation} 50 50)`}
+                />
+            );
+
+            cumulativePercent += percent;
+            return segment;
+        });
+    };
 
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-8">
@@ -163,16 +212,33 @@ const Dashboard = () => {
                 {/* Left Column (4/12 width) - Framework & Logged Tasks */}
                 <div className="lg:col-span-4 space-y-6">
                     {/* Widget 1: Framework Percentage */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center h-[280px]">
-                        <div className="relative w-40 h-40">
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center h-[280px] relative">
+                        <div className="relative w-48 h-48">
                             <svg className="w-full h-full" viewBox="0 0 100 100">
-                                <circle className="text-gray-100 stroke-current" strokeWidth="8" cx="50" cy="50" r="40" fill="transparent"></circle>
-                                <circle className="text-indigo-600 stroke-current" strokeWidth="8" strokeLinecap="round" cx="50" cy="50" r="40" fill="transparent" strokeDasharray="251.2" strokeDashoffset="62.8" transform="rotate(-90 50 50)"></circle>
+                                {/* Background Circle */}
+                                <circle className="text-gray-100 stroke-current" strokeWidth="10" cx="50" cy="50" r="40" fill="transparent"></circle>
+                                {/* Dynamic Segments */}
+                                {renderDoughnutSegments()}
                             </svg>
-                            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                <span className="text-4xl font-bold text-gray-900">75%</span>
-                                <span className="text-xs text-gray-500 uppercase tracking-wider mt-1">Framework</span>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                <span className="text-3xl font-bold text-gray-900">{frameworkTotal}%</span>
+                                <span className="text-xs text-gray-500 uppercase tracking-wider mt-1">Planned</span>
                             </div>
+                        </div>
+                        {/* Legend */}
+                        <div className="flex flex-wrap justify-center gap-3 mt-4">
+                            {allocations.map((item, idx) => (
+                                <div key={idx} className="flex items-center gap-1.5 text-xs">
+                                    <div className={`w-2 h-2 rounded-full ${['bg-indigo-600', 'bg-purple-500', 'bg-blue-400', 'bg-teal-400', 'bg-orange-400'][idx % 5]}`}></div>
+                                    <span className="text-gray-600 font-medium">{item.category_name} ({item.percentage}%)</span>
+                                </div>
+                            ))}
+                            {frameworkTotal < 100 && (
+                                <div className="flex items-center gap-1.5 text-xs">
+                                    <div className="w-2 h-2 rounded-full bg-gray-200"></div>
+                                    <span className="text-gray-400 font-medium">Unplanned ({100 - frameworkTotal}%)</span>
+                                </div>
+                            )}
                         </div>
                     </div>
 
