@@ -66,8 +66,8 @@ const Layout = () => {
         <div className="min-h-screen bg-gray-50 flex flex-col">
             {/* Global Values Header */}
             {/* Global Values Header */}
-            <div className="bg-white border-b border-gray-200 py-6 text-center">
-                <img src="/logo-wide.png" alt="AlphaGobi" className="h-12 mx-auto mb-3" />
+            <div className="bg-white border-b border-gray-200 py-6 px-8 relative flex items-center justify-center">
+                <img src="/logo-wide.png" alt="AlphaGobi" className="h-12 w-auto absolute left-8 top-1/2 transform -translate-y-1/2" />
                 <p className="text-3xl font-extrabold tracking-widest text-gray-800 uppercase" style={{ fontFamily: 'Inter, sans-serif' }}>
                     Integrity. Effort. Intelligence.
                 </p>
@@ -89,10 +89,9 @@ const Layout = () => {
                         isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
                     )}
                 >
-                    <div className="h-16 flex items-center justify-center px-6 border-b border-gray-200">
-                        <img src="/logo-wide.png" alt="AlphaGobi" className="h-10 w-auto" />
+                    <div className="h-16 flex items-center justify-end px-6 border-b border-gray-200">
                         <button
-                            className="lg:hidden text-gray-500 hover:text-gray-700 absolute right-4"
+                            className="lg:hidden text-gray-500 hover:text-gray-700"
                             onClick={() => setIsSidebarOpen(false)}
                         >
                             <X size={24} />
