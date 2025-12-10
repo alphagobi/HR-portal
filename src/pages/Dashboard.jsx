@@ -177,8 +177,8 @@ const Dashboard = () => {
                     </div>
 
                     {/* Widget 2: Logged Today */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 min-h-[200px]">
-                        <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2">
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-[296px] flex flex-col">
+                        <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2 flex-shrink-0">
                             <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
                                 <Clock size={18} className="text-indigo-600" />
                                 Logged Today
@@ -187,7 +187,7 @@ const Dashboard = () => {
                                 {loggedEntries.reduce((acc, curr) => acc + parseFloat(curr.duration || 0), 0).toFixed(2)} hrs
                             </span>
                         </div>
-                        <div className="space-y-3">
+                        <div className="space-y-3 flex-1 overflow-y-auto pr-1">
                             {loggedEntries.length === 0 ? (
                                 <div className="text-center py-6">
                                     <Clock size={32} className="mx-auto text-gray-200 mb-2" />
@@ -215,8 +215,8 @@ const Dashboard = () => {
 
                 {/* Right Column (8/12 width) - Tasks List */}
                 <div className="lg:col-span-8">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[504px]">
-                        {/* Fixed height to match approx height of left column items (280 + 200 + 24 gap = 504) */}
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[600px]">
+                        {/* Fixed height to match approx height of left column items (280 + 296 + 24 gap = 600) */}
                         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
                             <h2 className="text-lg font-bold text-gray-900">Your Tasks</h2>
                             <div className="flex gap-2">
