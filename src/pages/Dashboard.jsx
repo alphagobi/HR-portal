@@ -356,24 +356,25 @@ const Dashboard = () => {
                                     <p className="text-sm text-gray-400 italic">No work logged yet.</p>
                                 </div>
                             ) : (
-                                loggedEntries.map((entry, index) => (
-                                    <div key={index} className="flex justify-between items-center text-sm group hover:bg-gray-50 p-2 rounded-lg -mx-2 transition-colors">
-                                        <div className="flex items-center gap-3 min-w-0 flex-1">
-                                            {(() => {
-                                                const task = tasks.find(t => t.id == entry.taskId) || tasks.find(t => t.task_content === entry.description);
-                                                const color = getTaskStatusColor(task?.planned_date, task?.is_completed);
-                                                return <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors ${color.dot}`}></div>;
-                                            })()}
-                                            <span className="font-medium text-gray-700 truncate group-hover:text-gray-900 transition-colors">
-                                                {entry.description || "Work Logged"}
-                                            </span>
+                                loggedEntries.map((entry, index) => {
+                                    const task = tasks.find(t => t.id == entry.taskId) || tasks.find(t => t.task_content === entry.description);
+                                    const color = getTaskStatusColor(task?.planned_date, task?.is_completed);
+
+                                    return (
+                                        <div key={index} className="flex justify-between items-center text-sm group hover:bg-gray-50 p-2 rounded-lg -mx-2 transition-colors">
+                                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                                                <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors ${color.dot}`}></div>
+                                                <span className={`font-medium truncate transition-colors ${color.text}`}>
+                                                    {entry.description || "Work Logged"}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 pl-3">
+                                                <span className="font-bold text-gray-900">{entry.duration}</span>
+                                                <span className="text-xs text-gray-500 font-medium">hrs</span>
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-1.5 pl-3">
-                                            <span className="font-bold text-gray-900">{entry.duration}</span>
-                                            <span className="text-xs text-gray-500 font-medium">hrs</span>
-                                        </div>
-                                    </div>
-                                ))
+                                    );
+                                })
                             )}
                         </div>
                     </div>

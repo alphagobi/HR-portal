@@ -167,7 +167,7 @@ const Timesheet = () => {
                                             <div key={entry.id} className="flex items-center justify-between text-sm">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-2 h-2 rounded-full ${color.dot}`}></div>
-                                                    <span className="text-gray-700">{entry.description}</span>
+                                                    <span className={`font-medium ${color.text}`}>{entry.description}</span>
                                                 </div>
                                                 <div className="flex items-center gap-3">
                                                     <span className={`text-xs px-2 py-0.5 rounded-full ${entry.type === 'planned' ? 'bg-green-50 text-green-700' : 'bg-orange-50 text-orange-700'}`}>
