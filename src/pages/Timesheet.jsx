@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getTimesheets } from '../services/timesheetService';
+import { getTasks } from '../services/taskService';
+import { getTaskStatusColor } from '../utils/taskUtils';
 import { getCurrentUser } from '../services/authService';
 import { Calendar, ChevronLeft, ChevronRight, Clock, Filter } from 'lucide-react';
 import clsx from 'clsx';
@@ -8,16 +10,23 @@ const Timesheet = () => {
     const [viewMode, setViewMode] = useState('monthly'); // 'daily', 'weekly', 'monthly'
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [timesheets, setTimesheets] = useState([]);
+    const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const fetchTimesheets = async () => {
         setLoading(true);
         try {
             const user = getCurrentUser();
-            const data = await getTimesheets(user ? user.id : null);
-            setTimesheets(data);
+            if (user) {
+                const [tsData, tasksData] = await Promise.all([
+                    getTimesheets(user.id),
+                    getTasks(user.id)
+                ]);
+                setTimesheets(tsData);
+                setTasks(tasksData);
+            }
         } catch (error) {
-            console.error("Failed to fetch timesheets", error);
+            console.error("Failed to fetch data", error);
         } finally {
             setLoading(false);
         }
@@ -150,27 +159,33 @@ const Timesheet = () => {
                                 </div>
 
                                 <div className="space-y-2 pl-6 border-l-2 border-gray-100">
-                                    {sheet.entries.filter(e => e.is_deleted != 1).map(entry => (
-                                        <div key={entry.id} className="flex items-center justify-between text-sm">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-2 h-2 rounded-full ${entry.type === 'planned' ? 'bg-green-500' : 'bg-orange-500'}`} title={entry.type === 'planned' ? 'Planned' : 'Unplanned'}></div>
-                                                <span className="text-gray-700">{entry.description}</span>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <span className={`text-xs px-2 py-0.5 rounded-full ${entry.type === 'planned' ? 'bg-green-50 text-green-700' : 'bg-orange-50 text-orange-700'}`}>
-                                                    {entry.type === 'planned' ? 'Planned' : 'Unplanned'}
-                                                </span>
-                                                <span className="font-medium text-gray-900">{entry.duration} hrs</span>
+                                    {sheet.entries.filter(e => e.is_deleted != 1).map(entry => {
+                                        const task = tasks.find(t => t.id == entry.taskId) || tasks.find(t => t.task_content === entry.description);
+                                        const color = getTaskStatusColor(task?.planned_date, task?.is_completed);
+
+                                        return (
+                                            <div key={entry.id} className="flex items-center justify-between text-sm">
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-2 h-2 rounded-full ${color.dot}`}></div>
+                                                    <span className="text-gray-700">{entry.description}</span>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <span className={`text-xs px-2 py-0.5 rounded-full ${entry.type === 'planned' ? 'bg-green-50 text-green-700' : 'bg-orange-50 text-orange-700'}`}>
+                                                        {entry.type === 'planned' ? 'Planned' : 'Unplanned'}
+                                                    </span>
+                                                    <span className="font-medium text-gray-900">{entry.duration} hrs</span>
+                                                </div>
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
+                                );
+                                    })}
                             </div>
-                        ))}
-                    </div>
-                )}
+                            </div>
+                ))}
             </div>
+                )}
         </div>
+        </div >
     );
 };
 

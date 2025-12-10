@@ -5,6 +5,7 @@ import { getTimesheets, saveTimesheet } from '../services/timesheetService';
 import { getCurrentUser } from '../services/authService';
 import { Plus, Calendar, Clock, Search, X, Play, ChevronDown, ChevronUp, Save } from 'lucide-react';
 import clsx from 'clsx';
+import { getTaskStatusColor } from '../utils/taskUtils';
 
 const Tasks = () => {
     const navigate = useNavigate();
@@ -148,7 +149,7 @@ const Tasks = () => {
         });
     };
 
-    import { getTaskStatusColor } from '../utils/taskUtils';
+
 
     // Filter Logic
     const getFilteredTasks = () => {
@@ -408,7 +409,8 @@ const Tasks = () => {
                                                 </div>
                                             )}
                                         </div>
-                                    ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     ))

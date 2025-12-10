@@ -9,6 +9,7 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { saveFrameworkAllocations } from '../services/frameworkService';
+import { getTaskStatusColor } from '../utils/taskUtils';
 
 // Moved SortableItem outside to prevent re-mounting on every render (Focus Loss Fix)
 const SortableItem = ({ id, item, index, onRemove, onUpdate }) => {
@@ -120,7 +121,7 @@ const Dashboard = () => {
         }
     };
 
-    import { getTaskStatusColor } from '../utils/taskUtils';
+
 
     const getTaskCounts = () => {
         let overdue = 0;
