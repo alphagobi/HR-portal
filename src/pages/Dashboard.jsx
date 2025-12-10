@@ -120,27 +120,7 @@ const Dashboard = () => {
         }
     };
 
-    const getTaskTextColor = (plannedDate) => {
-        const taskDate = new Date(plannedDate);
-        const todayDate = new Date(today);
-        taskDate.setHours(0, 0, 0, 0);
-        todayDate.setHours(0, 0, 0, 0);
-
-        if (taskDate.getTime() < todayDate.getTime()) return 'text-red-600 font-bold'; // Overdue - Bright Red
-        if (taskDate.getTime() === todayDate.getTime()) return 'text-yellow-600 font-semibold'; // Due Today
-        return 'text-green-600 font-semibold'; // Future
-    };
-
-    const getStatusDotColor = (plannedDate) => {
-        const taskDate = new Date(plannedDate);
-        const todayDate = new Date(today);
-        taskDate.setHours(0, 0, 0, 0);
-        todayDate.setHours(0, 0, 0, 0);
-
-        if (taskDate.getTime() < todayDate.getTime()) return 'bg-red-600';
-        if (taskDate.getTime() === todayDate.getTime()) return 'bg-yellow-500';
-        return 'bg-green-500';
-    };
+    import { getTaskStatusColor } from '../utils/taskUtils';
 
     const getTaskCounts = () => {
         let overdue = 0;
@@ -378,7 +358,11 @@ const Dashboard = () => {
                                 loggedEntries.map((entry, index) => (
                                     <div key={index} className="flex justify-between items-center text-sm group hover:bg-gray-50 p-2 rounded-lg -mx-2 transition-colors">
                                         <div className="flex items-center gap-3 min-w-0 flex-1">
-                                            <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full flex-shrink-0 group-hover:bg-indigo-600 transition-colors"></div>
+                                            {(() => {
+                                                const task = tasks.find(t => t.id == entry.taskId) || tasks.find(t => t.task_content === entry.description);
+                                                const color = getTaskStatusColor(task?.planned_date, task?.is_completed);
+                                                return <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors ${color.dot}`}></div>;
+                                            })()}
                                             <span className="font-medium text-gray-700 truncate group-hover:text-gray-900 transition-colors">
                                                 {entry.description || "Work Logged"}
                                             </span>
@@ -436,8 +420,8 @@ const Dashboard = () => {
                                                 onClick={() => toggleTaskExpand(task)}
                                             >
                                                 <div className="col-span-6 flex items-center gap-3 overflow-hidden">
-                                                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getStatusDotColor(task.planned_date)}`}></div>
-                                                    <span className={`truncate text-sm font-bold ${getTaskTextColor(task.planned_date)}`}>
+                                                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getTaskStatusColor(task.planned_date).dot}`}></div>
+                                                    <span className={`truncate text-sm font-bold ${getTaskStatusColor(task.planned_date).text}`}>
                                                         {task.task_content}
                                                     </span>
                                                 </div>

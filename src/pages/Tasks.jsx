@@ -148,26 +148,7 @@ const Tasks = () => {
         });
     };
 
-    const getTaskColor = (task) => {
-        if (!task.is_completed) return "bg-white border-gray-200";
-
-        if (!task.completed_date) return "bg-gray-50 border-gray-200"; // Completed but no date?
-
-        const planned = new Date(task.planned_date);
-        const completed = new Date(task.completed_date);
-
-        // Reset times to compare only dates
-        planned.setHours(0, 0, 0, 0);
-        completed.setHours(0, 0, 0, 0);
-
-        if (completed.getTime() < planned.getTime()) {
-            return "bg-green-50 border-green-200"; // Early
-        } else if (completed.getTime() === planned.getTime()) {
-            return "bg-yellow-50 border-yellow-200"; // On Time
-        } else {
-            return "bg-red-50 border-red-200"; // Late
-        }
-    };
+    import { getTaskStatusColor } from '../utils/taskUtils';
 
     // Filter Logic
     const getFilteredTasks = () => {
@@ -341,82 +322,93 @@ const Tasks = () => {
                                 </h3>
                             </div>
                             <div className="divide-y divide-gray-100">
-                                {groupedTasks[date].map(task => (
-                                    <div key={task.id} className={`transition-colors border-b border-gray-100 last:border-0 ${getTaskColor(task)}`}>
-                                        <div className="p-4 flex items-center justify-between group">
-                                            <div className="flex items-center gap-4 flex-1">
-                                                <button
-                                                    onClick={() => toggleLogForm(task)}
-                                                    className={clsx(
-                                                        "flex-shrink-0 transition-colors p-2 rounded-full hover:bg-black/5",
-                                                        task.is_completed ? "text-gray-400" : "text-indigo-600"
-                                                    )}
-                                                    title={task.is_completed ? "Completed" : "Log Work"}
-                                                    disabled={task.is_completed}
-                                                >
-                                                    {task.is_completed ? <div className="w-5 h-5 rounded-full bg-gray-400" /> : <Play size={20} fill="currentColor" />}
-                                                </button>
-                                                <div className="flex-1">
-                                                    <p className={clsx(
-                                                        "text-gray-900 font-medium transition-all",
-                                                        task.is_completed && "text-gray-500 line-through"
-                                                    )}>
-                                                        {task.task_content}
-                                                    </p>
-                                                    {task.eta && (
-                                                        <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
-                                                            <Clock size={12} />
-                                                            <span>{task.eta} mins</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
+                                {groupedTasks[date].map(task => {
+                                    const status = getTaskStatusColor(task.planned_date, task.is_completed);
+                                    // Use specific completed logic if needed, or just standard
+                                    // Tasks page had specific logic for completed task background (early/late), 
+                                    // but user requested UNIVERSAL color. So I will use the universal dot/text logic,
+                                    // but maybe keep the background subtle?
+                                    // Let's stick to the requested "universally the same color" which implies the Red/Yellow/Green indicators.
+                                    // I will use a subtle background based on the status.
+                                    const borderClass = status.border.replace('text-', 'border-');
 
-                                        {/* Inline Log Form */}
-                                        {expandedTaskId === task.id && (
-                                            <div className="p-4 bg-gray-50 border-t border-gray-100 ml-12 mr-4 mb-4 rounded-lg shadow-inner">
-                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                                                    <div>
-                                                        <label className="block text-xs font-medium text-gray-500 mb-1">Date</label>
-                                                        <input
-                                                            type="date"
-                                                            className="w-full p-2 text-sm border border-gray-200 rounded-md"
-                                                            value={logData.date}
-                                                            onChange={(e) => setLogData({ ...logData, date: e.target.value })}
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-xs font-medium text-gray-500 mb-1">Duration (mins)</label>
-                                                        <input
-                                                            type="number"
-                                                            className="w-full p-2 text-sm border border-gray-200 rounded-md"
-                                                            placeholder="e.g. 60"
-                                                            value={logData.duration}
-                                                            onChange={(e) => setLogData({ ...logData, duration: e.target.value })}
-                                                        />
-                                                    </div>
+                                    return (
+                                        <div key={task.id} className={`transition-colors border-b border-gray-100 last:border-0`}>
+                                            <div className="p-4 flex items-center justify-between group">
+                                                <div className="flex items-center gap-4 flex-1">
+                                                    <div className={`w-2 h-2 rounded-full ${status.dot}`}></div>
                                                     <button
-                                                        onClick={() => handleSaveLog(task)}
-                                                        className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 flex items-center justify-center gap-2"
+                                                        onClick={() => toggleLogForm(task)}
+                                                        className={clsx(
+                                                            "flex-shrink-0 transition-colors p-2 rounded-full hover:bg-black/5",
+                                                            task.is_completed ? "text-gray-400" : "text-indigo-600"
+                                                        )}
+                                                        title={task.is_completed ? "Completed" : "Log Work"}
+                                                        disabled={task.is_completed}
                                                     >
-                                                        <Save size={16} /> Save Log
+                                                        {task.is_completed ? <div className="w-5 h-5 rounded-full bg-gray-400" /> : <Play size={20} fill="currentColor" />}
                                                     </button>
-                                                </div>
-                                                <div className="mt-3">
-                                                    <label className="block text-xs font-medium text-gray-500 mb-1">Remarks</label>
-                                                    <input
-                                                        type="text"
-                                                        className="w-full p-2 text-sm border border-gray-200 rounded-md"
-                                                        placeholder="Optional remarks..."
-                                                        value={logData.remarks}
-                                                        onChange={(e) => setLogData({ ...logData, remarks: e.target.value })}
-                                                    />
+                                                    <div className="flex-1">
+                                                        <p className={clsx(
+                                                            "text-gray-900 font-medium transition-all",
+                                                            task.is_completed && "text-gray-500 line-through"
+                                                        )}>
+                                                            {task.task_content}
+                                                        </p>
+                                                        {task.eta && (
+                                                            <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                                                                <Clock size={12} />
+                                                                <span>{task.eta} mins</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        )}
-                                    </div>
-                                ))}
+
+                                            {/* Inline Log Form */}
+                                            {expandedTaskId === task.id && (
+                                                <div className="p-4 bg-gray-50 border-t border-gray-100 ml-12 mr-4 mb-4 rounded-lg shadow-inner">
+                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-gray-500 mb-1">Date</label>
+                                                            <input
+                                                                type="date"
+                                                                className="w-full p-2 text-sm border border-gray-200 rounded-md"
+                                                                value={logData.date}
+                                                                onChange={(e) => setLogData({ ...logData, date: e.target.value })}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-gray-500 mb-1">Duration (mins)</label>
+                                                            <input
+                                                                type="number"
+                                                                className="w-full p-2 text-sm border border-gray-200 rounded-md"
+                                                                placeholder="e.g. 60"
+                                                                value={logData.duration}
+                                                                onChange={(e) => setLogData({ ...logData, duration: e.target.value })}
+                                                            />
+                                                        </div>
+                                                        <button
+                                                            onClick={() => handleSaveLog(task)}
+                                                            className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 flex items-center justify-center gap-2"
+                                                        >
+                                                            <Save size={16} /> Save Log
+                                                        </button>
+                                                    </div>
+                                                    <div className="mt-3">
+                                                        <label className="block text-xs font-medium text-gray-500 mb-1">Remarks</label>
+                                                        <input
+                                                            type="text"
+                                                            className="w-full p-2 text-sm border border-gray-200 rounded-md"
+                                                            placeholder="Optional remarks..."
+                                                            value={logData.remarks}
+                                                            onChange={(e) => setLogData({ ...logData, remarks: e.target.value })}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
                             </div>
                         </div>
                     ))
