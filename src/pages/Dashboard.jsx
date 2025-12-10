@@ -201,6 +201,8 @@ const Dashboard = () => {
         });
     };
 
+    const counts = getTaskCounts();
+
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-8">
             <div>
