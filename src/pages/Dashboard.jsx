@@ -52,15 +52,26 @@ const Dashboard = () => {
         }
     };
 
+    const getTaskTextColor = (plannedDate) => {
+        const taskDate = new Date(plannedDate);
+        const todayDate = new Date(today);
+        taskDate.setHours(0, 0, 0, 0);
+        todayDate.setHours(0, 0, 0, 0);
+
+        if (taskDate.getTime() < todayDate.getTime()) return 'text-red-600 font-bold'; // Overdue - Bright Red
+        if (taskDate.getTime() === todayDate.getTime()) return 'text-yellow-600 font-semibold'; // Due Today
+        return 'text-green-600 font-semibold'; // Future
+    };
+
     const getStatusDotColor = (plannedDate) => {
         const taskDate = new Date(plannedDate);
         const todayDate = new Date(today);
         taskDate.setHours(0, 0, 0, 0);
         todayDate.setHours(0, 0, 0, 0);
 
-        if (taskDate.getTime() < todayDate.getTime()) return 'bg-red-500'; // Overdue
-        if (taskDate.getTime() === todayDate.getTime()) return 'bg-yellow-500'; // Due Today
-        return 'bg-green-500'; // Future
+        if (taskDate.getTime() < todayDate.getTime()) return 'bg-red-600';
+        if (taskDate.getTime() === todayDate.getTime()) return 'bg-yellow-500';
+        return 'bg-green-500';
     };
 
     const toggleTaskExpand = (task) => {
@@ -126,7 +137,7 @@ const Dashboard = () => {
                 <p className="text-gray-500">Your dashboard overview.</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 {/* Left Column (4/12 width) - Framework & Logged Tasks */}
                 <div className="lg:col-span-4 space-y-8">
                     {/* Widget 1: Framework Percentage */}
@@ -177,37 +188,52 @@ const Dashboard = () => {
                             </span>
                         </div>
 
-                        <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+                        {/* Task List Header */}
+                        <div className="px-6 py-3 bg-gray-50/50 border-b border-gray-100 grid grid-cols-12 gap-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            <div className="col-span-6">Task</div>
+                            <div className="col-span-3 text-right">ETA</div>
+                            <div className="col-span-3 text-right">Due Date</div>
+                        </div>
+
+                        <div className="flex-1 p-6 space-y-4 overflow-y-auto">
                             {tasks.length === 0 ? (
                                 <p className="text-center text-gray-400 py-10">All caught up!</p>
                             ) : (
                                 tasks.map(task => (
-                                    <div key={task.id} className="group">
+                                    <div key={task.id} className="group border-b border-dashed border-gray-100 pb-4 last:border-0 last:pb-0">
                                         {/* Task Row */}
                                         <div
-                                            className="flex items-center justify-between cursor-pointer"
+                                            className="grid grid-cols-12 gap-4 items-center cursor-pointer hover:bg-gray-50 -mx-2 px-2 py-2 rounded-lg transition-colors"
                                             onClick={() => toggleTaskExpand(task)}
                                         >
-                                            <div className="flex items-center gap-3 overflow-hidden">
+                                            <div className="col-span-6 flex items-center gap-3 overflow-hidden">
                                                 <div className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusDotColor(task.planned_date)}`}></div>
-                                                <span className="font-semibold text-gray-700 truncate">{task.task_content}</span>
+                                                <span className={`truncate text-sm ${getTaskTextColor(task.planned_date)}`}>
+                                                    {task.task_content}
+                                                </span>
                                             </div>
-                                            <div className="flex items-center gap-4 text-xs text-gray-400 flex-shrink-0 ml-4">
-                                                {task.eta && <span>ETA: {task.eta}m</span>}
-                                                <span className="whitespace-nowrap">{new Date(task.planned_date).toLocaleDateString()}</span>
+                                            <div className="col-span-3 text-right text-sm text-gray-500">
+                                                {task.eta ? `${task.eta}m` : '-'}
+                                            </div>
+                                            <div className="col-span-3 text-right text-sm text-gray-500">
+                                                {new Date(task.planned_date).toLocaleDateString()}
                                             </div>
                                         </div>
 
                                         {/* Dropdown Content */}
                                         {expandedTaskId === task.id && (
-                                            <div className="mt-4 pl-5 border-l-2 border-gray-100 ml-1">
-                                                <form onSubmit={(e) => handleLogWork(e, task)} className="bg-gray-50 rounded-lg p-4 space-y-3">
+                                            <div className="mt-2 pl-4 border-l-2 border-indigo-100 ml-2">
+                                                <form onSubmit={(e) => handleLogWork(e, task)} className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 space-y-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <h4 className="text-xs font-semibold text-gray-500 uppercase">Log Completion</h4>
+                                                    </div>
                                                     <div className="grid grid-cols-2 gap-4">
                                                         <div>
-                                                            <label className="block text-xs font-medium text-gray-700 mb-1">Duration (Mins)</label>
+                                                            <label className="block text-xs font-medium text-gray-700 mb-1">Time Spent (Mins)</label>
                                                             <input
                                                                 type="number"
                                                                 required
+                                                                placeholder="e.g. 60"
                                                                 className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white"
                                                                 value={logForm.duration}
                                                                 onChange={(e) => setLogForm(prev => ({ ...prev, duration: e.target.value }))}
@@ -217,9 +243,9 @@ const Dashboard = () => {
                                                             <button
                                                                 type="submit"
                                                                 disabled={isSubmitting}
-                                                                className="w-full text-sm bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors font-medium"
+                                                                className="w-full text-sm bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors font-medium shadow-sm"
                                                             >
-                                                                {isSubmitting ? 'Saving...' : 'Complete & Log'}
+                                                                {isSubmitting ? 'Saving...' : 'Log & Complete'}
                                                             </button>
                                                         </div>
                                                     </div>

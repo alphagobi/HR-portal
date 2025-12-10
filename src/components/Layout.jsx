@@ -65,8 +65,8 @@ const Layout = () => {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             {/* Global Values Header */}
-            <div className="bg-white border-b border-gray-200 py-2 text-center">
-                <p className="text-sm font-semibold tracking-wide text-gray-600 uppercase">
+            <div className="bg-white border-b border-gray-200 py-3 text-center">
+                <p className="text-lg font-bold tracking-wide text-gray-700 uppercase">
                     Integrity. Effort. Intelligence.
                 </p>
             </div>
