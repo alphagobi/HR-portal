@@ -261,46 +261,7 @@ const Dashboard = () => {
         );
     };
 
-    // --- Framework Chart Logic ---
-    const renderDoughnutSegments = () => {
-        let cumulativePercent = 0;
-        const radius = 40;
-        const circumference = 2 * Math.PI * radius; // ~251.2
-
-        // Prepare data: existing allocations + unplanned if < 100
-        const data = [...allocations];
-        if (frameworkTotal < 100) {
-            data.push({ category_name: 'Unplanned', percentage: 100 - frameworkTotal, color: 'text-gray-200' });
-        }
-
-        // Color palette for dynamic segments
-        const colors = ['text-indigo-600', 'text-purple-500', 'text-blue-400', 'text-teal-400', 'text-orange-400'];
-
-        return data.map((item, index) => {
-            const percent = parseInt(item.percentage);
-            const offset = circumference - (percent / 100) * circumference;
-            const rotation = (cumulativePercent / 100) * 360 - 90; // Start from top (-90deg)
-            const colorClass = item.category_name === 'Unplanned' ? item.color : colors[index % colors.length];
-
-            const segment = (
-                <circle
-                    key={index}
-                    className={`${colorClass} stroke-current transition-all duration-500 ease-out`}
-                    strokeWidth="10"
-                    strokeLinecap="round" // Optional: makes ends round, might look weird for contiguous
-                    cx="50"
-                    cy="50"
-                    r={radius}
-                    fill="transparent"
-                    strokeDasharray={`${(percent / 100) * circumference} ${circumference}`}
-                    transform={`rotate(${rotation} 50 50)`}
-                />
-            );
-
-            cumulativePercent += percent;
-            return segment;
-        });
-    };
+    // --- Framework Chart Visuals Removed as per request ---
 
     const counts = getTaskCounts();
 
@@ -314,59 +275,51 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 {/* Left Column (4/12 width) - Framework & Logged Tasks */}
                 <div className="lg:col-span-4 space-y-6">
-                    {/* Widget 1: Framework Percentage */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center h-[280px] relative">
-                        <div className="relative w-48 h-48">
-                            <svg className="w-full h-full" viewBox="0 0 100 100">
-                                {/* Background Circle */}
-                                <circle className="text-gray-100 stroke-current" strokeWidth="10" cx="50" cy="50" r="40" fill="transparent"></circle>
-                                {/* Dynamic Segments */}
-                                {renderDoughnutSegments()}
-                            </svg>
-                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                <span className="text-3xl font-bold text-gray-900">{frameworkTotal}%</span>
-                                <span className="text-xs text-gray-500 uppercase tracking-wider mt-1">Planned</span>
-                            </div>
+                    {/* Widget 1: Framework Allocations */}
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[280px]">
+                        <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2">
+                            <h2 className="text-base font-bold text-gray-900">Framework</h2>
+                            {!isEditingFramework && (
+                                <button onClick={() => setIsEditingFramework(true)} className="text-gray-400 hover:text-indigo-600 transition-colors">
+                                    <Pencil size={14} />
+                                </button>
+                            )}
                         </div>
-                        {/* Legend / Edit List */}
+
                         {!isEditingFramework ? (
-                            <div className="w-full mt-6">
-                                <div className="flex justify-between items-center mb-3 px-2">
-                                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Allocations</h4>
-                                    <button onClick={() => setIsEditingFramework(true)} className="text-gray-400 hover:text-indigo-600 transition-colors">
-                                        <Pencil size={14} />
-                                    </button>
-                                </div>
-                                <div className="space-y-2 max-h-[140px] overflow-y-auto px-2">
-                                    {allocations.map((item, idx) => (
-                                        <div key={idx} className="flex justify-between items-center text-sm">
-                                            <div className="flex items-center gap-2">
-                                                <div className={`w-2 h-2 rounded-full ${['bg-indigo-600', 'bg-purple-500', 'bg-blue-400', 'bg-teal-400', 'bg-orange-400'][idx % 5]}`}></div>
-                                                <span className="text-gray-600 font-medium">{item.category_name}</span>
-                                            </div>
-                                            <span className="font-bold text-gray-900">{item.percentage}%</span>
+                            <div className="flex-1 overflow-y-auto space-y-4">
+                                {allocations.map((item, idx) => (
+                                    <div key={idx} className="flex justify-between items-center">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${['bg-indigo-500', 'bg-blue-500', 'bg-purple-500', 'bg-pink-500'][idx % 4]}`}></div>
+                                            <span className="text-sm font-bold text-gray-700">{item.category_name}</span>
                                         </div>
-                                    ))}
-                                    {frameworkTotal < 100 && (
-                                        <div className="flex justify-between items-center text-sm border-t border-dashed border-gray-200 pt-2 mt-1">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-                                                <span className="text-gray-400 font-medium italic">Unplanned</span>
-                                            </div>
-                                            <span className="font-bold text-gray-400">{100 - frameworkTotal}%</span>
+                                        <div className="text-right">
+                                            <span className="text-sm font-bold text-gray-900">{item.percentage}%</span>
                                         </div>
-                                    )}
-                                </div>
+                                    </div>
+                                ))}
+                                {frameworkTotal < 100 && (
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-2 h-2 rounded-full flex-shrink-0 bg-gray-300"></div>
+                                            <span className="text-sm font-bold text-gray-400">Unplanned</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-sm font-bold text-gray-400">{100 - frameworkTotal}%</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         ) : (
-                            <div className="w-full mt-4 bg-white z-10">
-                                <div className="flex justify-between items-center mb-3">
-                                    <h4 className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Edit Mode</h4>
+                            <div className="flex-1 flex flex-col min-h-0 bg-white z-10">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Editing...</span>
                                     <div className="flex gap-2">
-                                        <button onClick={() => handleSaveFramework()} className="text-green-600 hover:text-green-700">
+                                        <button onClick={() => handleSaveFramework()} className="text-green-600 hover:text-green-700" title="Save">
                                             <Save size={16} />
                                         </button>
-                                        <button onClick={() => { setIsEditingFramework(false); setTempAllocations(allocations); }} className="text-red-400 hover:text-red-500">
+                                        <button onClick={() => { setIsEditingFramework(false); setTempAllocations(allocations); }} className="text-red-400 hover:text-red-500" title="Cancel">
                                             <X size={16} />
                                         </button>
                                     </div>
@@ -374,7 +327,7 @@ const Dashboard = () => {
 
                                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                                     <SortableContext items={tempAllocations.map(i => i.id || i.tempId)} strategy={verticalListSortingStrategy}>
-                                        <div className="mb-3 max-h-[180px] overflow-y-auto">
+                                        <div className="flex-1 overflow-y-auto pr-1">
                                             {tempAllocations.map((item, index) => (
                                                 <SortableItem
                                                     key={item.id || item.tempId}
@@ -389,13 +342,12 @@ const Dashboard = () => {
                                     </SortableContext>
                                 </DndContext>
 
-                                <button onClick={handleAddAllocation} className="w-full flex items-center justify-center gap-1 text-xs text-indigo-600 bg-indigo-50 py-2 rounded-md hover:bg-indigo-100 transition-colors font-medium">
-                                    <Plus size={14} /> Add Category
-                                </button>
-
-                                <div className="mt-3 text-right text-xs text-gray-400">
-                                    Total: <span className={tempAllocations.reduce((sum, i) => sum + (parseInt(i.percentage) || 0), 0) > 100 ? "text-red-500 font-bold" : "text-gray-700 font-bold"}>
-                                        {tempAllocations.reduce((sum, i) => sum + (parseInt(i.percentage) || 0), 0)}%
+                                <div className="mt-2 pt-2 border-t border-gray-50 flex justify-between items-center">
+                                    <button onClick={handleAddAllocation} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+                                        <Plus size={14} /> Add Item
+                                    </button>
+                                    <span className={`text-xs font-bold ${tempAllocations.reduce((sum, i) => sum + (parseInt(i.percentage) || 0), 0) > 100 ? "text-red-500" : "text-gray-400"}`}>
+                                        Total: {tempAllocations.reduce((sum, i) => sum + (parseInt(i.percentage) || 0), 0)}%
                                     </span>
                                 </div>
                             </div>
