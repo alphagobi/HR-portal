@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getClaims, submitClaim } from '../services/reimbursementService';
-import { DollarSign, FileText, Upload, CheckCircle, Clock, XCircle, Plus } from 'lucide-react';
+import { IndianRupee, FileText, Upload, CheckCircle, Clock, XCircle, Plus } from 'lucide-react';
 
 const Reimbursements = () => {
     const [claims, setClaims] = useState([]);
@@ -156,7 +156,7 @@ const Reimbursements = () => {
                                     <div key={claim.id} className="p-6 hover:bg-gray-50 transition-colors flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                         <div className="flex items-start gap-4">
                                             <div className="p-3 bg-indigo-50 rounded-lg text-indigo-600">
-                                                <DollarSign size={24} />
+                                                <IndianRupee size={24} />
                                             </div>
                                             <div>
                                                 <div className="flex items-center gap-2 mb-1">

@@ -276,8 +276,8 @@ const Dashboard = () => {
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mt-6">
-                {/* Left Column (4/12 width) - Framework & Logged Tasks */}
-                <div className="lg:col-span-4 space-y-6">
+                {/* Left Column (5/12 width) - Framework & Logged Tasks */}
+                <div className="lg:col-span-5 space-y-6">
                     {/* Widget 1: Framework Allocations */}
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[280px]">
                         <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2">
@@ -394,8 +394,8 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                {/* Right Column (8/12 width) - Tasks List */}
-                <div className="lg:col-span-8">
+                {/* Right Column (7/12 width) - Tasks List */}
+                <div className="lg:col-span-7">
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-140px)] min-h-[600px]">
                         {/* Fixed height to match approx height of left column items (280 + 296 + 24 gap = 600) */}
                         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">

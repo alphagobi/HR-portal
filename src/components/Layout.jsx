@@ -3,7 +3,7 @@ import { Link, useLocation, Outlet } from 'react-router-dom';
 import { getAnnouncements } from '../services/announcementService';
 import { getLeaves } from '../services/leaveService';
 import { getCurrentUser } from '../services/authService';
-import { LayoutDashboard, FileText, Clock, Calendar, DollarSign, Menu, X, LogOut, CheckSquare, Megaphone } from 'lucide-react';
+import { LayoutDashboard, FileText, Clock, Calendar, IndianRupee, Menu, X, LogOut, CheckSquare, Megaphone } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { logout } from '../services/authService';
 import clsx from 'clsx';
@@ -53,7 +53,7 @@ const Layout = () => {
         { name: 'Timesheet', path: '/timesheet', icon: Clock },
         { name: 'Leaves', path: '/leaves', icon: Calendar, badge: unreadLeaves },
         { name: 'Calendar', path: '/calendar', icon: Calendar },
-        { name: 'Reimbursements', path: '/reimbursements', icon: DollarSign },
+        { name: 'Reimbursements', path: '/reimbursements', icon: IndianRupee },
         { name: 'Announcements', path: '/announcements', icon: Megaphone, badge: unreadAnnouncements },
         { name: 'Policies', path: '/policies', icon: FileText },
     ];
@@ -65,7 +65,9 @@ const Layout = () => {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             {/* Global Values Header */}
-            <div className="bg-white border-b border-gray-200 py-4 text-center">
+            {/* Global Values Header */}
+            <div className="bg-white border-b border-gray-200 py-6 text-center">
+                <img src="/logo-wide.png" alt="AlphaGobi" className="h-12 mx-auto mb-3" />
                 <p className="text-3xl font-extrabold tracking-widest text-gray-800 uppercase" style={{ fontFamily: 'Inter, sans-serif' }}>
                     Integrity. Effort. Intelligence.
                 </p>
