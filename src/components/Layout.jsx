@@ -89,9 +89,9 @@ const Layout = () => {
                         isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
                     )}
                 >
-                    <div className="h-16 flex items-center justify-end px-6 border-b border-gray-200">
+                    <div className="h-16 flex items-center justify-end px-6 border-b border-gray-200 lg:hidden">
                         <button
-                            className="lg:hidden text-gray-500 hover:text-gray-700"
+                            className="text-gray-500 hover:text-gray-700"
                             onClick={() => setIsSidebarOpen(false)}
                         >
                             <X size={24} />

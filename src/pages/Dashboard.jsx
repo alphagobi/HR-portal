@@ -290,7 +290,7 @@ const Dashboard = () => {
                         </div>
 
                         {!isEditingFramework ? (
-                            <div className="flex-1 overflow-y-auto space-y-4">
+                            <div className="flex-1 overflow-y-auto space-y-4 no-scrollbar">
                                 {allocations.map((item, idx) => (
                                     <div key={idx} className="flex justify-between items-center">
                                         <div className="flex items-center gap-3">
@@ -368,7 +368,7 @@ const Dashboard = () => {
                                 {loggedEntries.reduce((acc, curr) => acc + parseFloat(curr.duration || 0), 0).toFixed(2)} hrs
                             </span>
                         </div>
-                        <div className="space-y-3 flex-1 overflow-y-auto pr-1">
+                        <div className="space-y-3 flex-1 overflow-y-auto overflow-x-hidden pr-1 no-scrollbar">
                             {loggedEntries.length === 0 ? (
                                 <div className="text-center py-6">
                                     <Clock size={32} className="mx-auto text-gray-200 mb-2" />
@@ -423,7 +423,7 @@ const Dashboard = () => {
                             <div className="col-span-3 text-right">Due Date</div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto">
+                        <div className="flex-1 overflow-y-auto no-scrollbar">
                             {tasks.length === 0 ? (
                                 <p className="text-center text-gray-400 py-10">All caught up!</p>
                             ) : (
