@@ -219,8 +219,10 @@ const Dashboard = () => {
             setIsEditingFramework(false);
             console.log("Saved successfully");
         } catch (error) {
-            alert("Failed to save framework allocations.");
             console.error(error);
+            const msg = error.response?.data?.message || "Failed to save framework allocations.";
+            const debug = error.response?.data?.error || "";
+            alert(`${msg} ${debug}`);
         }
     };
 
@@ -267,12 +269,7 @@ const Dashboard = () => {
 
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-8">
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900">Welcome back, {user?.name?.split(' ')[0]}!</h1>
-                <p className="text-gray-500">Your dashboard overview.</p>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mt-6">
                 {/* Left Column (4/12 width) - Framework & Logged Tasks */}
                 <div className="lg:col-span-4 space-y-6">
                     {/* Widget 1: Framework Allocations */}
