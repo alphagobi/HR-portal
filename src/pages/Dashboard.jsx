@@ -10,6 +10,47 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { CSS } from '@dnd-kit/utilities';
 import { saveFrameworkAllocations } from '../services/frameworkService';
 
+// Moved SortableItem outside to prevent re-mounting on every render (Focus Loss Fix)
+const SortableItem = ({ id, item, index, onRemove, onUpdate }) => {
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+
+    return (
+        <div ref={setNodeRef} style={style} className="flex items-center gap-2 mb-2 bg-gray-50 p-2 rounded-md border border-gray-100 group">
+            <div {...attributes} {...listeners} className="cursor-grab text-gray-400 hover:text-gray-600">
+                <GripVertical size={16} />
+            </div>
+            <input
+                type="text"
+                value={item.category_name}
+                onChange={(e) => onUpdate(index, 'category_name', e.target.value)}
+                className="flex-1 text-sm bg-transparent border-b border-transparent focus:border-indigo-300 focus:ring-0 p-1 font-medium text-gray-700 placeholder-gray-400 transition-colors"
+                placeholder="Category Name"
+            />
+            <div className="flex items-center gap-1 bg-white px-2 py-1 rounded border border-gray-200 w-16 shadow-sm">
+                <input
+                    type="text"
+                    value={item.percentage}
+                    onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        onUpdate(index, 'percentage', val === '' ? 0 : parseInt(val));
+                    }}
+                    className="w-full text-sm bg-transparent border-none focus:ring-0 p-0 text-center font-bold text-indigo-600 outline-none"
+                    placeholder="0"
+                />
+                <span className="text-xs text-gray-400 font-medium select-none">%</span>
+            </div>
+            <button onClick={() => onRemove(index)} className="text-gray-400 hover:text-red-500 transition-colors">
+                <Trash2 size={16} />
+            </button>
+        </div>
+    );
+};
+
 const Dashboard = () => {
     const location = useLocation();
     const [loading, setLoading] = useState(true);
@@ -205,9 +246,9 @@ const Dashboard = () => {
     };
 
     const handleUpdateAllocation = (index, field, value) => {
-        const newAllocations = [...tempAllocations];
-        newAllocations[index][field] = value;
-        setTempAllocations(newAllocations);
+        setTempAllocations(prev => prev.map((item, i) =>
+            i === index ? { ...item, [field]: value } : item
+        ));
     };
 
     const handleSaveFramework = async () => {
@@ -224,43 +265,6 @@ const Dashboard = () => {
             const debug = error.response?.data?.error || "";
             alert(`${msg} ${debug}`);
         }
-    };
-
-    // --- Sortable Item Component ---
-    const SortableItem = ({ id, item, index, onRemove, onUpdate }) => {
-        const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: id });
-
-        const style = {
-            transform: CSS.Transform.toString(transform),
-            transition,
-        };
-
-        return (
-            <div ref={setNodeRef} style={style} className="flex items-center gap-2 mb-2 bg-gray-50 p-2 rounded-md border border-gray-100 group">
-                <div {...attributes} {...listeners} className="cursor-grab text-gray-400 hover:text-gray-600">
-                    <GripVertical size={16} />
-                </div>
-                <input
-                    type="text"
-                    value={item.category_name}
-                    onChange={(e) => onUpdate(index, 'category_name', e.target.value)}
-                    className="flex-1 text-sm bg-transparent border-none focus:ring-0 p-0 font-medium text-gray-700"
-                    placeholder="Category Name"
-                />
-                <div className="flex items-center gap-1 bg-white px-2 py-1 rounded border border-gray-200">
-                    <input
-                        type="number"
-                        value={item.percentage}
-                        onChange={(e) => onUpdate(index, 'percentage', parseInt(e.target.value) || 0)}
-                        className="w-8 text-sm bg-transparent border-none focus:ring-0 p-0 text-right font-bold text-indigo-600"
-                    />
-                    <span className="text-xs text-gray-400">%</span>
-                </div>
-                <button onClick={() => onRemove(index)} className="text-gray-400 hover:text-red-500 transition-colors">
-                    <Trash2 size={16} />
-                </button>
-            </div>
-        );
     };
 
     // --- Framework Chart Visuals Removed as per request ---
