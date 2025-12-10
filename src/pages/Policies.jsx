@@ -47,6 +47,16 @@ const Policies = () => {
         policy.title.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const getStatusBadge = (status) => {
+        switch (status) {
+            case 'New': return <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 text-xs font-bold border border-purple-200">New</span>;
+            case 'Pending': return <span className="px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 text-xs font-bold border border-orange-200">Pending</span>;
+            case 'Mandatory': return <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-bold border border-red-200">Mandatory</span>;
+            case 'Updated': return <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-xs font-bold border border-blue-200">Updated</span>;
+            default: return null;
+        }
+    };
+
     return (
         <div className="p-6 max-w-7xl mx-auto">
             <div className="mb-8">
@@ -81,8 +91,12 @@ const Policies = () => {
                                 <div className="p-3 bg-gray-50 rounded-lg text-gray-400">
                                     <FileText size={24} />
                                 </div>
-                                <div>
-                                    <h3 className="font-semibold text-gray-900 text-lg">{policy.title}</h3>
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <h3 className="font-semibold text-gray-900 text-lg">{policy.title}</h3>
+                                        {/* Status Badge - Disappears when acknowledged */}
+                                        {policy.is_acknowledged != 1 && getStatusBadge(policy.status)}
+                                    </div>
                                     <p className="text-sm text-gray-500">
                                         Last Updated: {new Date(policy.updated_at).toLocaleDateString()} • Version {policy.version}
                                     </p>

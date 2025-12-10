@@ -10,6 +10,18 @@ include_once 'db.php';
 $database = new Database();
 $db = $database->getConnection();
 
+// --- Auto-Migration to ensure 'position' column exists ---
+try {
+    // Check if column exists, if not add it. 
+    // This is a naive but effective way for this environment without user running SQL manually
+    $check = $db->query("SHOW COLUMNS FROM work_allocations LIKE 'position'");
+    if ($check->rowCount() == 0) {
+        $db->exec("ALTER TABLE work_allocations ADD COLUMN position INT DEFAULT 0");
+    }
+} catch (Exception $e) {
+    // Ignore migration errors, might already exist or permission denied
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method == 'GET') {

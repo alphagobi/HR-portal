@@ -1,6 +1,14 @@
 <?php
 require_once 'config.php';
 
+// --- Auto-Migration for 'status' column ---
+try {
+    $check = $db->query("SHOW COLUMNS FROM policies LIKE 'status'");
+    if ($check->rowCount() == 0) {
+        $db->exec("ALTER TABLE policies ADD COLUMN status VARCHAR(50) DEFAULT 'New'");
+    }
+} catch (Exception $e) { }
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
@@ -38,13 +46,15 @@ elseif ($method === 'POST') {
         }
     } else {
         // Admin creating a policy
-        $stmt = $pdo->prepare("INSERT INTO policies (title, content, version, category) VALUES (?, ?, ?, ?)");
+        $query = "INSERT INTO policies (title, content, version, category, status) VALUES (:title, :content, :version, :category, :status)";
+        $stmt = $pdo->prepare($query);
         try {
             $stmt->execute([
-                $data['title'],
-                $data['content'],
-                $data['version'] ?? '1.0',
-                $data['category'] ?? 'General'
+                ':title' => $data['title'],
+                ':content' => $data['content'],
+                ':version' => $data['version'] ?? '1.0',
+                ':category' => $data['category'] ?? 'General',
+                ':status' => $data['status'] ?? 'New' // Default status if not provided
             ]);
             echo json_encode(["message" => "Policy created", "id" => $pdo->lastInsertId()]);
         } catch (PDOException $e) {
@@ -58,14 +68,16 @@ elseif ($method === 'PUT') {
     $data = json_decode(file_get_contents("php://input"), true);
     $id = $_GET['id'];
     
-    $stmt = $pdo->prepare("UPDATE policies SET title=?, content=?, version=?, category=? WHERE id=?");
+    $query = "UPDATE policies SET title = :title, content = :content, version = :version, category = :category, status = :status WHERE id = :id";
+    $stmt = $pdo->prepare($query);
     try {
         $stmt->execute([
-            $data['title'],
-            $data['content'],
-            $data['version'],
-            $data['category'],
-            $id
+            ':title' => $data['title'],
+            ':content' => $data['content'],
+            ':version' => $data['version'],
+            ':category' => $data['category'],
+            ':status' => $data['status'],
+            ':id' => $id
         ]);
         echo json_encode(["message" => "Policy updated"]);
     } catch (PDOException $e) {

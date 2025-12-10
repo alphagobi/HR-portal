@@ -101,7 +101,7 @@ const Reimbursements = () => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Amount ($)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Amount (₹)</label>
                                 <input
                                     type="number"
                                     step="0.01"
@@ -145,7 +145,7 @@ const Reimbursements = () => {
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                             <h2 className="text-lg font-bold text-gray-900">Claim History</h2>
                             <div className="flex gap-2">
-                                <span className="text-xs font-medium px-2 py-1 bg-gray-100 rounded-full text-gray-600">Total Pending: $45.00</span>
+                                <span className="text-xs font-medium px-2 py-1 bg-gray-100 rounded-full text-gray-600">Total Pending: ₹45.00</span>
                             </div>
                         </div>
                         <div className="divide-y divide-gray-100">
@@ -161,7 +161,7 @@ const Reimbursements = () => {
                                             <div>
                                                 <div className="flex items-center gap-2 mb-1">
                                                     <h3 className="font-semibold text-gray-900">{claim.category}</h3>
-                                                    <span className="text-sm font-bold text-gray-900">${claim.amount}</span>
+                                                    <span className="text-sm font-bold text-gray-900">₹{claim.amount}</span>
                                                 </div>
                                                 <p className="text-sm text-gray-500">{claim.date}</p>
                                                 <p className="text-sm text-gray-600 mt-1">{claim.description}</p>

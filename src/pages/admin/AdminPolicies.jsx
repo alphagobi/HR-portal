@@ -12,7 +12,8 @@ const AdminPolicies = () => {
         title: '',
         content: '',
         version: '1.0',
-        category: 'General'
+        category: 'General',
+        status: 'New'
     });
 
     useEffect(() => {
@@ -55,7 +56,8 @@ const AdminPolicies = () => {
             title: policy.title,
             content: policy.content,
             version: policy.version,
-            category: policy.category
+            category: policy.category,
+            status: policy.status || 'New'
         });
         setEditingId(policy.id);
         setShowModal(true);
@@ -79,7 +81,7 @@ const AdminPolicies = () => {
     const closeModal = () => {
         setShowModal(false);
         setEditingId(null);
-        setNewPolicy({ title: '', content: '', version: '1.0', category: 'General' });
+        setNewPolicy({ title: '', content: '', version: '1.0', category: 'General', status: 'New' });
     };
 
     const filteredPolicies = policies.filter(policy =>
@@ -215,6 +217,21 @@ const AdminPolicies = () => {
                                     />
                                 </div>
                             </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                <select
+                                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                                    value={newPolicy.status}
+                                    onChange={(e) => setNewPolicy({ ...newPolicy, status: e.target.value })}
+                                >
+                                    <option value="New">New (Purple)</option>
+                                    <option value="Pending">Pending (Orange)</option>
+                                    <option value="Mandatory">Mandatory (Red)</option>
+                                    <option value="Updated">Updated (Blue)</option>
+                                </select>
+                            </div>
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
                                 <textarea
