@@ -38,18 +38,24 @@ const Tasks = () => {
 
     const fetchTasks = async () => {
         setLoading(true);
+        const user = getCurrentUser();
+        if (!user) {
+            setLoading(false);
+            return;
+        }
+
         try {
-            const user = getCurrentUser();
-            if (user) {
-                const [tasksData, frameworksData] = await Promise.all([
-                    getTasks(user.id),
-                    getFrameworkAllocations(user.id)
-                ]);
-                setTasks(tasksData);
-                setFrameworks(frameworksData);
-            }
+            const data = await getTasks(user.id);
+            setTasks(data);
         } catch (error) {
             console.error("Failed to fetch tasks", error);
+        }
+
+        try {
+            const fwData = await getFrameworkAllocations(user.id);
+            setFrameworks(fwData || []);
+        } catch (error) {
+            console.error("Failed to fetch frameworks", error);
         } finally {
             setLoading(false);
         }

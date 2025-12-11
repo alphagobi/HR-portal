@@ -13,20 +13,30 @@ const Timesheet = () => {
 
     const fetchTimesheets = async () => {
         setLoading(true);
+        const user = getCurrentUser();
+        if (!user) {
+            setLoading(false);
+            return;
+        }
+
+        // Fetch Core Data
         try {
-            const user = getCurrentUser();
-            if (user) {
-                const [tsData, tasksData, fwData] = await Promise.all([
-                    getTimesheets(user.id),
-                    getTasks(user.id),
-                    getFrameworkAllocations(user.id)
-                ]);
-                setTimesheets(tsData);
-                setTasks(tasksData);
-                setFrameworks(fwData);
-            }
+            const [tsData, tasksData] = await Promise.all([
+                getTimesheets(user.id),
+                getTasks(user.id)
+            ]);
+            setTimesheets(tsData);
+            setTasks(tasksData);
         } catch (error) {
-            console.error("Failed to fetch data", error);
+            console.error("Failed to fetch timesheet/tasks data", error);
+        }
+
+        // Fetch Frameworks Separately (fail-safe)
+        try {
+            const fwData = await getFrameworkAllocations(user.id);
+            setFrameworks(fwData || []);
+        } catch (error) {
+            console.error("Failed to fetch frameworks", error);
         } finally {
             setLoading(false);
         }
