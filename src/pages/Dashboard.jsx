@@ -485,7 +485,7 @@ const Dashboard = () => {
                                                     <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors ${color.dot}`}></div>
                                                     <div className="flex flex-col min-w-0">
                                                         {/* Always show Task Content as Title if linked, else Entry Description */}
-                                                        <span className={`font-medium truncate transition-colors ${color.text}`}>
+                                                        <span className={`font-medium truncate transition-colors ${color.text} ${task?.is_completed ? "line-through text-gray-400" : ""}`}>
                                                             {task?.task_content || entry.description || "Work Logged"}
                                                         </span>
                                                         {/* Show remarks if they exist and are different from Title */}
