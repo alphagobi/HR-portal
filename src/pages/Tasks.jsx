@@ -52,6 +52,10 @@ const Tasks = () => {
     const handleCreateTask = async (e) => {
         e.preventDefault();
         if (!newTask.content) return;
+        if (!newTask.eta || parseInt(newTask.eta) <= 0) {
+            alert("ETA is mandatory and must be greater than 0 minutes.");
+            return;
+        }
 
         const user = getCurrentUser();
         if (!user) return;
@@ -450,7 +454,7 @@ const Tasks = () => {
                                 />
                             </div>
                             <div className="mb-6">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">ETA (Minutes)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">ETA (Minutes) <span className="text-red-500">*</span></label>
                                 <div className="flex gap-2 mb-2">
                                     <input
                                         type="number"
@@ -458,6 +462,7 @@ const Tasks = () => {
                                         className="flex-1 p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
                                         value={newTask.eta}
                                         onChange={(e) => setNewTask({ ...newTask, eta: e.target.value })}
+                                        required
                                     />
                                 </div>
                                 <div className="flex gap-2">

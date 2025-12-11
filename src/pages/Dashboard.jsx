@@ -73,6 +73,10 @@ const Dashboard = () => {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Editing Logged Entry State
+    const [editingEntryId, setEditingEntryId] = useState(null);
+    const [editDuration, setEditDuration] = useState('');
+
     // Draggable Sensor Setup
     const sensors = useSensors(
         useSensor(PointerSensor),
@@ -199,6 +203,65 @@ const Dashboard = () => {
             alert("Failed to log work.");
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    const handleDeleteEntry = async (entryIndex) => {
+        if (!confirm("Are you sure you want to delete this logged entry?")) return;
+        try {
+            const timesheetsData = await getTimesheets(user.id);
+            const todaySheet = timesheetsData.find(t => t.date === today);
+            if (!todaySheet) return;
+
+            // Finding the actual entry in the main list to mark deleted
+            const entryToDelete = loggedEntries[entryIndex];
+            const updatedEntries = todaySheet.entries.map(e =>
+                (e.id && e.id === entryToDelete.id) || (e.description === entryToDelete.description && e.duration === entryToDelete.duration && e.taskId === entryToDelete.taskId)
+                    ? { ...e, is_deleted: 1 }
+                    : e
+            );
+
+            await saveTimesheet({
+                date: today,
+                entries: updatedEntries,
+                employeeId: user.id,
+                status: todaySheet.status
+            });
+
+            fetchDashboardData();
+        } catch (error) {
+            console.error("Failed to delete entry", error);
+            alert("Failed to delete entry.");
+        }
+    };
+
+    const startEditingEntry = (entry) => {
+        setEditingEntryId(entry.id);
+        setEditDuration(entry.duration);
+    };
+
+    const handleUpdateEntry = async (entry) => {
+        try {
+            const timesheetsData = await getTimesheets(user.id);
+            const todaySheet = timesheetsData.find(t => t.date === today);
+            if (!todaySheet) return;
+
+            const updatedEntries = todaySheet.entries.map(e =>
+                e.id === entry.id ? { ...e, duration: (parseFloat(editDuration) || 0).toFixed(2) } : e
+            );
+
+            await saveTimesheet({
+                date: today,
+                entries: updatedEntries,
+                employeeId: user.id,
+                status: todaySheet.status
+            });
+
+            setEditingEntryId(null);
+            fetchDashboardData();
+        } catch (error) {
+            console.error("Failed to update entry", error);
+            alert("Failed to update entry.");
         }
     };
 
@@ -373,9 +436,39 @@ const Dashboard = () => {
                                                     {entry.description || "Work Logged"}
                                                 </span>
                                             </div>
-                                            <div className="flex items-center gap-1.5 pl-3">
-                                                <span className="font-bold text-gray-900">{entry.duration}</span>
-                                                <span className="text-xs text-gray-500 font-medium">hrs</span>
+                                            <div className="flex items-center gap-3 pl-3">
+                                                {editingEntryId === entry.id ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <input
+                                                            type="number"
+                                                            value={editDuration}
+                                                            onChange={(e) => setEditDuration(e.target.value)}
+                                                            className="w-16 p-1 text-xs border border-gray-300 rounded"
+                                                            autoFocus
+                                                        />
+                                                        <button onClick={() => handleUpdateEntry(entry)} className="text-green-600 hover:text-green-800">
+                                                            <Save size={14} />
+                                                        </button>
+                                                        <button onClick={() => setEditingEntryId(null)} className="text-red-500 hover:text-red-700">
+                                                            <X size={14} />
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="font-bold text-gray-900">{entry.duration}</span>
+                                                            <span className="text-xs text-gray-500 font-medium">hrs</span>
+                                                        </div>
+                                                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <button onClick={() => startEditingEntry(entry)} className="text-gray-400 hover:text-indigo-600">
+                                                                <Pencil size={14} />
+                                                            </button>
+                                                            <button onClick={() => handleDeleteEntry(index)} className="text-gray-400 hover:text-red-500">
+                                                                <Trash2 size={14} />
+                                                            </button>
+                                                        </div>
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
                                     );
