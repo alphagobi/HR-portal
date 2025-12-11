@@ -5,6 +5,7 @@ import { getCurrentUser } from '../services/authService';
 import { Plus, Calendar, Search, X } from 'lucide-react';
 import clsx from 'clsx';
 import { getTaskStatusColor } from '../utils/taskUtils';
+import { getFrameworkAllocations } from '../services/frameworkService';
 
 const Tasks = () => {
     const navigate = useNavigate();
@@ -29,16 +30,23 @@ const Tasks = () => {
     const [newTask, setNewTask] = useState({
         content: '',
         date: new Date().toISOString().split('T')[0],
-        eta: ''
+        eta: '',
+        frameworkId: ''
     });
+
+    const [frameworks, setFrameworks] = useState([]);
 
     const fetchTasks = async () => {
         setLoading(true);
         try {
             const user = getCurrentUser();
             if (user) {
-                const data = await getTasks(user.id);
-                setTasks(data);
+                const [tasksData, frameworksData] = await Promise.all([
+                    getTasks(user.id),
+                    getFrameworkAllocations(user.id)
+                ]);
+                setTasks(tasksData);
+                setFrameworks(frameworksData);
             }
         } catch (error) {
             console.error("Failed to fetch tasks", error);
@@ -68,9 +76,10 @@ const Tasks = () => {
                 task_content: newTask.content,
                 planned_date: newTask.date,
                 eta: newTask.eta || null,
+                framework_id: newTask.frameworkId || null,
                 recurrence: isRecurring ? { ...recurrenceSettings, isRecurring: true } : null
             });
-            setNewTask({ content: '', date: new Date().toISOString().split('T')[0], eta: '' });
+            setNewTask({ content: '', date: new Date().toISOString().split('T')[0], eta: '', frameworkId: '' });
             setIsRecurring(false); // Reset recurrence
             setShowAddModal(false);
             fetchTasks();
@@ -328,6 +337,20 @@ const Tasks = () => {
                                     value={newTask.date}
                                     onChange={(e) => setNewTask({ ...newTask, date: e.target.value })}
                                 />
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Link Framework (Strategy)</label>
+                                <select
+                                    className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                                    value={newTask.frameworkId}
+                                    onChange={(e) => setNewTask({ ...newTask, frameworkId: e.target.value })}
+                                >
+                                    <option value="">-- No Framework --</option>
+                                    {frameworks.map(fw => (
+                                        <option key={fw.id} value={fw.id}>{fw.category_name} ({fw.percentage}%)</option>
+                                    ))}
+                                </select>
                             </div>
 
                             {/* Recurrence Toggle */}

@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getTimesheets } from '../services/timesheetService';
-import { getTasks } from '../services/taskService';
-import { getTaskStatusColor } from '../utils/taskUtils';
-import { getCurrentUser } from '../services/authService';
-import { Calendar, ChevronLeft, ChevronRight, Clock, Filter } from 'lucide-react';
+import { getFrameworkAllocations } from '../services/frameworkService';
+import { Calendar, ChevronLeft, ChevronRight, Clock, Filter, BarChart3 } from 'lucide-react';
 import clsx from 'clsx';
 
 const Timesheet = () => {
@@ -11,6 +8,7 @@ const Timesheet = () => {
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [timesheets, setTimesheets] = useState([]);
     const [tasks, setTasks] = useState([]);
+    const [frameworks, setFrameworks] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const fetchTimesheets = async () => {
@@ -18,12 +16,14 @@ const Timesheet = () => {
         try {
             const user = getCurrentUser();
             if (user) {
-                const [tsData, tasksData] = await Promise.all([
+                const [tsData, tasksData, fwData] = await Promise.all([
                     getTimesheets(user.id),
-                    getTasks(user.id)
+                    getTasks(user.id),
+                    getFrameworkAllocations(user.id)
                 ]);
                 setTimesheets(tsData);
                 setTasks(tasksData);
+                setFrameworks(fwData);
             }
         } catch (error) {
             console.error("Failed to fetch data", error);
@@ -72,6 +72,28 @@ const Timesheet = () => {
     }, 0);
 
     const unplannedHours = totalHours - plannedHours;
+
+    // Calculate Framework Stats
+    const frameworkStats = frameworks.map(fw => {
+        let duration = 0;
+        filteredTimesheets.forEach(sheet => {
+            sheet.entries.forEach(entry => {
+                // Find task to get framework_id
+                const task = tasks.find(t => t.id == entry.taskId) || tasks.find(t => t.task_content === entry.description);
+                // Note: task.framework_id might be string or int
+                if (task && task.framework_id == fw.id) {
+                    duration += parseFloat(entry.duration || 0);
+                }
+            });
+        });
+
+        const percentage = totalHours > 0 ? ((duration / totalHours) * 100).toFixed(1) : 0;
+        return {
+            ...fw,
+            actualDuration: duration,
+            actualPercentage: parseFloat(percentage)
+        };
+    });
 
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-6">
@@ -135,6 +157,55 @@ const Timesheet = () => {
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <p className="text-sm text-orange-600 font-medium">Unplanned Hours</p>
                     <h3 className="text-2xl font-bold text-orange-700">{unplannedHours.toFixed(1)}</h3>
+                </div>
+            </div>
+
+            {/* Framework Analysis Section */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <div className="flex items-center gap-2 mb-4">
+                    <BarChart3 className="text-indigo-600" size={20} />
+                    <h2 className="text-lg font-bold text-gray-900">Framework Alignment</h2>
+                </div>
+
+                <div className="space-y-4">
+                    {frameworkStats.map(fw => (
+                        <div key={fw.id} className="space-y-1">
+                            <div className="flex justify-between text-sm">
+                                <span className="font-medium text-gray-700">{fw.category_name}</span>
+                                <div className="flex gap-4 text-gray-500">
+                                    <span>Target: <span className="font-bold text-gray-900">{fw.percentage}%</span></span>
+                                    <span>Actual: <span className={clsx("font-bold", fw.actualPercentage >= fw.percentage ? "text-green-600" : "text-amber-600")}>{fw.actualPercentage}%</span> ({fw.actualDuration.toFixed(1)}h)</span>
+                                </div>
+                            </div>
+                            <div className="h-2 bg-gray-100 rounded-full overflow-hidden flex">
+                                {/* Actual Bar */}
+                                <div
+                                    className={clsx("h-full rounded-full transition-all duration-500", fw.actualPercentage >= fw.percentage ? "bg-green-500" : "bg-indigo-500")}
+                                    style={{ width: `${Math.min(fw.actualPercentage, 100)}%` }}
+                                ></div>
+                            </div>
+                        </div>
+                    ))}
+                    {/* Unallocated */}
+                    {(() => {
+                        const trackedDuration = frameworkStats.reduce((acc, fw) => acc + fw.actualDuration, 0);
+                        const unallocated = totalHours - trackedDuration;
+                        const unallocatedPct = totalHours > 0 ? ((unallocated / totalHours) * 100).toFixed(1) : 0;
+                        if (unallocated > 0.01) return (
+                            <div className="space-y-1">
+                                <div className="flex justify-between text-sm">
+                                    <span className="font-medium text-gray-500 italic">Unallocated / General</span>
+                                    <span className="text-gray-500">Actual: <span className="font-bold text-gray-600">{unallocatedPct}%</span> ({unallocated.toFixed(1)}h)</span>
+                                </div>
+                                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-gray-400 rounded-full"
+                                        style={{ width: `${Math.min(unallocatedPct, 100)}%` }}
+                                    ></div>
+                                </div>
+                            </div>
+                        );
+                    })()}
                 </div>
             </div>
 

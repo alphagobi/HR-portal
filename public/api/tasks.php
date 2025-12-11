@@ -1,6 +1,16 @@
 <?php
 require_once 'config.php';
 
+// --- Auto-Migration to ensure 'framework_id' column exists ---
+try {
+    $check = $pdo->query("SHOW COLUMNS FROM planned_tasks LIKE 'framework_id'");
+    if ($check->rowCount() == 0) {
+        $pdo->exec("ALTER TABLE planned_tasks ADD COLUMN framework_id INT DEFAULT NULL");
+    }
+} catch (Exception $e) {
+    // Ignore migration errors
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
@@ -13,27 +23,27 @@ if ($method === 'GET') {
         exit;
     }
 
+    // Join with work_allocations to get framework name
+    $query = "
+        SELECT pt.*, t.date as completed_date, wa.category_name as framework_name, wa.percentage as framework_target
+        FROM planned_tasks pt
+        LEFT JOIN timesheet_entries te ON pt.related_entry_id = te.id
+        LEFT JOIN timesheets t ON te.timesheet_id = t.id
+        LEFT JOIN work_allocations wa ON pt.framework_id = wa.id
+        WHERE pt.user_id = ? 
+    ";
+
+    $params = [$user_id];
+    
     if ($date) {
-        $stmt = $pdo->prepare("
-            SELECT pt.*, t.date as completed_date 
-            FROM planned_tasks pt
-            LEFT JOIN timesheet_entries te ON pt.related_entry_id = te.id
-            LEFT JOIN timesheets t ON te.timesheet_id = t.id
-            WHERE pt.user_id = ? AND pt.planned_date = ? 
-            ORDER BY pt.created_at ASC
-        ");
-        $stmt->execute([$user_id, $date]);
+        $query .= " AND pt.planned_date = ? ORDER BY pt.created_at ASC";
+        $params[] = $date;
     } else {
-        $stmt = $pdo->prepare("
-            SELECT pt.*, t.date as completed_date 
-            FROM planned_tasks pt
-            LEFT JOIN timesheet_entries te ON pt.related_entry_id = te.id
-            LEFT JOIN timesheets t ON te.timesheet_id = t.id
-            WHERE pt.user_id = ? 
-            ORDER BY pt.planned_date ASC, pt.created_at ASC
-        ");
-        $stmt->execute([$user_id]);
+        $query .= " ORDER BY pt.planned_date ASC, pt.created_at ASC";
     }
+
+    $stmt = $pdo->prepare($query);
+    $stmt->execute($params);
     echo json_encode($stmt->fetchAll());
 } elseif ($method === 'POST') {
     $data = json_decode(file_get_contents("php://input"), true);
@@ -50,10 +60,10 @@ if ($method === 'GET') {
         $user_id = $data['user_id'];
         $content = $data['task_content'];
         $baseDate = $data['planned_date'];
-        // Always set start time to 09:00:00 if not provided to avoid null issues in ordering, though schema allows null
         $startTime = $data['start_time'] ?? null; 
         $endTime = $data['end_time'] ?? null;
         $eta = $data['eta'] ?? null;
+        $frameworkId = $data['framework_id'] ?? null; // Capture framework_id
         $recurrence = $data['recurrence'] ?? null;
 
         $tasksToInsert = [];
@@ -98,20 +108,9 @@ if ($method === 'GET') {
                     $currentDate->modify("+$interval day");
                 } elseif ($freq === 'weekly') {
                     if (!empty($weekDays)) {
-                        // If checking specific days, move one day at a time? 
-                        // Or if we found a match, move to next match?
-                        // Simple approach: Move 1 day at a time and strict check.
-                        // BUT standard behavior for 'Interval > 1' is tricky with specific days.
-                        // Usually, if "Every 2 Weeks on Mon, Wed", it implies the set of days repeats every 2 weeks.
-                        // Let's stick to simple: If weekDays is set, we iterate days.
-                        // If weekDays is NOT set, we jump by week interval.
-                        
-                         // COMPLEXITY SIMPLIFICATION:
                          // User asked to "surprise me". Let's handle two modes:
                          // 1. Simple Weekly (No days selected): Jump by X weeks.
                          // 2. Specific Days (Days selected): User Interval usually implies "Every week on Mon/Wed".
-                         // If Interval > 1 with Days, it's ambiguous. defaulting to "Every days checking".
-                        
                         $currentDate->modify("+1 day");
                     } else {
                         $currentDate->modify("+$interval week");
@@ -126,7 +125,7 @@ if ($method === 'GET') {
             $tasksToInsert[] = $baseDate;
         }
 
-        $stmt = $pdo->prepare("INSERT INTO planned_tasks (user_id, task_content, planned_date, start_time, end_time, eta) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO planned_tasks (user_id, task_content, planned_date, start_time, end_time, eta, framework_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
         
         $insertedCount = 0;
         foreach ($tasksToInsert as $dateStr) {
@@ -136,7 +135,8 @@ if ($method === 'GET') {
                 $dateStr, 
                 $startTime, 
                 $endTime, 
-                $eta
+                $eta,
+                $frameworkId // Insert framework_id
             ]);
             $insertedCount++;
         }
