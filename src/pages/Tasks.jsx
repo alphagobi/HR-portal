@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getTasks, createTask, updateTask, deleteTask } from '../services/taskService';
-import { getTimesheets, saveTimesheet } from '../services/timesheetService';
+import { getTasks, createTask, deleteTask } from '../services/taskService';
 import { getCurrentUser } from '../services/authService';
-import { Plus, Calendar, Clock, Search, X, Play, ChevronDown, ChevronUp, Save } from 'lucide-react';
+import { Plus, Calendar, Search, X } from 'lucide-react';
 import clsx from 'clsx';
 import { getTaskStatusColor } from '../utils/taskUtils';
 
@@ -16,13 +15,9 @@ const Tasks = () => {
     const [viewMode, setViewMode] = useState('monthly'); // 'daily', 'weekly', 'monthly'
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
-    // Inline Logging State
-    const [expandedTaskId, setExpandedTaskId] = useState(null);
-    const [logData, setLogData] = useState({
-        date: new Date().toISOString().split('T')[0],
-        duration: '',
-        remarks: ''
-    });
+    // Inline Logging State - REMOVED for clean "View Only" UI
+    // const [expandedTaskId, setExpandedTaskId] = useState(null);
+    // const [logData, setLogData] = useState(...);
 
     const [newTask, setNewTask] = useState({
         content: '',
@@ -77,74 +72,8 @@ const Tasks = () => {
 
     // Removed handleDeleteTask as per request
 
-    const toggleLogForm = (task) => {
-        if (expandedTaskId === task.id) {
-            setExpandedTaskId(null);
-        } else {
-            setExpandedTaskId(task.id);
-            setLogData({
-                date: new Date().toISOString().split('T')[0],
-                duration: task.eta || '', // Pre-fill with ETA if available
-                remarks: task.task_content
-            });
-        }
-    };
-
-    const handleSaveLog = async (task) => {
-        if (!logData.duration || !logData.date) {
-            alert("Please fill in date and duration.");
-            return;
-        }
-
-        const user = getCurrentUser();
-        if (!user) return;
-
-        try {
-            // 1. Fetch existing timesheet for the selected date
-            const timesheets = await getTimesheets(user.id);
-            const existingSheet = timesheets.find(t => t.date === logData.date);
-
-            let entries = existingSheet ? [...existingSheet.entries] : [];
-
-            // 2. Add new entry
-            const durationInHours = (parseFloat(logData.duration) / 60).toFixed(2);
-            const newEntry = {
-                id: Date.now(), // Temp ID
-                duration: durationInHours,
-                description: logData.remarks || task.task_content,
-                taskId: task.id,
-                project: 'General',
-                startTime: '09:00', // Defaults
-                endTime: '10:00',
-                type: 'planned'
-            };
-            entries.push(newEntry);
-
-            // 3. Save Timesheet
-            await saveTimesheet({
-                employeeId: user.id,
-                date: logData.date,
-                entries: entries,
-                status: existingSheet ? existingSheet.status : 'draft'
-            });
-
-            // 4. Update Task as Completed
-            await updateTask(task.id, {
-                is_completed: true,
-                // We rely on the backend to link the task to the entry if needed, 
-                // but for now we just mark it complete. 
-                // Ideally updateTask should also accept related_entry_id but we don't have the real DB ID of the entry yet.
-                // The backend sync logic (if any) or a second call would be needed for perfect linking.
-                // For now, let's assume the backend `saveTimesheet` or `updateTask` handles it or we just mark it complete.
-            });
-
-            setExpandedTaskId(null);
-            fetchTasks(); // Refresh to get updated status and colors
-        } catch (error) {
-            console.error("Failed to log work", error);
-            alert("Failed to log work. Please try again.");
-        }
-    };
+    // handleSaveLog REMOVED
+    // toggleLogForm REMOVED
 
     const addEta = (minutes) => {
         setNewTask(prev => {
@@ -312,112 +241,61 @@ const Tasks = () => {
                 </div>
             </div>
 
-            <div className="space-y-6">
+            {/* Task List - Redesigned to match Timesheet.jsx */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 {loading ? (
-                    <div className="text-center py-12 text-gray-500">Loading tasks...</div>
+                    <div className="p-8 text-center text-gray-400">Loading tasks...</div>
                 ) : sortedDates.length === 0 ? (
-                    <div className="text-center py-12 text-gray-500">No tasks found for this period.</div>
+                    <div className="p-8 text-center text-gray-400">No tasks found for this period.</div>
                 ) : (
-                    sortedDates.map(date => (
-                        <div key={date} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                            <div className="bg-gray-50 px-6 py-3 border-b border-gray-200 flex items-center gap-2">
-                                <Calendar size={18} className="text-indigo-600" />
-                                <h3 className="font-semibold text-gray-900">
-                                    {new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                                </h3>
-                            </div>
-                            <div className="divide-y divide-gray-100">
-                                {groupedTasks[date].map(task => {
-                                    const status = getTaskStatusColor(task.planned_date, task.is_completed);
-                                    // Use specific completed logic if needed, or just standard
-                                    // Tasks page had specific logic for completed task background (early/late), 
-                                    // but user requested UNIVERSAL color. So I will use the universal dot/text logic,
-                                    // but maybe keep the background subtle?
-                                    // Let's stick to the requested "universally the same color" which implies the Red/Yellow/Green indicators.
-                                    // I will use a subtle background based on the status.
-                                    const borderClass = status.border.replace('text-', 'border-');
+                    <div className="divide-y divide-gray-100">
+                        {sortedDates.map(date => {
+                            const daysTasks = groupedTasks[date];
+                            const daysPlannedMinutes = daysTasks.reduce((acc, t) => acc + parseInt(t.eta || 0), 0);
+                            const daysPlannedHours = (daysPlannedMinutes / 60).toFixed(1);
 
-                                    return (
-                                        <div key={task.id} className={`transition-colors border-b border-gray-100 last:border-0`}>
-                                            <div className="p-4 flex items-center justify-between group">
-                                                <div className="flex items-center gap-4 flex-1">
-                                                    <div className={`w-2 h-2 rounded-full ${status.dot}`}></div>
-                                                    <button
-                                                        onClick={() => toggleLogForm(task)}
-                                                        className={clsx(
-                                                            "flex-shrink-0 transition-colors p-2 rounded-full hover:bg-black/5",
-                                                            task.is_completed ? "text-gray-400" : "text-indigo-600"
-                                                        )}
-                                                        title={task.is_completed ? "Completed" : "Log Work"}
-                                                        disabled={task.is_completed}
-                                                    >
-                                                        {task.is_completed ? <div className="w-5 h-5 rounded-full bg-gray-400" /> : <Play size={20} fill="currentColor" />}
-                                                    </button>
-                                                    <div className="flex-1">
-                                                        <p className={clsx(
-                                                            "text-gray-900 font-medium transition-all",
-                                                            task.is_completed && "text-gray-500 line-through"
-                                                        )}>
+                            return (
+                                <div key={date} className="p-6 hover:bg-gray-50 transition-colors">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                                            <Calendar size={18} className="text-indigo-600" />
+                                            {new Date(date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                                        </h3>
+                                        <span className="text-sm font-medium text-gray-500">
+                                            {daysPlannedHours} hrs
+                                        </span>
+                                    </div>
+
+                                    <div className="space-y-2 pl-6 border-l-2 border-gray-100">
+                                        {daysTasks.map(task => {
+                                            const status = getTaskStatusColor(task.planned_date, task.is_completed);
+
+                                            return (
+                                                <div key={task.id} className="flex items-center justify-between text-sm group">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-2 h-2 rounded-full ${status.dot}`}></div>
+                                                        <span className={clsx(`font-medium ${status.text}`, task.is_completed && "line-through text-gray-400")}>
                                                             {task.task_content}
-                                                        </p>
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        {task.is_completed && (
+                                                            <span className="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700">
+                                                                Completed
+                                                            </span>
+                                                        )}
                                                         {task.eta && (
-                                                            <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
-                                                                <Clock size={12} />
-                                                                <span>{task.eta} mins</span>
-                                                            </div>
+                                                            <span className="font-medium text-gray-900">{task.eta} mins</span>
                                                         )}
                                                     </div>
                                                 </div>
-                                            </div>
-
-                                            {/* Inline Log Form */}
-                                            {expandedTaskId === task.id && (
-                                                <div className="p-4 bg-gray-50 border-t border-gray-100 ml-12 mr-4 mb-4 rounded-lg shadow-inner">
-                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                                                        <div>
-                                                            <label className="block text-xs font-medium text-gray-500 mb-1">Date</label>
-                                                            <input
-                                                                type="date"
-                                                                className="w-full p-2 text-sm border border-gray-200 rounded-md"
-                                                                value={logData.date}
-                                                                onChange={(e) => setLogData({ ...logData, date: e.target.value })}
-                                                            />
-                                                        </div>
-                                                        <div>
-                                                            <label className="block text-xs font-medium text-gray-500 mb-1">Duration (mins)</label>
-                                                            <input
-                                                                type="number"
-                                                                className="w-full p-2 text-sm border border-gray-200 rounded-md"
-                                                                placeholder="e.g. 60"
-                                                                value={logData.duration}
-                                                                onChange={(e) => setLogData({ ...logData, duration: e.target.value })}
-                                                            />
-                                                        </div>
-                                                        <button
-                                                            onClick={() => handleSaveLog(task)}
-                                                            className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 flex items-center justify-center gap-2"
-                                                        >
-                                                            <Save size={16} /> Save Log
-                                                        </button>
-                                                    </div>
-                                                    <div className="mt-3">
-                                                        <label className="block text-xs font-medium text-gray-500 mb-1">Remarks</label>
-                                                        <input
-                                                            type="text"
-                                                            className="w-full p-2 text-sm border border-gray-200 rounded-md"
-                                                            placeholder="Optional remarks..."
-                                                            value={logData.remarks}
-                                                            onChange={(e) => setLogData({ ...logData, remarks: e.target.value })}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    ))
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 )}
             </div>
 
