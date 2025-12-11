@@ -21,16 +21,20 @@ const Timesheet = () => {
             return;
         }
 
+        // Fetch Timesheets (Independent)
         try {
-            const [tsData, tasksData] = await Promise.all([
-                getTimesheets(user.id),
-                getTasks(user.id)
-            ]);
-            // Safety Checks
+            const tsData = await getTimesheets(user.id);
             setTimesheets(Array.isArray(tsData) ? tsData : []);
+        } catch (error) {
+            console.error("Failed to fetch timesheets", error);
+        }
+
+        // Fetch Tasks (Independent)
+        try {
+            const tasksData = await getTasks(user.id);
             setTasks(Array.isArray(tasksData) ? tasksData : []);
         } catch (error) {
-            console.error("Failed to fetch timesheet/tasks data", error);
+            console.error("Failed to fetch tasks", error);
         } finally {
             setLoading(false);
         }
