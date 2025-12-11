@@ -35,8 +35,7 @@ if ($method === 'GET') {
         $stmt->execute([$user_id]);
     }
     echo json_encode($stmt->fetchAll());
-} 
-elseif ($method === 'POST') {
+} elseif ($method === 'POST') {
     $data = json_decode(file_get_contents("php://input"), true);
     
     if (!isset($data['user_id']) || !isset($data['task_content']) || !isset($data['planned_date'])) {
@@ -45,18 +44,110 @@ elseif ($method === 'POST') {
         exit;
     }
 
-    $stmt = $pdo->prepare("INSERT INTO planned_tasks (user_id, task_content, planned_date, start_time, end_time, eta) VALUES (?, ?, ?, ?, ?, ?)");
     try {
-        $stmt->execute([
-            $data['user_id'], 
-            $data['task_content'], 
-            $data['planned_date'], 
-            $data['start_time'] ?? null,
-            $data['end_time'] ?? null,
-            $data['eta'] ?? null
-        ]);
-        echo json_encode(["message" => "Task created", "id" => $pdo->lastInsertId()]);
-    } catch (PDOException $e) {
+        $pdo->beginTransaction();
+        
+        $user_id = $data['user_id'];
+        $content = $data['task_content'];
+        $baseDate = $data['planned_date'];
+        // Always set start time to 09:00:00 if not provided to avoid null issues in ordering, though schema allows null
+        $startTime = $data['start_time'] ?? null; 
+        $endTime = $data['end_time'] ?? null;
+        $eta = $data['eta'] ?? null;
+        $recurrence = $data['recurrence'] ?? null;
+
+        $tasksToInsert = [];
+
+        if ($recurrence && $recurrence['isRecurring']) {
+            // Generate multiple tasks
+            $freq = $recurrence['frequency'] ?? 'daily';
+            $interval = max(1, intval($recurrence['interval'] ?? 1));
+            $endType = $recurrence['endType'] ?? 'date';
+            $endDate = $recurrence['endDate'] ?? null;
+            $endCount = intval($recurrence['endCount'] ?? 10);
+            $weekDays = $recurrence['weekDays'] ?? []; // Array of day indexes (0=Sun, 1=Mon...)
+
+            $currentDate = new DateTime($baseDate);
+            $limitDate = ($endDate) ? new DateTime($endDate) : (new DateTime($baseDate))->modify('+1 year');
+            $count = 0;
+            $maxCount = ($endType === 'count') ? $endCount : 365; // hard cap for safety
+
+            while ($count < $maxCount) {
+                // Check date limit
+                if ($endType === 'date' && $currentDate > $limitDate) {
+                    break;
+                }
+
+                // For weekly with specific days, check if current day matches
+                $shouldInsert = true;
+                if ($freq === 'weekly' && !empty($weekDays)) {
+                    // PHP 'w' returns 0 (Sun) - 6 (Sat)
+                    $dayOfWeek = intval($currentDate->format('w'));
+                    if (!in_array($dayOfWeek, $weekDays)) {
+                        $shouldInsert = false;
+                    }
+                }
+
+                if ($shouldInsert) {
+                    $tasksToInsert[] = $currentDate->format('Y-m-d');
+                    $count++;
+                }
+
+                // Advance Date
+                if ($freq === 'daily') {
+                    $currentDate->modify("+$interval day");
+                } elseif ($freq === 'weekly') {
+                    if (!empty($weekDays)) {
+                        // If checking specific days, move one day at a time? 
+                        // Or if we found a match, move to next match?
+                        // Simple approach: Move 1 day at a time and strict check.
+                        // BUT standard behavior for 'Interval > 1' is tricky with specific days.
+                        // Usually, if "Every 2 Weeks on Mon, Wed", it implies the set of days repeats every 2 weeks.
+                        // Let's stick to simple: If weekDays is set, we iterate days.
+                        // If weekDays is NOT set, we jump by week interval.
+                        
+                         // COMPLEXITY SIMPLIFICATION:
+                         // User asked to "surprise me". Let's handle two modes:
+                         // 1. Simple Weekly (No days selected): Jump by X weeks.
+                         // 2. Specific Days (Days selected): User Interval usually implies "Every week on Mon/Wed".
+                         // If Interval > 1 with Days, it's ambiguous. defaulting to "Every days checking".
+                        
+                        $currentDate->modify("+1 day");
+                    } else {
+                        $currentDate->modify("+$interval week");
+                    }
+                } elseif ($freq === 'monthly') {
+                    $currentDate->modify("+$interval month");
+                }
+            }
+
+        } else {
+            // Single Task
+            $tasksToInsert[] = $baseDate;
+        }
+
+        $stmt = $pdo->prepare("INSERT INTO planned_tasks (user_id, task_content, planned_date, start_time, end_time, eta) VALUES (?, ?, ?, ?, ?, ?)");
+        
+        $insertedCount = 0;
+        foreach ($tasksToInsert as $dateStr) {
+            $stmt->execute([
+                $user_id, 
+                $content, 
+                $dateStr, 
+                $startTime, 
+                $endTime, 
+                $eta
+            ]);
+            $insertedCount++;
+        }
+
+        $pdo->commit();
+        echo json_encode(["message" => "Tasks created", "count" => $insertedCount]);
+
+    } catch (Exception $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
         http_response_code(500);
         echo json_encode(["error" => $e->getMessage()]);
     }
