@@ -474,9 +474,8 @@ const Dashboard = () => {
                             ) : (
                                 loggedEntries.map((entry, index) => {
                                     const task = allTasksList.find(t => t.id == entry.taskId) || allTasksList.find(t => t.task_content === entry.description);
-                                    // Force isCompleted to false so the color reflects the due date status (Red/Yellow/Green)
-                                    // even if the task is technically "completed" or "logged"
-                                    const color = getTaskStatusColor(task?.planned_date, false);
+                                    // Use actual completion status so Green shows for completed tasks
+                                    const color = getTaskStatusColor(task?.planned_date, task?.is_completed == 1);
 
                                     return (
                                         <div key={index} className="group hover:bg-gray-50 rounded-lg -mx-2 transition-colors">
