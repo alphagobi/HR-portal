@@ -24,11 +24,14 @@ const Timesheet = () => {
             return;
         }
 
+        let tsData = [];
+        let tasksData = [];
+
         // Fetch Timesheets (Independent)
         try {
-            const tsData = await getTimesheets(user.id);
-            setTimesheets(Array.isArray(tsData) ? tsData : []);
-            if (!Array.isArray(tsData)) {
+            const result = await getTimesheets(user.id);
+            tsData = Array.isArray(result) ? result : [];
+            if (!Array.isArray(result)) {
                 setDebugError((prev) => (prev ? prev + " | " : "") + "Timesheets API returned non-array");
             }
         } catch (error) {
@@ -38,11 +41,99 @@ const Timesheet = () => {
 
         // Fetch Tasks (Independent)
         try {
-            const tasksData = await getTasks(user.id);
-            setTasks(Array.isArray(tasksData) ? tasksData : []);
+            const result = await getTasks(user.id);
+            tasksData = Array.isArray(result) ? result : [];
         } catch (error) {
             console.error("Failed to fetch tasks", error);
             // We don't block UI for tasks, but can log it
+        }
+
+        // Process & Merge Data
+        try {
+            let fullHistory = Array.isArray(tsData) ? [...tsData] : [];
+            const taskList = Array.isArray(tasksData) ? tasksData : [];
+
+            // 1. Identify tasks already logged in real timesheets to avoid duplicates
+            const loggedTaskIds = new Set();
+            fullHistory.forEach(sheet => {
+                if (sheet.entries) {
+                    sheet.entries.forEach(entry => {
+                        if (entry.taskId) loggedTaskIds.add(String(entry.taskId));
+                    });
+                }
+            });
+
+            // 2. Find Completed Tasks NOT logged
+            const orphanedTasks = taskList.filter(t =>
+                (t.is_completed == 1 || t.is_completed === true) &&
+                !loggedTaskIds.has(String(t.id))
+            );
+
+            // 3. Convert Orphans to Virtual Timesheets
+            const virtualSheets = [];
+            orphanedTasks.forEach(task => {
+                // Use planned_date for grouping (since we don't have exact completed_at if not logged)
+                const date = task.planned_date || new Date().toISOString().split('T')[0];
+
+                // Check if we already have a sheet for this date in virtualSheets
+                let sheet = virtualSheets.find(s => s.date === date);
+                if (!sheet) {
+                    // Check if we have a REAL sheet for this date to append to
+                    const realSheetIndex = fullHistory.findIndex(s => s.date === date);
+                    if (realSheetIndex !== -1) {
+                        sheet = fullHistory[realSheetIndex]; // Modify existing real sheet object (careful with mutation)
+                    } else {
+                        sheet = {
+                            id: `virtual-${date}`, // unique ID
+                            date: date,
+                            employee_id: user.id,
+                            employee_name: user.name,
+                            entries: [],
+                            isVirtual: true // flag
+                        };
+                        virtualSheets.push(sheet);
+                    }
+                }
+
+                // Create Virtual Entry
+                const entry = {
+                    id: `v-entry-${task.id}`,
+                    timesheet_id: sheet.id,
+                    startTime: "09:00", // Default
+                    endTime: "10:00", // Default
+                    duration: task.eta || "0",
+                    description: task.task_content,
+                    project: "Task",
+                    taskId: task.id,
+                    type: 'planned',
+                    is_edited: 0,
+                    is_deleted: 0
+                };
+
+                // If it's a real sheet, we must modify a copy or push to its entries? 
+                // Better to re-construct. 
+                // Let's simplify: Add to 'sheet.entries'.
+                if (!sheet.entries) sheet.entries = [];
+                sheet.entries.push(entry);
+            });
+
+            // 4. Combine Real + Virtual New Sheets
+            // Note: We modified real sheets in-place if they existed in `virtualSheets` loop? 
+            // No, `sheet = fullHistory[...]` refers to the object in the array. 
+            // So modifying `sheet.entries` updates `fullHistory`.
+            // The `virtualSheets` array ONLY contains NEW sheets for dates that didn't exist.
+
+            fullHistory = [...fullHistory, ...virtualSheets];
+
+            // 5. Sort by Date DESC
+            fullHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            setTimesheets(fullHistory);
+            setTasks(taskList);
+
+        } catch (error) {
+            console.error("Failed to process data", error);
+            setDebugError((prev) => (prev ? prev + " | " : "") + "Processing: " + error.message);
         } finally {
             setLoading(false);
         }
