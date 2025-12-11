@@ -75,7 +75,10 @@ const Dashboard = () => {
 
     // Editing Logged Entry State
     const [editingEntryId, setEditingEntryId] = useState(null);
-    const [editDuration, setEditDuration] = useState('');
+    // Reuse logForm for editing to keep it consistent (duration in mins, remarks)
+    // We can use a separate state if we want to avoid conflicts, but reusing logic is fine if we are careful.
+    // Let's use a separate state to be safe and clear.
+    const [editForm, setEditForm] = useState({ duration: '', remarks: '' });
 
     // Draggable Sensor Setup
     const sensors = useSensors(
@@ -240,8 +243,18 @@ const Dashboard = () => {
     };
 
     const startEditingEntry = (entry) => {
-        setEditingEntryId(entry.id);
-        setEditDuration(entry.duration);
+        if (editingEntryId === entry.id) {
+            setEditingEntryId(null);
+            setEditForm({ duration: '', remarks: '' });
+        } else {
+            setEditingEntryId(entry.id);
+            // Convert hours to minutes for the form
+            const mins = Math.round(parseFloat(entry.duration || 0) * 60);
+            setEditForm({
+                duration: mins.toString(),
+                remarks: entry.description || ''
+            });
+        }
     };
 
     const handleUpdateEntry = async (entry) => {
@@ -250,8 +263,10 @@ const Dashboard = () => {
             const todaySheet = timesheetsData.find(t => t.date === today);
             if (!todaySheet) return;
 
+            const durationInHours = (parseFloat(editForm.duration) / 60).toFixed(2);
+
             const updatedEntries = todaySheet.entries.map(e =>
-                e.id === entry.id ? { ...e, duration: (parseFloat(editDuration) || 0).toFixed(2) } : e
+                e.id === entry.id ? { ...e, duration: durationInHours, description: editForm.remarks } : e
             );
 
             await saveTimesheet({
@@ -262,6 +277,7 @@ const Dashboard = () => {
             });
 
             setEditingEntryId(null);
+            setEditForm({ duration: '', remarks: '' });
             fetchDashboardData();
         } catch (error) {
             console.error("Failed to update entry", error);
@@ -433,47 +449,67 @@ const Dashboard = () => {
                                     const color = getTaskStatusColor(task?.planned_date, false);
 
                                     return (
-                                        <div key={index} className="flex justify-between items-center text-sm group hover:bg-gray-50 p-2 rounded-lg -mx-2 transition-colors">
-                                            <div className="flex items-center gap-3 min-w-0 flex-1">
-                                                <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors ${color.dot}`}></div>
-                                                <span className={`font-medium truncate transition-colors ${color.text}`}>
-                                                    {entry.description || "Work Logged"}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center gap-3 pl-3">
-                                                {editingEntryId === entry.id ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <input
-                                                            type="number"
-                                                            value={editDuration}
-                                                            onChange={(e) => setEditDuration(e.target.value)}
-                                                            className="w-16 p-1 text-xs border border-gray-300 rounded"
-                                                            autoFocus
-                                                        />
-                                                        <button onClick={() => handleUpdateEntry(entry)} className="text-green-600 hover:text-green-800">
-                                                            <Save size={14} />
+                                        <div key={index} className="group hover:bg-gray-50 rounded-lg -mx-2 transition-colors">
+                                            {/* Entry Row */}
+                                            <div className="flex justify-between items-center text-sm p-2">
+                                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors ${color.dot}`}></div>
+                                                    <span className={`font-medium truncate transition-colors ${color.text}`}>
+                                                        {entry.description || "Work Logged"}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-3 pl-3">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="font-bold text-gray-900">{entry.duration}</span>
+                                                        <span className="text-xs text-gray-500 font-medium">hrs</span>
+                                                    </div>
+                                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button onClick={() => startEditingEntry(entry)} className="text-gray-400 hover:text-indigo-600">
+                                                            <Pencil size={14} />
                                                         </button>
-                                                        <button onClick={() => setEditingEntryId(null)} className="text-red-500 hover:text-red-700">
-                                                            <X size={14} />
+                                                        <button onClick={() => handleDeleteEntry(index)} className="text-gray-400 hover:text-red-500">
+                                                            <Trash2 size={14} />
                                                         </button>
                                                     </div>
-                                                ) : (
-                                                    <>
-                                                        <div className="flex items-center gap-1.5">
-                                                            <span className="font-bold text-gray-900">{entry.duration}</span>
-                                                            <span className="text-xs text-gray-500 font-medium">hrs</span>
-                                                        </div>
-                                                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <button onClick={() => startEditingEntry(entry)} className="text-gray-400 hover:text-indigo-600">
-                                                                <Pencil size={14} />
-                                                            </button>
-                                                            <button onClick={() => handleDeleteEntry(index)} className="text-gray-400 hover:text-red-500">
-                                                                <Trash2 size={14} />
-                                                            </button>
-                                                        </div>
-                                                    </>
-                                                )}
+                                                </div>
                                             </div>
+
+                                            {/* Edit Dropdown Form */}
+                                            {editingEntryId === entry.id && (
+                                                <div className="px-4 pb-4 pt-2 bg-gray-50/50 border-t border-gray-100 mx-2 mb-2 rounded-b-md">
+                                                    <div className="space-y-3">
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div>
+                                                                <label className="block text-xs font-medium text-gray-700 mb-1">Time Spent (Mins)</label>
+                                                                <input
+                                                                    type="number"
+                                                                    required
+                                                                    placeholder="e.g. 60"
+                                                                    className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white"
+                                                                    value={editForm.duration}
+                                                                    onChange={(e) => setEditForm(prev => ({ ...prev, duration: e.target.value }))}
+                                                                />
+                                                            </div>
+                                                            <div className="flex items-end">
+                                                                <button
+                                                                    onClick={() => handleUpdateEntry(entry)}
+                                                                    className="w-full text-sm bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors font-medium shadow-sm flex justify-center items-center gap-2"
+                                                                >
+                                                                    <Save size={14} /> Update Log
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <textarea
+                                                                placeholder="Remarks"
+                                                                className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white h-16 resize-none"
+                                                                value={editForm.remarks}
+                                                                onChange={(e) => setEditForm(prev => ({ ...prev, remarks: e.target.value }))}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     );
                                 })
