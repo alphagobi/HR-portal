@@ -21,9 +21,9 @@ const SortableItem = ({ id, item, index, onRemove, onUpdate }) => {
     };
 
     return (
-        <div ref={setNodeRef} style={style} className="flex items-center gap-2 mb-2 bg-gray-50 p-2 rounded-md border border-gray-100 group">
-            <div {...attributes} {...listeners} className="cursor-grab text-gray-400 hover:text-gray-600">
-                <GripVertical size={16} />
+        <div ref={setNodeRef} style={style} className="flex items-center gap-3 mb-3 bg-white p-3 rounded-lg border border-gray-100 shadow-sm group">
+            <div {...attributes} {...listeners} className="cursor-grab text-gray-400 hover:text-indigo-500 p-1">
+                <GripVertical size={18} />
             </div>
             <input
                 type="text"
@@ -32,7 +32,7 @@ const SortableItem = ({ id, item, index, onRemove, onUpdate }) => {
                 className="flex-1 text-sm bg-transparent border-b border-transparent focus:border-indigo-300 focus:ring-0 p-1 font-medium text-gray-700 placeholder-gray-400 transition-colors"
                 placeholder="Category Name"
             />
-            <div className="flex items-center gap-1 bg-white px-2 py-1 rounded border border-gray-200 w-16 shadow-sm">
+            <div className="flex items-center gap-1 bg-gray-50 px-3 py-1.5 rounded-md border border-gray-200 min-w-[4.5rem] shadow-inner">
                 <input
                     type="text"
                     value={item.percentage}
@@ -45,8 +45,8 @@ const SortableItem = ({ id, item, index, onRemove, onUpdate }) => {
                 />
                 <span className="text-xs text-gray-400 font-medium select-none">%</span>
             </div>
-            <button onClick={() => onRemove(index)} className="text-gray-400 hover:text-red-500 transition-colors">
-                <Trash2 size={16} />
+            <button onClick={() => onRemove(index)} className="text-gray-300 hover:text-red-500 transition-colors p-1">
+                <Trash2 size={18} />
             </button>
         </div>
     );
@@ -255,55 +255,55 @@ const Dashboard = () => {
     const counts = getTaskCounts();
 
     return (
-        <div className="p-6 max-w-7xl mx-auto space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mt-6">
+        <div className="p-4 lg:p-8 max-w-7xl mx-auto space-y-6 lg:space-y-8 font-sans">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mt-2">
                 {/* Left Column (5/12 width) - Framework & Logged Tasks */}
                 <div className="lg:col-span-5 space-y-6">
                     {/* Widget 1: Framework Allocations */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[280px]">
+                    <div className="bg-white p-5 lg:p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col min-h-[250px] lg:h-[280px]">
                         <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2">
-                            <h2 className="text-base font-bold text-gray-900">Framework</h2>
+                            <h2 className="text-lg font-bold text-gray-800">Framework</h2>
                             {!isEditingFramework && (
-                                <button onClick={() => setIsEditingFramework(true)} className="text-gray-400 hover:text-indigo-600 transition-colors">
-                                    <Pencil size={14} />
+                                <button onClick={() => setIsEditingFramework(true)} className="p-2 -mr-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-all">
+                                    <Pencil size={16} />
                                 </button>
                             )}
                         </div>
 
                         {!isEditingFramework ? (
-                            <div className="flex-1 overflow-y-auto space-y-4 no-scrollbar">
+                            <div className="flex-1 overflow-y-auto space-y-3 lg:space-y-4 no-scrollbar">
                                 {allocations.map((item, idx) => (
-                                    <div key={idx} className="flex justify-between items-center">
+                                    <div key={idx} className="flex justify-between items-center group">
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${['bg-indigo-500', 'bg-blue-500', 'bg-purple-500', 'bg-pink-500'][idx % 4]}`}></div>
-                                            <span className="text-sm font-bold text-gray-700">{item.category_name}</span>
+                                            <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-sm ${['bg-indigo-500', 'bg-blue-500', 'bg-purple-500', 'bg-pink-500'][idx % 4]}`}></div>
+                                            <span className="text-sm font-semibold text-gray-700 group-hover:text-gray-900 transition-colors">{item.category_name}</span>
                                         </div>
                                         <div className="text-right">
-                                            <span className="text-sm font-bold text-gray-900">{item.percentage}%</span>
+                                            <span className="text-sm font-bold text-gray-900 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100">{item.percentage}%</span>
                                         </div>
                                     </div>
                                 ))}
                                 {frameworkTotal < 100 && (
-                                    <div className="flex justify-between items-center">
+                                    <div className="flex justify-between items-center opacity-75">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-2 h-2 rounded-full flex-shrink-0 bg-gray-300"></div>
-                                            <span className="text-sm font-bold text-gray-400">Unplanned</span>
+                                            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-gray-300"></div>
+                                            <span className="text-sm font-semibold text-gray-500">Unplanned</span>
                                         </div>
                                         <div className="text-right">
-                                            <span className="text-sm font-bold text-gray-400">{100 - frameworkTotal}%</span>
+                                            <span className="text-sm font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100">{100 - frameworkTotal}%</span>
                                         </div>
                                     </div>
                                 )}
                             </div>
                         ) : (
-                            <div className="flex-1 flex flex-col min-h-0 bg-white z-10">
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Editing...</span>
+                            <div className="flex-1 flex flex-col min-h-0 bg-gray-50/50 -mx-4 -mb-4 p-4 rounded-b-2xl">
+                                <div className="flex justify-between items-center mb-3">
+                                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Ordering</span>
                                     <div className="flex gap-2">
-                                        <button onClick={() => handleSaveFramework()} className="text-green-600 hover:text-green-700" title="Save">
+                                        <button onClick={() => handleSaveFramework()} className="text-white bg-green-500 hover:bg-green-600 p-1.5 rounded-lg shadow-sm transition-colors" title="Save">
                                             <Save size={16} />
                                         </button>
-                                        <button onClick={() => { setIsEditingFramework(false); setTempAllocations(allocations); }} className="text-red-400 hover:text-red-500" title="Cancel">
+                                        <button onClick={() => { setIsEditingFramework(false); setTempAllocations(allocations); }} className="text-gray-500 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors" title="Cancel">
                                             <X size={16} />
                                         </button>
                                     </div>
@@ -326,11 +326,11 @@ const Dashboard = () => {
                                     </SortableContext>
                                 </DndContext>
 
-                                <div className="mt-2 pt-2 border-t border-gray-50 flex justify-between items-center">
-                                    <button onClick={handleAddAllocation} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
-                                        <Plus size={14} /> Add Item
+                                <div className="mt-3 pt-3 border-t border-gray-200 flex justify-between items-center">
+                                    <button onClick={handleAddAllocation} className="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1.5 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">
+                                        <Plus size={14} /> Add Category
                                     </button>
-                                    <span className={`text-xs font-bold ${tempAllocations.reduce((sum, i) => sum + (parseInt(i.percentage) || 0), 0) > 100 ? "text-red-500" : "text-gray-400"}`}>
+                                    <span className={`text-xs font-bold px-2 py-1 rounded-md ${tempAllocations.reduce((sum, i) => sum + (parseInt(i.percentage) || 0), 0) > 100 ? "text-red-600 bg-red-50" : "text-gray-500 bg-gray-100"}`}>
                                         Total: {tempAllocations.reduce((sum, i) => sum + (parseInt(i.percentage) || 0), 0)}%
                                     </span>
                                 </div>
@@ -339,21 +339,21 @@ const Dashboard = () => {
                     </div>
 
                     {/* Widget 2: Logged Today */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-420px)] min-h-[300px]">
+                    <div className="bg-white p-5 lg:p-6 rounded-2xl shadow-md border border-gray-100 flex flex-col lg:h-[calc(100vh-450px)] min-h-[350px]">
                         <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2 flex-shrink-0">
-                            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                                <Clock size={18} className="text-indigo-600" />
+                            <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                <Clock size={20} className="text-indigo-600" />
                                 Logged Today
                             </h2>
-                            <span className="text-sm font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-md">
+                            <span className="text-sm font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-3 py-1 rounded-lg">
                                 {loggedEntries.reduce((acc, curr) => acc + parseFloat(curr.duration || 0), 0).toFixed(2)} hrs
                             </span>
                         </div>
-                        <div className="space-y-3 flex-1 overflow-y-auto overflow-x-hidden pr-1 no-scrollbar">
+                        <div className="space-y-2 flex-1 overflow-y-auto scroll-smooth pr-1 no-scrollbar">
                             {loggedEntries.length === 0 ? (
-                                <div className="text-center py-6">
-                                    <Clock size={32} className="mx-auto text-gray-200 mb-2" />
-                                    <p className="text-sm text-gray-400 italic">No work logged yet.</p>
+                                <div className="flex flex-col items-center justify-center h-full text-center py-6 text-gray-300">
+                                    <Clock size={48} strokeWidth={1.5} className="mb-3 opacity-50" />
+                                    <p className="text-sm font-medium">No work logged yet</p>
                                 </div>
                             ) : (
                                 loggedEntries.map((entry, index) => {
@@ -361,16 +361,15 @@ const Dashboard = () => {
                                     const color = getTaskStatusColor(task?.planned_date, task?.is_completed);
 
                                     return (
-                                        <div key={index} className="flex justify-between items-center text-sm group hover:bg-gray-50 p-2 rounded-lg -mx-2 transition-colors">
+                                        <div key={index} className="flex justify-between items-center text-sm group hover:bg-gray-50 p-3 rounded-xl border border-transparent hover:border-gray-100 transition-all duration-200">
                                             <div className="flex items-center gap-3 min-w-0 flex-1">
-                                                <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors ${color.dot}`}></div>
+                                                <div className={`w-2 h-2 rounded-full flex-shrink-0 transition-colors shadow-sm ${color.dot}`}></div>
                                                 <span className={`font-medium truncate transition-colors ${color.text}`}>
                                                     {entry.description || "Work Logged"}
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-1.5 pl-3">
-                                                <span className="font-bold text-gray-900">{entry.duration}</span>
-                                                <span className="text-xs text-gray-500 font-medium">hrs</span>
+                                                <span className="font-bold text-gray-900 bg-gray-100 px-2 py-0.5 rounded text-xs">{entry.duration}h</span>
                                             </div>
                                         </div>
                                     );
@@ -382,74 +381,85 @@ const Dashboard = () => {
 
                 {/* Right Column (7/12 width) - Tasks List */}
                 <div className="lg:col-span-7">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-140px)] min-h-[600px]">
-                        {/* Fixed height to match approx height of left column items (280 + 296 + 24 gap = 600) */}
-                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                            <h2 className="text-lg font-bold text-gray-900">Your Tasks</h2>
-                            <div className="flex gap-2">
+                    <div className="bg-white rounded-2xl shadow-md border border-gray-100 flex flex-col lg:h-[calc(100vh-170px)] min-h-[500px]">
+                        {/* Fixed height to match approx height of left column items */}
+                        <div className="px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <h2 className="text-xl font-bold text-gray-900">Your Tasks</h2>
+                            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                                 {/* Red - Overdue */}
-                                <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.overdue > 0 ? 'text-red-700 bg-red-100' : 'text-gray-400 bg-gray-50'}`}>
+                                <span className={`text-xs font-bold px-3 py-1.5 rounded-lg flex-1 sm:flex-none text-center ${counts.overdue > 0 ? 'text-red-700 bg-red-100' : 'text-gray-400 bg-gray-50'}`}>
                                     {counts.overdue} Red
                                 </span>
                                 {/* Yellow - Due Today */}
-                                <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.dueToday > 0 ? 'text-yellow-700 bg-yellow-100' : 'text-gray-400 bg-gray-50'}`}>
+                                <span className={`text-xs font-bold px-3 py-1.5 rounded-lg flex-1 sm:flex-none text-center ${counts.dueToday > 0 ? 'text-yellow-700 bg-yellow-100' : 'text-gray-400 bg-gray-50'}`}>
                                     {counts.dueToday} Yellow
                                 </span>
                                 {/* Green - Future */}
-                                <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.future > 0 ? 'text-green-700 bg-green-100' : 'text-gray-400 bg-gray-50'}`}>
+                                <span className={`text-xs font-bold px-3 py-1.5 rounded-lg flex-1 sm:flex-none text-center ${counts.future > 0 ? 'text-green-700 bg-green-100' : 'text-gray-400 bg-gray-50'}`}>
                                     {counts.future} Green
                                 </span>
                             </div>
                         </div>
 
-                        {/* Task List Header */}
-                        <div className="px-6 py-3 bg-gray-50/50 border-b border-gray-100 grid grid-cols-12 gap-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        {/* Task List Header - Hidden on Mobile */}
+                        <div className="hidden sm:grid grid-cols-12 gap-4 px-6 py-3 bg-gray-50/80 border-b border-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wider">
                             <div className="col-span-6">Task</div>
                             <div className="col-span-3 text-right">ETA</div>
                             <div className="col-span-3 text-right">Due Date</div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto no-scrollbar">
+                        <div className="flex-1 overflow-y-auto no-scrollbar p-2 sm:p-0">
                             {tasks.length === 0 ? (
-                                <p className="text-center text-gray-400 py-10">All caught up!</p>
+                                <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                                    <CheckCircle size={48} className="mb-4 text-green-100" />
+                                    <p className="font-medium">All caught up!</p>
+                                </div>
                             ) : (
-                                <div className="divide-y divide-gray-50">
+                                <div className="space-y-2 sm:space-y-0 sm:divide-y divide-gray-50">
                                     {tasks.map(task => (
-                                        <div key={task.id} className="group hover:bg-gray-50 transition-colors">
+                                        <div key={task.id} className="group hover:bg-gray-50 transition-colors bg-white border border-gray-100 sm:border-0 rounded-xl sm:rounded-none shadow-sm sm:shadow-none overflow-hidden">
                                             {/* Task Row */}
                                             <div
-                                                className="grid grid-cols-12 gap-4 items-center cursor-pointer px-6 py-3"
+                                                className="flex flex-col sm:grid sm:grid-cols-12 gap-2 sm:gap-4 items-start sm:items-center cursor-pointer px-4 lg:px-6 py-4"
                                                 onClick={() => toggleTaskExpand(task)}
                                             >
-                                                <div className="col-span-6 flex items-center gap-3 overflow-hidden">
-                                                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getTaskStatusColor(task.planned_date).dot}`}></div>
-                                                    <span className={`truncate text-sm font-bold ${getTaskStatusColor(task.planned_date).text}`}>
+                                                <div className="sm:col-span-6 flex items-center gap-3 w-full">
+                                                    <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-sm ${getTaskStatusColor(task.planned_date).dot}`}></div>
+                                                    <span className={`truncate text-sm font-bold flex-1 ${getTaskStatusColor(task.planned_date).text}`}>
                                                         {task.task_content}
                                                     </span>
                                                 </div>
-                                                <div className="col-span-3 text-right text-xs font-medium text-gray-500">
-                                                    {task.eta ? `${task.eta}m` : '-'}
-                                                </div>
-                                                <div className="col-span-3 text-right text-xs font-medium text-gray-500">
-                                                    {new Date(task.planned_date).toLocaleDateString()}
+                                                <div className="flex w-full sm:col-span-6 justify-between sm:justify-end gap-4 mt-1 sm:mt-0 pl-6 sm:pl-0 border-t sm:border-0 border-gray-50 pt-2 sm:pt-0">
+                                                    <div className="flex items-center gap-1 sm:justify-end sm:col-span-3">
+                                                        <span className="sm:hidden text-xs text-gray-400 uppercase font-bold mr-1">ETA:</span>
+                                                        <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md">
+                                                            {task.eta ? `${task.eta}m` : '-'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1 sm:justify-end sm:col-span-3">
+                                                        <span className="sm:hidden text-xs text-gray-400 uppercase font-bold mr-1">Due:</span>
+                                                        <span className="text-xs font-semibold text-gray-600">
+                                                            {new Date(task.planned_date).toLocaleDateString()}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
 
                                             {/* Dropdown Content */}
                                             {expandedTaskId === task.id && (
-                                                <div className="px-6 pb-4 bg-gray-50/50 border-t border-gray-100">
-                                                    <form onSubmit={(e) => handleLogWork(e, task)} className="mt-4 space-y-3 max-w-lg">
+                                                <div className="px-4 lg:px-6 pb-6 bg-gray-50/50 border-t border-gray-100 animate-in slide-in-from-top-2 duration-200">
+                                                    <form onSubmit={(e) => handleLogWork(e, task)} className="mt-4 space-y-4 max-w-lg">
                                                         <div className="flex items-center justify-between">
-                                                            <h4 className="text-xs font-bold text-gray-500 uppercase">Log Task Completion</h4>
+                                                            <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Log & Complete</h4>
                                                         </div>
                                                         <div className="grid grid-cols-2 gap-4">
                                                             <div>
-                                                                <label className="block text-xs font-medium text-gray-700 mb-1">Time Spent (Mins)</label>
+                                                                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Time Spent (Mins)</label>
                                                                 <input
                                                                     type="number"
                                                                     required
                                                                     placeholder="e.g. 60"
-                                                                    className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white"
+                                                                    className="w-full text-sm p-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white transition-all shadow-sm outline-none"
                                                                     value={logForm.duration}
                                                                     onChange={(e) => setLogForm(prev => ({ ...prev, duration: e.target.value }))}
                                                                 />
@@ -458,16 +468,17 @@ const Dashboard = () => {
                                                                 <button
                                                                     type="submit"
                                                                     disabled={isSubmitting}
-                                                                    className="w-full text-sm bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors font-medium shadow-sm"
+                                                                    className="w-full text-sm bg-indigo-600 text-white py-2.5 rounded-xl hover:bg-indigo-700 transition-all font-semibold shadow-md hover:shadow-lg disabled:opacity-70 disabled:hover:shadow-md"
                                                                 >
-                                                                    {isSubmitting ? 'Saving...' : 'Log & Complete'}
+                                                                    {isSubmitting ? 'Saving...' : 'Complete Task'}
                                                                 </button>
                                                             </div>
                                                         </div>
                                                         <div>
+                                                            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Remarks (Optional)</label>
                                                             <textarea
-                                                                placeholder="Remarks (Optional)"
-                                                                className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white h-16 resize-none"
+                                                                placeholder="Any notes about this task..."
+                                                                className="w-full text-sm p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 bg-white h-20 resize-none transition-all shadow-sm outline-none"
                                                                 value={logForm.remarks}
                                                                 onChange={(e) => setLogForm(prev => ({ ...prev, remarks: e.target.value }))}
                                                             />
