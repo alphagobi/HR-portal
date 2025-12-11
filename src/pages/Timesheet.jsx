@@ -89,6 +89,7 @@ const Timesheet = () => {
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Timesheet History</h1>
                     <p className="text-gray-500">View your logged work history.</p>
+                    <p className="text-xs text-red-500 mt-1">Debug: Loaded {timesheets.length} sheets. Visible {filteredTimesheets.length}. Loading: {loading ? 'Yes' : 'No'}</p>
                 </div>
                 <div className="flex items-center gap-4 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
                     <div className="flex gap-1 bg-gray-100 p-1 rounded-md">
