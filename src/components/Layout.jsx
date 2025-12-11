@@ -63,20 +63,20 @@ const Layout = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
-            {/* Global Values Header - Desktop Only */}
-            <div className="hidden lg:flex bg-white border-b border-gray-200 py-6 px-8 relative items-center justify-center shadow-sm z-10">
-                <img src="/logo-wide.png" alt="AlphaGobi" className="h-12 w-auto absolute left-8 top-1/2 transform -translate-y-1/2" />
-                <p className="text-3xl font-extrabold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-gray-800 to-gray-600 uppercase" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <div className="min-h-screen bg-gray-50 flex flex-col">
+            {/* Global Values Header */}
+            {/* Global Values Header */}
+            <div className="bg-white border-b border-gray-200 py-4 px-8 relative flex items-center justify-center">
+                <p className="text-xl font-extrabold tracking-widest text-gray-800 uppercase" style={{ fontFamily: 'Inter, sans-serif' }}>
                     Integrity. Effort. Intelligence.
                 </p>
             </div>
 
-            <div className="flex flex-1 overflow-hidden relative">
+            <div className="flex flex-1 overflow-hidden">
                 {/* Mobile Sidebar Overlay */}
                 {isSidebarOpen && (
                     <div
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity"
+                        className="fixed inset-0 bg-black/50 z-20 lg:hidden"
                         onClick={() => setIsSidebarOpen(false)}
                     />
                 )}
@@ -84,21 +84,21 @@ const Layout = () => {
                 {/* Sidebar */}
                 <aside
                     className={clsx(
-                        "fixed lg:static inset-y-0 left-0 z-50 w-72 bg-white border-r border-gray-200 transition-transform duration-300 cubic-bezier(0.4, 0, 0.2, 1) flex flex-col shadow-xl lg:shadow-none",
+                        "fixed lg:static inset-y-0 left-0 z-30 w-64 bg-white border-r border-gray-200 transition-transform duration-200 ease-in-out flex flex-col",
                         isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
                     )}
                 >
-                    <div className="h-20 flex items-center justify-between px-6 border-b border-gray-100 lg:hidden">
-                        <img src="/logo-wide.png" alt="AlphaGobi" className="h-8 w-auto" />
+                    <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200">
+                        <img src="/logo-wide.png" alt="AlphaGobi" className="h-8 w-auto bg-gray-50 rounded px-1" />
                         <button
-                            className="text-gray-400 hover:text-gray-700 transition-colors p-2 hover:bg-gray-100 rounded-full"
+                            className="text-gray-500 hover:text-gray-700 lg:hidden"
                             onClick={() => setIsSidebarOpen(false)}
                         >
                             <X size={24} />
                         </button>
                     </div>
 
-                    <nav className="p-4 space-y-2 flex-1 overflow-y-auto no-scrollbar">
+                    <nav className="p-4 space-y-1 flex-1">
                         {navItems.map((item) => {
                             const Icon = item.icon;
                             const isActive = location.pathname === item.path;
@@ -108,19 +108,16 @@ const Layout = () => {
                                     to={item.path}
                                     onClick={() => setIsSidebarOpen(false)}
                                     className={clsx(
-                                        "flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 group relative overflow-hidden",
+                                        "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
                                         isActive
-                                            ? "bg-indigo-600 text-white shadow-indigo-200 shadow-md"
-                                            : "text-gray-600 hover:bg-gray-50 hover:text-indigo-600"
+                                            ? "bg-indigo-50 text-indigo-700"
+                                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                                     )}
                                 >
-                                    <Icon size={20} className={clsx("transition-transform duration-200", !isActive && "group-hover:scale-110", isActive && "text-white")} />
-                                    <span className="flex-1 z-10">{item.name}</span>
+                                    <Icon size={20} />
+                                    <span className="flex-1">{item.name}</span>
                                     {item.badge > 0 && (
-                                        <span className={clsx(
-                                            "text-xs font-bold px-2.5 py-0.5 rounded-full z-10",
-                                            isActive ? "bg-white/20 text-white" : "bg-red-500 text-white shadow-sm"
-                                        )}>
+                                        <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                                             {item.badge}
                                         </span>
                                     )}
@@ -129,47 +126,32 @@ const Layout = () => {
                         })}
                     </nav>
 
-                    <div className="p-4 border-t border-gray-100">
-                        {/* User Profile Mini - Visible in sidebar for mobile/desktop parity */}
-                        <div className="flex items-center gap-3 px-4 py-3 mb-2 rounded-xl bg-gray-50 border border-gray-100">
-                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs">
-                                {user?.name?.charAt(0) || 'U'}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <p className="text-sm font-bold text-gray-900 truncate">{user?.name || 'User'}</p>
-                                <p className="text-xs text-gray-500 truncate">Employee</p>
-                            </div>
-                        </div>
-
+                    <div className="p-4 border-t border-gray-200">
                         <button
                             onClick={handleLogout}
-                            className="flex items-center gap-3 px-4 py-3 w-full text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-200 font-medium group"
+                            className="flex items-center gap-3 px-4 py-3 w-full text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
                         >
-                            <LogOut size={20} className="group-hover:-translate-x-1 transition-transform" />
-                            <span>Sign Out</span>
+                            <LogOut size={20} />
+                            <span className="font-medium">Sign Out</span>
                         </button>
                     </div>
                 </aside>
 
                 {/* Main Content */}
-                <div className="flex-1 flex flex-col min-w-0 bg-gray-50/50">
-                    {/* Top Header (Mobile only) - Sticky & Glassmorphism */}
-                    <header className="h-16 bg-white/80 backdrop-blur-lg border-b border-gray-200 flex items-center justify-between px-4 lg:hidden sticky top-0 z-30 transition-all duration-300">
-                        <div className="flex items-center gap-3">
-                            <button
-                                className="text-gray-500 hover:text-indigo-600 transition-colors p-2 -ml-2 rounded-lg active:bg-gray-100"
-                                onClick={() => setIsSidebarOpen(true)}
-                            >
-                                <Menu size={24} />
-                            </button>
-                            <div className="flex items-center gap-2">
-                                <img src="/logo-round.png" alt="Logo" className="h-8 w-8" />
-                                <span className="text-lg font-bold text-gray-900 tracking-tight">Internal Portal</span>
-                            </div>
-                        </div>
+                <div className="flex-1 flex flex-col min-w-0">
+                    {/* Top Header (Mobile only) */}
+                    <header className="h-16 bg-white border-b border-gray-200 flex items-center px-4 lg:hidden gap-3">
+                        <button
+                            className="text-gray-500 hover:text-gray-700"
+                            onClick={() => setIsSidebarOpen(true)}
+                        >
+                            <Menu size={24} />
+                        </button>
+                        <img src="/logo-round.png" alt="Logo" className="h-8 w-8" />
+                        <span className="text-lg font-semibold text-gray-900">Internal Portal</span>
                     </header>
 
-                    <main className="flex-1 overflow-auto scroll-smooth">
+                    <main className="flex-1 overflow-auto">
                         <Outlet />
                     </main>
                 </div>
