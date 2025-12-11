@@ -56,10 +56,12 @@ const Timesheet = () => {
 
             // 1. Identify tasks already logged in real timesheets to avoid duplicates
             const loggedTaskIds = new Set();
+            const loggedTaskDescriptions = new Set();
             fullHistory.forEach(sheet => {
                 if (sheet.entries) {
                     sheet.entries.forEach(entry => {
                         if (entry.taskId) loggedTaskIds.add(String(entry.taskId));
+                        if (entry.description) loggedTaskDescriptions.add(entry.description.trim().toLowerCase());
                     });
                 }
             });
@@ -67,7 +69,8 @@ const Timesheet = () => {
             // 2. Find Completed Tasks NOT logged
             const orphanedTasks = taskList.filter(t =>
                 (t.is_completed == 1 || t.is_completed === true) &&
-                !loggedTaskIds.has(String(t.id))
+                !loggedTaskIds.has(String(t.id)) &&
+                !loggedTaskDescriptions.has((t.task_content || "").trim().toLowerCase())
             );
 
             // 3. Convert Orphans to Virtual Timesheets
@@ -97,12 +100,14 @@ const Timesheet = () => {
                 }
 
                 // Create Virtual Entry
+                const durationHours = (parseFloat(task.eta || 0) / 60).toFixed(2);
+
                 const entry = {
                     id: `v-entry-${task.id}`,
                     timesheet_id: sheet.id,
                     startTime: "09:00", // Default
                     endTime: "10:00", // Default
-                    duration: task.eta || "0",
+                    duration: durationHours,
                     description: task.task_content,
                     project: "Task",
                     taskId: task.id,
