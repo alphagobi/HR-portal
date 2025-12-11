@@ -11,13 +11,16 @@ const Timesheet = () => {
     const [timesheets, setTimesheets] = useState([]);
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [debugError, setDebugError] = useState(null);
 
     const fetchTimesheets = async () => {
         setLoading(true);
+        setDebugError(null);
         const user = getCurrentUser();
 
         if (!user) {
             setLoading(false);
+            setDebugError("No user logged in (getCurrentUser returned null)");
             return;
         }
 
@@ -25,8 +28,12 @@ const Timesheet = () => {
         try {
             const tsData = await getTimesheets(user.id);
             setTimesheets(Array.isArray(tsData) ? tsData : []);
+            if (!Array.isArray(tsData)) {
+                setDebugError((prev) => (prev ? prev + " | " : "") + "Timesheets API returned non-array");
+            }
         } catch (error) {
             console.error("Failed to fetch timesheets", error);
+            setDebugError((prev) => (prev ? prev + " | " : "") + "Timesheets API: " + error.message);
         }
 
         // Fetch Tasks (Independent)
@@ -35,6 +42,7 @@ const Timesheet = () => {
             setTasks(Array.isArray(tasksData) ? tasksData : []);
         } catch (error) {
             console.error("Failed to fetch tasks", error);
+            // We don't block UI for tasks, but can log it
         } finally {
             setLoading(false);
         }
@@ -89,7 +97,16 @@ const Timesheet = () => {
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Timesheet History</h1>
                     <p className="text-gray-500">View your logged work history.</p>
-                    <p className="text-xs text-red-500 mt-1">Debug: Loaded {timesheets.length} sheets. Visible {filteredTimesheets.length}. Loading: {loading ? 'Yes' : 'No'}</p>
+                    <div className="text-xs mt-1 space-y-1">
+                        <p className="text-red-500">
+                            Debug: Loaded {timesheets.length} sheets. Visible {filteredTimesheets.length}. Loading: {loading ? 'Yes' : 'No'}
+                        </p>
+                        {debugError && (
+                            <p className="bg-red-100 text-red-700 p-2 rounded border border-red-200 font-mono break-all">
+                                ERROR: {debugError}
+                            </p>
+                        )}
+                    </div>
                 </div>
                 <div className="flex items-center gap-4 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
                     <div className="flex gap-1 bg-gray-100 p-1 rounded-md">
