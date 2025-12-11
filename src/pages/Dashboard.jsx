@@ -207,7 +207,6 @@ const Dashboard = () => {
     };
 
     const handleDeleteEntry = async (entryIndex) => {
-        if (!confirm("Are you sure you want to delete this logged entry?")) return;
         try {
             const timesheetsData = await getTimesheets(user.id);
             const todaySheet = timesheetsData.find(t => t.date === today);
@@ -227,6 +226,11 @@ const Dashboard = () => {
                 employeeId: user.id,
                 status: todaySheet.status
             });
+
+            // Reopen the task so it moves back to "Your Tasks"
+            if (entryToDelete.taskId) {
+                await updateTask(entryToDelete.taskId, { is_completed: 0 });
+            }
 
             fetchDashboardData();
         } catch (error) {
