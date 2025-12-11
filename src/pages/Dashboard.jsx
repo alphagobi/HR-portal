@@ -209,7 +209,7 @@ const Dashboard = () => {
         }
     };
 
-    const handleDeleteEntry = async (entryIndex) => {
+    const handleDeleteEntry = async (entryIndex, task) => {
         try {
             const timesheetsData = await getTimesheets(user.id);
             const todaySheet = timesheetsData.find(t => t.date === today);
@@ -231,8 +231,10 @@ const Dashboard = () => {
             });
 
             // Reopen the task so it moves back to "Your Tasks"
-            if (entryToDelete.taskId) {
-                await updateTask(entryToDelete.taskId, { is_completed: 0 });
+            // Use the passed task object to be sure we have the ID
+            const targetTaskId = task?.id || entryToDelete.taskId;
+            if (targetTaskId) {
+                await updateTask(targetTaskId, { is_completed: 0 });
             }
 
             fetchDashboardData();
@@ -242,7 +244,7 @@ const Dashboard = () => {
         }
     };
 
-    const startEditingEntry = (entry) => {
+    const startEditingEntry = (entry, task) => {
         if (editingEntryId === entry.id) {
             setEditingEntryId(null);
             setEditForm({ duration: '', remarks: '' });
@@ -250,14 +252,23 @@ const Dashboard = () => {
             setEditingEntryId(entry.id);
             // Convert hours to minutes for the form
             const mins = Math.round(parseFloat(entry.duration || 0) * 60);
+
+            // Determine Remarks:
+            // If description exactly matches task content, show empty remarks (it was just the default title)
+            // Otherwise, show the description as remarks
+            let remarks = entry.description || '';
+            if (task && remarks === task.task_content) {
+                remarks = '';
+            }
+
             setEditForm({
                 duration: mins.toString(),
-                remarks: entry.description || ''
+                remarks: remarks
             });
         }
     };
 
-    const handleUpdateEntry = async (entry) => {
+    const handleUpdateEntry = async (entry, task) => {
         try {
             const timesheetsData = await getTimesheets(user.id);
             const todaySheet = timesheetsData.find(t => t.date === today);
@@ -265,8 +276,26 @@ const Dashboard = () => {
 
             const durationInHours = (parseFloat(editForm.duration) / 60).toFixed(2);
 
+            // Construct Description:
+            // If remarks present, use remarks.
+            // If empty, revert to task content (Title).
+            // NOTE: User wants "exact like remarks". If I set description to remarks, it might lose the "Title".
+            // Ideally description = remarks || task_content. 
+            // BUT if the user wants the "Title" to stay fixed and remarks to be secondary, we might need to store them separately?
+            // The request says "Give exact like remarks whihc like yours tasks". In "Your Tasks", you log "Time" and "Remarks".
+            // The entry description usually stores the Task Content (or remarks). 
+            // Let's stick to saving the Remarks as the description if provided, OR keep task content if empty.
+            // Actually, usually `description` IS the log entry text.
+            // If I change description to "Late work", the display shows "Late work".
+            // The User wants the Title ("Task Content") to remain visible and Remarks to be editable.
+            // So we should save description as: `editForm.remarks`? 
+            // If we do that, we lose the task title in the entry description.
+            // However, since we link by `taskId`, we can display `task.task_content` in the UI always.
+            // So `entry.description` essentially becomes the "Remarks".
+            const newDescription = editForm.remarks || task?.task_content || "Work Logged";
+
             const updatedEntries = todaySheet.entries.map(e =>
-                e.id === entry.id ? { ...e, duration: durationInHours, description: editForm.remarks } : e
+                e.id === entry.id ? { ...e, duration: durationInHours, description: newDescription } : e
             );
 
             await saveTimesheet({
@@ -454,9 +483,18 @@ const Dashboard = () => {
                                             <div className="flex justify-between items-center text-sm p-2">
                                                 <div className="flex items-center gap-3 min-w-0 flex-1">
                                                     <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors ${color.dot}`}></div>
-                                                    <span className={`font-medium truncate transition-colors ${color.text}`}>
-                                                        {entry.description || "Work Logged"}
-                                                    </span>
+                                                    <div className="flex flex-col min-w-0">
+                                                        {/* Always show Task Content as Title if linked, else Entry Description */}
+                                                        <span className={`font-medium truncate transition-colors ${color.text}`}>
+                                                            {task?.task_content || entry.description || "Work Logged"}
+                                                        </span>
+                                                        {/* Show remarks if they exist and are different from Title */}
+                                                        {entry.description && task && entry.description !== task.task_content && (
+                                                            <span className="text-xs text-gray-400 truncate">
+                                                                {entry.description}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                                 <div className="flex items-center gap-3 pl-3">
                                                     <div className="flex items-center gap-1.5">
@@ -464,10 +502,10 @@ const Dashboard = () => {
                                                         <span className="text-xs text-gray-500 font-medium">hrs</span>
                                                     </div>
                                                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button onClick={() => startEditingEntry(entry)} className="text-gray-400 hover:text-indigo-600">
+                                                        <button onClick={() => startEditingEntry(entry, task)} className="text-gray-400 hover:text-indigo-600">
                                                             <Pencil size={14} />
                                                         </button>
-                                                        <button onClick={() => handleDeleteEntry(index)} className="text-gray-400 hover:text-red-500">
+                                                        <button onClick={() => handleDeleteEntry(index, task)} className="text-gray-400 hover:text-red-500">
                                                             <Trash2 size={14} />
                                                         </button>
                                                     </div>
@@ -492,7 +530,7 @@ const Dashboard = () => {
                                                             </div>
                                                             <div className="flex items-end">
                                                                 <button
-                                                                    onClick={() => handleUpdateEntry(entry)}
+                                                                    onClick={() => handleUpdateEntry(entry, task)}
                                                                     className="w-full text-sm bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors font-medium shadow-sm flex justify-center items-center gap-2"
                                                                 >
                                                                     <Save size={14} /> Update Log
