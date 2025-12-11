@@ -58,6 +58,7 @@ const Dashboard = () => {
 
     // Tasks State
     const [tasks, setTasks] = useState([]);
+    const [allTasksList, setAllTasksList] = useState([]); // Store all tasks for lookup
     const [loggedEntries, setLoggedEntries] = useState([]);
     const [allocations, setAllocations] = useState([]);
     const [frameworkTotal, setFrameworkTotal] = useState(0);
@@ -93,6 +94,7 @@ const Dashboard = () => {
         try {
             // 1. Fetch All Tasks
             const allTasks = await getTasks(user.id);
+            setAllTasksList(allTasks); // Save all tasks
             const pendingTasks = allTasks.filter(t => t.is_completed != 1);
 
             // Sort by planned_date
@@ -120,6 +122,7 @@ const Dashboard = () => {
             setLoading(false);
         }
     };
+
 
 
 
@@ -357,7 +360,7 @@ const Dashboard = () => {
                                 </div>
                             ) : (
                                 loggedEntries.map((entry, index) => {
-                                    const task = tasks.find(t => t.id == entry.taskId) || tasks.find(t => t.task_content === entry.description);
+                                    const task = allTasksList.find(t => t.id == entry.taskId) || allTasksList.find(t => t.task_content === entry.description);
                                     const color = getTaskStatusColor(task?.planned_date, task?.is_completed);
 
                                     return (
@@ -392,7 +395,7 @@ const Dashboard = () => {
                                     {counts.overdue} Red
                                 </span>
                                 {/* Yellow - Due Today */}
-                                <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.dueToday > 0 ? 'text-yellow-700 bg-yellow-100' : 'text-gray-400 bg-gray-50'}`}>
+                                <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.dueToday > 0 ? 'text-black bg-[#FFFF00] border border-yellow-300' : 'text-gray-400 bg-gray-50'}`}>
                                     {counts.dueToday} Yellow
                                 </span>
                                 {/* Green - Future */}
