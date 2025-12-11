@@ -361,7 +361,9 @@ const Dashboard = () => {
                             ) : (
                                 loggedEntries.map((entry, index) => {
                                     const task = allTasksList.find(t => t.id == entry.taskId) || allTasksList.find(t => t.task_content === entry.description);
-                                    const color = getTaskStatusColor(task?.planned_date, task?.is_completed);
+                                    // Force isCompleted to false so the color reflects the due date status (Red/Yellow/Green)
+                                    // even if the task is technically "completed" or "logged"
+                                    const color = getTaskStatusColor(task?.planned_date, false);
 
                                     return (
                                         <div key={index} className="flex justify-between items-center text-sm group hover:bg-gray-50 p-2 rounded-lg -mx-2 transition-colors">
@@ -395,7 +397,7 @@ const Dashboard = () => {
                                     {counts.overdue} Red
                                 </span>
                                 {/* Yellow - Due Today */}
-                                <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.dueToday > 0 ? 'text-black bg-[#FFFF00] border border-yellow-300' : 'text-gray-400 bg-gray-50'}`}>
+                                <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.dueToday > 0 ? 'text-yellow-800 bg-yellow-100 border border-yellow-200' : 'text-gray-400 bg-gray-50'}`}>
                                     {counts.dueToday} Yellow
                                 </span>
                                 {/* Green - Future */}
