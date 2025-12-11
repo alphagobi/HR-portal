@@ -39,23 +39,32 @@ const Tasks = () => {
     const fetchTasks = async () => {
         setLoading(true);
         const user = getCurrentUser();
+
         if (!user) {
             setLoading(false);
             return;
         }
 
         try {
-            const data = await getTasks(user.id);
-            setTasks(data);
-        } catch (error) {
-            console.error("Failed to fetch tasks", error);
-        }
+            // Fetch Tasks
+            try {
+                const data = await getTasks(user.id);
+                setTasks(Array.isArray(data) ? data : []);
+            } catch (error) {
+                console.error("Failed to fetch tasks", error);
+                setTasks([]);
+            }
 
-        try {
-            const fwData = await getFrameworkAllocations(user.id);
-            setFrameworks(fwData || []);
-        } catch (error) {
-            console.error("Failed to fetch frameworks", error);
+            // Fetch Frameworks
+            try {
+                const fwData = await getFrameworkAllocations(user.id);
+                setFrameworks(Array.isArray(fwData) ? fwData : []);
+            } catch (error) {
+                console.error("Failed to fetch frameworks", error);
+                setFrameworks([]);
+            }
+        } catch (err) {
+            console.error("Unexpected error in fetchTasks", err);
         } finally {
             setLoading(false);
         }
