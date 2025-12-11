@@ -1,0 +1,42 @@
+# Refine Log Editing & Deletion
+
+## Goal Description
+1.  **Fix Deletion**: Ensure deleting a log entry correctly moves the task back to "Your Tasks".
+    - Issue: `entry.taskId` might be undefined in the handler scope or the update is failing.
+    - Fix: Pass the full `task` object to [handleDeleteEntry](file:///home/aravinth/Anti%20Gravity/src/pages/Dashboard.jsx#212-244) to guarantee access to `task.id`.
+2.  **Fix Edit UI**: Prevent editing the "Title" of the log entry.
+    - Issue: Currently `entry.description` is used for both Title and Remarks.
+    - Fix:
+        - **Display**: Always show `task.task_content` as the Log Title if the task exists. Show `entry.description` as secondary text (Remarks) if it differs from content.
+        - **Edit**: The textarea should only edit `remarks`. If `entry.description` matches `task.task_content`, the remarks field should be empty. When saving, we save `remarks || task.task_content`.
+
+## Proposed Changes
+
+### [Dashboard.jsx](file:///home/aravinth/Anti Gravity/src/pages/Dashboard.jsx)
+#### [handleDeleteEntry(entryIndex, task)](file:///home/aravinth/Anti%20Gravity/src/pages/Dashboard.jsx#212-244)
+- Update signature to accept `task`.
+- Use `task.id` for the `updateTask` call to reopen the task.
+
+#### [startEditingEntry(entry, task)](file:///home/aravinth/Anti%20Gravity/src/pages/Dashboard.jsx#245-259)
+- Update signature to accept `task`.
+- Logic: `const initialRemarks = (entry.description === task?.task_content) ? '' : entry.description;`
+- set `editForm` with `initialRemarks`.
+
+#### [handleUpdateEntry(entry, task)](file:///home/aravinth/Anti%20Gravity/src/pages/Dashboard.jsx#260-287)
+- Update signature.
+- Logic: `const finalDescription = editForm.remarks || task?.task_content || "Work Logged";`
+
+#### Render Loop
+- Update display to:
+    ```jsx
+    <span className="..."> {task?.task_content || entry.description} </span>
+    {/* Optional: Show remarks below if they exist and are different? User didn't explicitly ask, but might be nice. For now, stick to user request: "Give exact like remarks" */}
+    ```
+- Pass `task` to handlers.
+
+## Verification Plan
+1.  **Delete**: Log a task. Delete it. Verify it moves to "Your Tasks".
+2.  **Edit**: Log a task with NO remarks. Click Edit. Textarea should be empty (placeholder "Remarks").
+    - Add remarks "Done late". Update.
+    - Title should still be "Task Name".
+    - Edit again. Textarea should show "Done late".

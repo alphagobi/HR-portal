@@ -1,0 +1,33 @@
+# Recurring Tasks Implementation
+
+## Goal Description
+Allow users to create recurring tasks.
+- **UI**: Add a "Recurring" switch in the "Add Task" modal. When enabled, show advanced settings (Frequency, Daily/Weekly/Monthly, Interval, End Date).
+- **Backend**: Update [tasks.php](file:///home/aravinth/Anti%20Gravity/public/api/tasks.php) to accept these settings and *immediately generate* the individual task instances for a defined period (e.g., next 6 months or 50 occurrences). This ensures tasks appear on the calendar without complex cron jobs.
+
+## Proposed Changes
+
+### [Tasks.jsx](file:///home/aravinth/Anti Gravity/src/pages/Tasks.jsx)
+#### Add Task Modal
+- Add `isRecurring` state.
+- Add `recurrenceSettings` state: `{ frequency: 'daily', interval: 1, endType: 'date', endDate: '...', endCount: 10, weekDays: [] }`.
+- Render a robust form when `isRecurring` is true:
+    - **Frequency**: Dropdown (Daily, Weekly, Monthly).
+    - **Interval**: "Repeat every X [days/weeks/months]".
+    - **Weekdays**: Buttons (Sun, Mon, Tue...) - visible only if Weekly.
+    - **End**: Radio options "On Date" or "After X Occurrences".
+
+### [tasks.php](file:///home/aravinth/Anti Gravity/public/api/tasks.php)
+#### POST Handling
+- Check for `recurrence` field in payload.
+- If present, parse logic:
+    - Loop from `startDate` adding `interval` based on `frequency`.
+    - Handle `weekly` specific logic (checking days).
+    - Stop when `endDate` or `endCount` is reached (cap at ~365 days or 100 tasks to prevent overflow).
+    - Insert a `planned_task` for each calculated date.
+- If not present, insert single task as before.
+
+## Verification Plan
+1.  **UI**: Open Add Task -> Toggle Recurring -> Verify all options appear (Frequency, Interval, etc.).
+2.  **Creation**: Create a "Weekly Meeting" every "Monday" and "Wednesday" for the next "3 weeks".
+3.  **Result**: Verify the list shows 6 new tasks on the correct dates.

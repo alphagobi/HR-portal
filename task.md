@@ -1,0 +1,4 @@
+- [x] Link Frameworks to Tasks <!-- id: 29 -->
+    - [x] Backend: Add `framework_id` column to `planned_tasks` & update `tasks.php` <!-- id: 30 -->
+    - [x] Frontend: Update `Tasks.jsx` to fetch frameworks & add selection dropdown <!-- id: 31 -->
+    - [x] Frontend: Create "Framework Analysis" view in `Timesheet.jsx` <!-- id: 32 -->

@@ -1,0 +1,48 @@
+# Task & Logging Enhancements
+
+## Goal Description
+Enhance the task management and time logging workflow by:
+1.  Enforcing ETA input during task creation.
+2.  Simplifying logging by pre-filling the actual duration with the estimated ETA.
+3.  Providing flexibility to edit or remove logged work entries directly from the dashboard.
+
+## User Review Required
+> [!NOTE]
+> Deleting a logged entry will remove it from the timesheet. The associated task might remain marked as "Completed" unless we explicitly revert it. I will assuming deleting a log entry should generic "un-complete" logic is complex, so for now I will just remove the time entry. If the user wants the task to reopen, they can drag it back or toggle it, but I won't automate that to avoid edge cases unless requested.
+
+## Proposed Changes
+
+### Task Creation ([Tasks.jsx](file:///home/aravinth/Anti%20Gravity/src/pages/Tasks.jsx) & potentially [Dashboard.jsx](file:///home/aravinth/Anti%20Gravity/src/pages/Dashboard.jsx) if it has create)
+#### [MODIFY] [Tasks.jsx](file:///home/aravinth/Anti Gravity/src/pages/Tasks.jsx)
+- Update "Add Task" modal.
+- Add `required` attribute to ETA input.
+- Add validation check in [handleCreateTask](file:///home/aravinth/Anti%20Gravity/src/pages/Tasks.jsx#52-73) to ensure ETA > 0.
+
+### Auto-populate Duration
+#### [MODIFY] [Dashboard.jsx](file:///home/aravinth/Anti Gravity/src/pages/Dashboard.jsx)
+- In [toggleTaskExpand](file:///home/aravinth/Anti%20Gravity/src/pages/Dashboard.jsx#149-161), set `logForm.duration` to `task.eta`.
+
+#### [MODIFY] [Tasks.jsx](file:///home/aravinth/Anti Gravity/src/pages/Tasks.jsx)
+- Update [toggleLogForm](file:///home/aravinth/Anti%20Gravity/src/pages/Tasks.jsx#76-88) to ensure it populates duration with `task.eta`.
+
+### Edit/Delete Logged Entries
+#### [MODIFY] [Dashboard.jsx](file:///home/aravinth/Anti Gravity/src/pages/Dashboard.jsx)
+- Update `Logged Today` list to show Edit (Pencil) and Delete (Trash) icons.
+- Add state for `editingEntryId` and `editForm`.
+- Implement `handleDeleteEntry(entry)`:
+    - Call `timesheetService` to update the timesheet (remove entry).
+    - Refresh data.
+- Implement `handleUpdateEntry(entry)`:
+    - Show inline input for duration.
+    - Save changes to `timesheetService`.
+
+#### [MODIFY] [timesheetService.js](file:///home/aravinth/Anti Gravity/src/services/timesheetService.js)
+- Verify `saveTimesheet` can accept the modified entries list (it replaces the list for the day, so this should be fine).
+- No new API needed if we just update the whole list for the date.
+
+## Verification Plan
+### Manual Verification
+1.  **Add Task**: Try creating a task without ETA. Should fail/warn. Create one with ETA.
+2.  **Log Task**: Click "Log" on the task. "Time Spent" should default to the ETA value.
+3.  **Edit Log**: Go to "Logged Today". Click Edit. Change duration. Save. Verify total hours update.
+4.  **Delete Log**: Click Delete on a logged entry. Verify it disappears and total hours decrease.
