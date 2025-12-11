@@ -217,10 +217,11 @@ const Dashboard = () => {
 
             // Finding the actual entry in the main list to mark deleted
             const entryToDelete = loggedEntries[entryIndex];
-            const updatedEntries = todaySheet.entries.map(e =>
-                (e.id && e.id === entryToDelete.id) || (e.description === entryToDelete.description && e.duration === entryToDelete.duration && e.taskId === entryToDelete.taskId)
-                    ? { ...e, is_deleted: 1 }
-                    : e
+
+            // Backend expects missing entries to be soft-deleted. Filter it out instead of marking is_deleted.
+            const updatedEntries = todaySheet.entries.filter(e =>
+                !((e.id && e.id === entryToDelete.id) ||
+                    (e.description === entryToDelete.description && e.duration === entryToDelete.duration && e.taskId === entryToDelete.taskId))
             );
 
             await saveTimesheet({
