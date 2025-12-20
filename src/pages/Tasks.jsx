@@ -307,7 +307,7 @@ const Tasks = () => {
                                                 <div key={task.id} className="flex items-center justify-between text-sm group">
                                                     <div className="flex items-center gap-3">
                                                         <div className={`w-2 h-2 rounded-full ${status.dot}`}></div>
-                                                        <span className={clsx(`font-medium ${status.text}`, task.is_completed && "line-through text-gray-400")}>
+                                                        <span className={clsx(`font-medium ${status.text}`)}>
                                                             {task.task_content}
                                                         </span>
                                                     </div>

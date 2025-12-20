@@ -1,13 +1,4 @@
 export const getTaskStatusColor = (plannedDate, isCompleted = false) => {
-    if (isCompleted) {
-        return {
-            bg: 'bg-green-500',
-            text: 'text-green-600',
-            border: 'border-green-200',
-            dot: 'bg-green-500' // Completed tasks are Green
-        };
-    }
-
     if (!plannedDate) {
         return {
             bg: 'bg-gray-100',
