@@ -116,11 +116,6 @@ const AdminTimesheets = () => {
     };
 
     const handleSaveRemark = async (item, newRemark) => {
-        // If there's no timesheet entry yet, we might need to create a placeholder or just store it if the backend supports upsert by date/emp
-        // For now, we assume we attach it to an existing timesheet or creates a phantom one if your logic requires it.
-        // If daysTimesheet is null, we can't easily save a remark on a non-existent row without creating it.
-        // Assuming we update the 'timesheet' object if it exists.
-
         if (item.timesheet) {
             await saveTimesheet({
                 ...item.timesheet,
@@ -132,8 +127,22 @@ const AdminTimesheets = () => {
             );
             setTimesheets(newTimesheets);
         } else {
-            console.warn("Cannot save remarks on empty timesheet day yet (Logic dependence)");
-            // Optional: Implement create-on-remark logic here
+            // Create new timesheet entry for remarks
+            try {
+                const payload = {
+                    employeeId: selectedEmployee.id, // Ensure this matches backend expectation (camelCase or snake_case depending on service wrapper)
+                    employee_id: selectedEmployee.id, // Send both to be safe or check service
+                    date: item.date,
+                    adminRemarks: newRemark,
+                    entries: []
+                };
+                await saveTimesheet(payload);
+                // We must re-fetch here because we don't have the new ID
+                fetchAllData();
+            } catch (error) {
+                console.error("Failed to save remark for new timesheet", error);
+                alert("Failed to save remark");
+            }
         }
     };
 
@@ -232,7 +241,7 @@ const AdminTimesheets = () => {
                                                 <ul className="list-disc list-inside space-y-1">
                                                     {day.tasks.map(t => (
                                                         <li key={t.id} className="text-sm text-gray-600">
-                                                            {t.title}
+                                                            {t.task_content}
                                                             <span className={clsx("ml-2 text-xs px-1.5 py-0.5 rounded",
                                                                 t.is_completed ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
                                                             )}>
@@ -283,7 +292,6 @@ const AdminTimesheets = () => {
                                                 placeholder="Add comment..."
                                                 defaultValue={day.timesheet?.adminRemarks || ''}
                                                 onBlur={(e) => handleSaveRemark(day, e.target.value)}
-                                                disabled={!day.timesheet} // Disable if no timesheet exists yet to attach remark to
                                             />
                                         </td>
                                     </tr>
