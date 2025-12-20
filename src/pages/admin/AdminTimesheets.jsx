@@ -220,8 +220,8 @@ const AdminTimesheets = () => {
                                 if (day.isHoliday || day.isSunday) {
                                     return (
                                         <tr key={day.date} className="bg-yellow-100 border-b border-gray-200">
-                                            <td className="py-3 px-4 font-medium text-gray-800 border-r border-yellow-200">{day.date}</td>
-                                            <td colSpan="3" className="py-3 px-4 text-center font-bold text-gray-600 tracking-wider uppercase">
+                                            <td className="py-1 px-4 font-medium text-gray-800 border-r border-yellow-200 text-sm">{day.date}</td>
+                                            <td colSpan="3" className="py-1 px-4 text-center font-bold text-gray-600 tracking-wider uppercase text-xs">
                                                 {day.holidayName}
                                             </td>
                                         </tr>
