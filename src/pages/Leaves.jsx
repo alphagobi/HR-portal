@@ -211,8 +211,6 @@ const Leaves = () => {
                             >
                                 <option value="Informed Leave">Informed Leave</option>
                                 <option value="Emergency Leave">Emergency Leave</option>
-                                <option value="Sick Leave">Sick Leave</option>
-                                <option value="Casual Leave">Casual Leave</option>
                             </select>
                         </div>
                         <div>
@@ -257,34 +255,33 @@ const Leaves = () => {
                     ) : (
                         leaves.slice(0, 10).map((leave) => (
                             <div key={leave.id} className="border-b border-gray-50 last:border-0 pb-4 last:pb-0 hover:bg-gray-50 p-4 rounded-lg transition-colors">
-                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-1">
-                                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(leave.status)} flex items-center gap-1.5`}>
+                                <div className="flex flex-col gap-3">
+                                    {/* Top Row: Date & Reason */}
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-3 mb-1">
+                                                <h4 className="text-lg font-bold text-gray-900">
+                                                    {leave.start_date ? new Date(leave.start_date).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' }) : 'Date Pending'}
+                                                </h4>
+                                                <p className="text-lg text-gray-800 font-medium truncate max-w-xl" title={leave.reason}>
+                                                    {leave.reason}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        {/* Status on Right Top */}
+                                        <div className="flex flex-col items-end gap-2">
+                                            <span className={`px-3 py-1 rounded-full text-sm font-bold ${getStatusColor(leave.status)} flex items-center gap-1.5`}>
                                                 {getStatusIcon(leave.status)} {leave.status}
                                             </span>
-                                            <p className="font-medium text-gray-900 text-sm">{leave.type}</p>
                                         </div>
-
-                                        <div className="flex items-center gap-6 mt-2">
-                                            <div className="flex items-center gap-2 text-xs text-gray-500">
-                                                <Calendar size={14} />
-                                                <span className="font-medium">
-                                                    {leave.start_date ? new Date(leave.start_date).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : 'Date Pending'}
-                                                </span>
-                                            </div>
-                                            <p className="text-sm text-gray-600 truncate max-w-md" title={leave.reason}>{leave.reason}</p>
-                                        </div>
-
-                                        {leave.admin_remarks && (
-                                            <div className="mt-2 text-xs bg-red-50 p-2 rounded text-red-700 border border-red-100 inline-block">
-                                                <span className="font-semibold">Admin Note:</span> {leave.admin_remarks}
-                                            </div>
-                                        )}
                                     </div>
 
-                                    {/* Action Buttons */}
-                                    <div className="flex items-center gap-2">
+                                    {/* Bottom Row: Type on Left, Chat on Right */}
+                                    <div className="flex justify-between items-center mt-2">
+                                        <span className={`px-3 py-1 rounded-md text-xs font-semibold uppercase tracking-wider ${leave.type === 'Emergency Leave' ? 'bg-red-100 text-red-700' : 'bg-blue-50 text-blue-700'}`}>
+                                            {leave.type}
+                                        </span>
+
                                         <button
                                             onClick={() => handleChallenge(leave.id)}
                                             className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-800 font-medium px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors relative"
@@ -296,6 +293,12 @@ const Leaves = () => {
                                             )}
                                         </button>
                                     </div>
+
+                                    {leave.admin_remarks && (
+                                        <div className="mt-2 text-xs bg-red-50 p-2 rounded text-red-700 border border-red-100 inline-block">
+                                            <span className="font-semibold">Admin Note:</span> {leave.admin_remarks}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ))
