@@ -45,9 +45,17 @@ try {
             ob_clean();
             echo json_encode($allocations);
         } else {
+            // Fetch ALL allocations for Admin view
+            $query = "SELECT work_allocations.*, users.name as employee_name, users.department 
+                      FROM work_allocations 
+                      JOIN users ON work_allocations.user_id = users.id 
+                      ORDER BY users.name ASC, work_allocations.position ASC";
+            $stmt = $pdo->prepare($query);
+            $stmt->execute();
+            $allocations = $stmt->fetchAll();
+            
             ob_clean();
-            http_response_code(400);
-            echo json_encode(["message" => "Missing user_id parameter."]);
+            echo json_encode($allocations);
         }
     } elseif ($method == 'POST') {
         $input = file_get_contents("php://input");
