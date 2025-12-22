@@ -60,7 +60,7 @@ const Timesheet = () => {
             fullHistory.forEach(sheet => {
                 if (sheet.entries) {
                     sheet.entries.forEach(entry => {
-                        if (entry.taskId) loggedTaskIds.add(String(entry.taskId));
+                        if (entry.taskId || entry.task_id) loggedTaskIds.add(String(entry.taskId || entry.task_id));
                         if (entry.description) loggedTaskDescriptions.add(entry.description.trim().toLowerCase());
                     });
                 }
@@ -173,20 +173,22 @@ const Timesheet = () => {
 
     const filteredTimesheets = getFilteredTimesheets();
 
-    // Calculate stats
+    // Calculate stats - Filter out deleted entries!
     const totalHours = filteredTimesheets.reduce((acc, sheet) => {
-        const sheetTotal = sheet.entries.reduce((sAcc, entry) => sAcc + parseFloat(entry.duration || 0), 0);
+        const sheetTotal = sheet.entries
+            .filter(e => e.is_deleted != 1)
+            .reduce((sAcc, entry) => sAcc + parseFloat(entry.duration || 0), 0);
         return acc + sheetTotal;
     }, 0);
 
     const plannedHours = filteredTimesheets.reduce((acc, sheet) => {
-        const sheetTotal = sheet.entries.filter(e => e.type === 'planned').reduce((sAcc, entry) => sAcc + parseFloat(entry.duration || 0), 0);
+        const sheetTotal = sheet.entries
+            .filter(e => e.is_deleted != 1 && e.type === 'planned')
+            .reduce((sAcc, entry) => sAcc + parseFloat(entry.duration || 0), 0);
         return acc + sheetTotal;
     }, 0);
 
     const unplannedHours = totalHours - plannedHours;
-
-
 
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-6">
@@ -194,16 +196,6 @@ const Timesheet = () => {
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Timesheet History</h1>
                     <p className="text-gray-500">View your logged work history.</p>
-                    <div className="text-xs mt-1 space-y-1">
-                        <p className="text-red-500">
-                            Debug: Loaded {timesheets.length} sheets. Visible {filteredTimesheets.length}. Loading: {loading ? 'Yes' : 'No'}
-                        </p>
-                        {debugError && (
-                            <p className="bg-red-100 text-red-700 p-2 rounded border border-red-200 font-mono break-all">
-                                ERROR: {debugError}
-                            </p>
-                        )}
-                    </div>
                 </div>
                 <div className="flex items-center gap-4 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
                     <div className="flex gap-1 bg-gray-100 p-1 rounded-md">
@@ -251,15 +243,15 @@ const Timesheet = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <p className="text-sm text-gray-500 font-medium">Total Hours ({viewMode})</p>
-                    <h3 className="text-2xl font-bold text-gray-900">{totalHours.toFixed(1)}</h3>
+                    <h3 className="text-2xl font-bold text-gray-900">{totalHours.toFixed(2)}</h3>
                 </div>
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <p className="text-sm text-green-600 font-medium">Planned Hours</p>
-                    <h3 className="text-2xl font-bold text-green-700">{plannedHours.toFixed(1)}</h3>
+                    <h3 className="text-2xl font-bold text-green-700">{plannedHours.toFixed(2)}</h3>
                 </div>
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <p className="text-sm text-orange-600 font-medium">Unplanned Hours</p>
-                    <h3 className="text-2xl font-bold text-orange-700">{unplannedHours.toFixed(1)}</h3>
+                    <h3 className="text-2xl font-bold text-orange-700">{unplannedHours.toFixed(2)}</h3>
                 </div>
             </div>
 
@@ -282,13 +274,16 @@ const Timesheet = () => {
                                         {new Date(sheet.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                                     </h3>
                                     <span className="text-sm font-medium text-gray-500">
-                                        {sheet.entries.reduce((acc, e) => acc + parseFloat(e.duration || 0), 0)} hrs
+                                        {sheet.entries
+                                            .filter(e => e.is_deleted != 1)
+                                            .reduce((acc, e) => acc + parseFloat(e.duration || 0), 0)
+                                            .toFixed(2)} hrs
                                     </span>
                                 </div>
 
                                 <div className="space-y-2 pl-6 border-l-2 border-gray-100">
                                     {sheet.entries.filter(e => e.is_deleted != 1).map(entry => {
-                                        const task = tasks.find(t => t.id == entry.taskId) || tasks.find(t => t.task_content === entry.description);
+                                        const task = tasks.find(t => t.id == (entry.taskId || entry.task_id)) || tasks.find(t => t.task_content === entry.description);
                                         const color = getTaskStatusColor(task?.planned_date, task?.is_completed);
 
                                         return (
