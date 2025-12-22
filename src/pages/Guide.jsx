@@ -5,108 +5,160 @@ import {
     Clock,
     Calendar,
     DollarSign,
-    FileText
+    FileText,
+    Megaphone,
+    ChevronRight
 } from 'lucide-react';
 
 const Guide = () => {
-    const modules = [
+    const sections = [
         {
-            title: "Dashboard Overview",
-            icon: <LayoutDashboard className="w-6 h-6 text-indigo-600" />,
-            description: "Your central hub for daily activities.",
-            points: [
-                "View your total logged hours for the day.",
-                "See pending tasks and upcoming deadlines.",
-                "Review your framework allocation progress."
-            ]
-        },
-        {
+            id: 'tasks',
             title: "Task Management",
             icon: <CheckSquare className="w-6 h-6 text-green-600" />,
-            description: "Manage your daily work items effectively.",
-            points: [
-                "Create tasks for what you plan to achieve today.",
-                "Mark tasks as 'Done' once completed.",
-                "Overdue tasks from previous days appear in red."
+            usage: "Daily",
+            description: "Manage your daily work items. This is your primary workspace.",
+            steps: [
+                "Navigate to the **Tasks** page from the sidebar.",
+                "Click the **+ New Task** button.",
+                "Select a **Project Code** (e.g., General, Client Work).",
+                "Enter a clear **Task Description** of what you plan to do.",
+                "Set the **Planned Date** (defaults to today).",
+                "Once you finish a task, click the **checkbox** to mark it as 'Done'.",
+                "**Note:** Tasks marked as 'Done' will automatically appear in your Timesheet."
             ]
         },
         {
+            id: 'timesheets',
             title: "Timesheets",
             icon: <Clock className="w-6 h-6 text-blue-600" />,
-            description: "Log your work hours accurately.",
-            points: [
-                "Your timesheet is automatically populated from your completed tasks.",
-                "You can manually add entries if needed.",
-                "Ensure your daily total matches your working hours."
+            usage: "Daily",
+            description: "Log your work hours. Accurate timesheets ensure proper tracking.",
+            steps: [
+                "Go to the **Timesheet** page.",
+                "Your **completed tasks** for the day are automatically added as entries.",
+                "Review the **Duration** for each entry. Adjust if necessary.",
+                "If you did work not captured in tasks, use the **Add Entry** button.",
+                "Verify the **Total Hours** at the bottom matches your working day.",
+                "Click **Submit** at the end of the day or week as per policy."
             ]
         },
         {
+            id: 'announcements',
+            title: "Announcements",
+            icon: <Megaphone className="w-6 h-6 text-red-600" />,
+            usage: "Scanning",
+            description: "Stay updated with important company news and alerts.",
+            steps: [
+                "Check the **Announcements** page or the Dashboard widget.",
+                "Unread announcements will have a **badge** indicator.",
+                "Click on an announcement to read the full details.",
+                "Some announcements require acknowledgment. Click the **Acknowledge** button to confirm you've read it."
+            ]
+        },
+        {
+            id: 'leaves',
             title: "Leaves & Time Off",
             icon: <Calendar className="w-6 h-6 text-orange-600" />,
-            description: "Apply for leaves and check status.",
-            points: [
-                "Submit leave requests for approval.",
-                "Check your remaining leave balance.",
-                "View the company holiday calendar."
+            usage: "Occasional",
+            description: "Apply for leaves and managing your time off balance.",
+            steps: [
+                "Navigate to the **Leaves** page.",
+                "Click **Apply Leave** to open the request form.",
+                "Select the **Leave Type** (Sick, Casual, Earned).",
+                "Choose the **From** and **To** dates.",
+                "Add a brief **Reason** for the leave.",
+                "Click **Submit**. You can track the status (Pending/Approved) in the 'My Leaves' list."
             ]
         },
         {
+            id: 'reimbursements',
             title: "Reimbursements",
             icon: <DollarSign className="w-6 h-6 text-purple-600" />,
-            description: "Claim business expenses.",
-            points: [
-                "Upload receipts/bills for expenses.",
-                "Track the status of your claims (Approved/Pending/Rejected).",
-                "Ensure all details are accurate before submitting."
+            usage: "Occasional",
+            description: "Claim business-related expenses.",
+            steps: [
+                "Go to the **Reimbursements** page.",
+                "Click **New Claim**.",
+                "Enter the **Expense Type** (Travel, Food, etc.) and **Amount**.",
+                "**Upload** a clear photo or PDF of the receipt/bill (Required).",
+                "Submit the claim. You will be notified once Finance approves or rejects it."
             ]
         },
         {
+            id: 'policies',
             title: "Company Policies",
             icon: <FileText className="w-6 h-6 text-gray-600" />,
-            description: "Stay informed about company rules.",
-            points: [
-                "Read the latest HR policies.",
-                "Acknowledge new policies when required.",
-                "Refer back to policies anytime."
+            usage: "Occasional",
+            description: "Reference guide for company rules and regulations.",
+            steps: [
+                "Visit the **Policies** page to access the employee handbook.",
+                "Click on a policy document to **view or download** it.",
+                "When a policy is updated, you may be asked to **Acknowledge** the new version."
             ]
         }
     ];
 
     return (
-        <div className="p-6 max-w-7xl mx-auto">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Employee Portal Guide</h1>
-                <p className="mt-2 text-gray-600 text-lg">
-                    Welcome to the AlphaGobi Employee Portal. Here's a quick guide to help you get started.
+        <div className="p-6 max-w-5xl mx-auto space-y-8">
+            <div className="text-center mb-10">
+                <h1 className="text-3xl font-bold text-gray-900">How to Use the Employee Portal</h1>
+                <p className="mt-3 text-gray-600 text-lg max-w-2xl mx-auto">
+                    A step-by-step guide to your daily workflows, ordered by frequency of use.
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {modules.map((module, index) => (
-                    <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="p-2 bg-gray-50 rounded-lg">
-                                {module.icon}
+            <div className="space-y-6">
+                {sections.map((section) => (
+                    <div key={section.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                        <div className="p-6 md:p-8">
+                            <div className="flex flex-col md:flex-row md:items-start gap-6">
+                                {/* Icon & Header */}
+                                <div className="flex-shrink-0">
+                                    <div className="p-3 bg-gray-50 rounded-xl inline-flex">
+                                        {section.icon}
+                                    </div>
+                                </div>
+
+                                <div className="flex-1">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                                        <h2 className="text-xl font-bold text-gray-900">{section.title}</h2>
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                            ${section.usage === 'Daily' ? 'bg-green-100 text-green-800' :
+                                                section.usage === 'Scanning' ? 'bg-blue-100 text-blue-800' :
+                                                    'bg-gray-100 text-gray-800'}`}>
+                                            {section.usage} Use
+                                        </span>
+                                    </div>
+                                    <p className="text-gray-600 mb-6">{section.description}</p>
+
+                                    {/* Steps */}
+                                    <div className="bg-gray-50 rounded-lg p-5 border border-gray-100">
+                                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">How to use:</h3>
+                                        <ul className="space-y-3">
+                                            {section.steps.map((step, idx) => (
+                                                <li key={idx} className="flex items-start gap-3 text-sm text-gray-700">
+                                                    <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-indigo-100 text-indigo-600 font-bold text-xs mt-0.5">
+                                                        {idx + 1}
+                                                    </span>
+                                                    <span className="leading-relaxed" dangerouslySetInnerHTML={{
+                                                        __html: step.replace(/\*\*(.*?)\*\*/g, '<span class="font-semibold text-gray-900">$1</span>')
+                                                    }} />
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
-                            <h2 className="text-xl font-semibold text-gray-900">{module.title}</h2>
                         </div>
-                        <p className="text-gray-600 mb-4 font-medium">{module.description}</p>
-                        <ul className="space-y-2">
-                            {module.points.map((point, idx) => (
-                                <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
-                                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0"></span>
-                                    <span>{point}</span>
-                                </li>
-                            ))}
-                        </ul>
                     </div>
                 ))}
             </div>
 
-            <div className="mt-12 bg-indigo-50 rounded-xl p-8 border border-indigo-100">
-                <h2 className="text-xl font-bold text-indigo-900 mb-2">Need Help?</h2>
+            <div className="mt-12 bg-indigo-50 rounded-xl p-8 border border-indigo-100 text-center">
+                <h2 className="text-xl font-bold text-indigo-900 mb-2">Still have questions?</h2>
                 <p className="text-indigo-700">
-                    If you have any questions or encounter issues, please contact the HR team.
+                    Reach out to the HR department for further assistance with the portal.
                 </p>
             </div>
         </div>
