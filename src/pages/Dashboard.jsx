@@ -483,7 +483,7 @@ const Dashboard = () => {
                                 </div>
                             ) : (
                                 loggedEntries.map((entry, index) => {
-                                    const task = allTasksList.find(t => t.id == entry.taskId) || allTasksList.find(t => t.task_content === entry.description);
+                                    const task = allTasksList.find(t => t.id == (entry.taskId || entry.task_id)) || allTasksList.find(t => t.task_content === entry.description);
                                     // Use actual completion status so Green shows for completed tasks
                                     const color = getTaskStatusColor(task?.planned_date, task?.is_completed);
 
