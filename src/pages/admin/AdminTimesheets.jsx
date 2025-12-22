@@ -267,14 +267,31 @@ const AdminTimesheets = () => {
                                         <td className="py-3 px-4 border-r border-gray-100 align-top">
                                             {day.timesheet && day.timesheet.entries && day.timesheet.entries.length > 0 ? (
                                                 <div className="space-y-2">
-                                                    {day.timesheet.entries.map(entry => (
-                                                        <div key={entry.id} className={clsx("text-sm", entry.is_deleted == 1 ? "line-through text-gray-400" : "text-gray-700")}>
-                                                            <span className="font-medium text-gray-900 mr-2">
-                                                                {entry.startTime} - {entry.endTime} ({entry.duration}h):
-                                                            </span>
-                                                            {entry.description}
-                                                        </div>
-                                                    ))}
+                                                    {day.timesheet.entries.map(entry => {
+                                                        const task = tasks.find(t => t.id == (entry.taskId || entry.task_id));
+                                                        let timeDiffElement = null;
+                                                        if (task && task.eta) {
+                                                            const etaMins = parseInt(task.eta);
+                                                            const actualMins = parseFloat(entry.duration) * 60;
+                                                            const diff = Math.round(actualMins - etaMins);
+
+                                                            if (diff < 0) {
+                                                                timeDiffElement = <span className="text-xs font-bold text-green-600 bg-green-50 px-1 py-0.5 rounded ml-1">{diff}m</span>;
+                                                            } else if (diff > 0) {
+                                                                timeDiffElement = <span className="text-xs font-bold text-red-600 bg-red-50 px-1 py-0.5 rounded ml-1">+{diff}m</span>;
+                                                            }
+                                                        }
+
+                                                        return (
+                                                            <div key={entry.id} className={clsx("text-sm", entry.is_deleted == 1 ? "line-through text-gray-400" : "text-gray-700")}>
+                                                                <span className="font-medium text-gray-900 mr-2">
+                                                                    {entry.startTime} - {entry.endTime} ({entry.duration}h
+                                                                    {timeDiffElement}):
+                                                                </span>
+                                                                {entry.description}
+                                                            </div>
+                                                        );
+                                                    })}
                                                     <div className="pt-1 mt-1 border-t border-gray-100 flex justify-between items-center">
                                                         <span className="text-xs font-bold text-indigo-600">
                                                             Total: {day.timesheet.entries.reduce((sum, e) => sum + (e.is_deleted == 1 ? 0 : parseFloat(e.duration || 0)), 0)} hrs

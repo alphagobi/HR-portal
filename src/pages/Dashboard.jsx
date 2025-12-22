@@ -487,6 +487,30 @@ const Dashboard = () => {
                                     // Use actual completion status so Green shows for completed tasks
                                     const color = getTaskStatusColor(task?.planned_date, task?.is_completed);
 
+                                    // ETA vs Actual Calculation
+                                    let timeDiffElement = null;
+                                    if (task && task.eta) {
+                                        const etaMins = parseInt(task.eta);
+                                        const actualMins = parseFloat(entry.duration) * 60;
+                                        const diff = Math.round(actualMins - etaMins);
+
+                                        if (diff < 0) {
+                                            // Saved time (Green)
+                                            timeDiffElement = (
+                                                <span className="text-xs font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded ml-2" title="Time Saved">
+                                                    {diff}m
+                                                </span>
+                                            );
+                                        } else if (diff > 0) {
+                                            // Over time (Red)
+                                            timeDiffElement = (
+                                                <span className="text-xs font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded ml-2" title="Time Overrun">
+                                                    +{diff}m
+                                                </span>
+                                            );
+                                        }
+                                    }
+
                                     return (
                                         <div key={entry.id || index} className="group hover:bg-gray-50 rounded-lg -mx-2 transition-colors">
                                             {/* Entry Row */}
@@ -510,6 +534,7 @@ const Dashboard = () => {
                                                     <div className="flex items-center gap-1.5">
                                                         <span className="font-bold text-gray-900">{entry.duration}</span>
                                                         <span className="text-xs text-gray-500 font-medium">hrs</span>
+                                                        {timeDiffElement}
                                                     </div>
                                                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <button onClick={() => startEditingEntry(entry, task)} className="text-gray-400 hover:text-indigo-600">
