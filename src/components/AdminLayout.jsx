@@ -12,7 +12,8 @@ import {
     ShieldCheck,
     CheckSquare,
     Megaphone,
-    Users
+    Users,
+    LayoutTemplate
 } from 'lucide-react';
 import { logout, getCurrentUser } from '../services/authService';
 import { getLeaves } from '../services/leaveService';
@@ -48,6 +49,7 @@ const AdminLayout = () => {
         { path: '/admin/clients', icon: Users, label: 'Clients' },
         { path: '/admin/users', icon: Users, label: 'Employees' },
         { path: '/admin/timesheets', icon: Clock, label: 'Timesheets' },
+        { path: '/admin/frameworks', icon: LayoutTemplate, label: 'Frameworks' },
         { path: '/admin/leaves', icon: CheckSquare, label: 'Leave Approvals', badge: unreadLeaves },
         { path: '/admin/calendar', icon: Calendar, label: 'Calendar' },
         { path: '/admin/reimbursements', icon: DollarSign, label: 'Reimbursements' },

@@ -22,6 +22,7 @@ import AdminPolicies from './pages/admin/AdminPolicies';
 import AdminCalendar from './pages/admin/AdminCalendar';
 import AdminInvoices from './pages/admin/AdminInvoices';
 import AdminClients from './pages/admin/AdminClients';
+import AdminFrameworks from './pages/admin/AdminFrameworks';
 
 function App() {
   return (
@@ -61,6 +62,7 @@ function App() {
           <Route path="policies" element={<AdminPolicies />} />
           <Route path="invoices" element={<AdminInvoices />} />
           <Route path="clients" element={<AdminClients />} />
+          <Route path="frameworks" element={<AdminFrameworks />} />
         </Route>
       </Routes>
     </Router>
