@@ -267,7 +267,7 @@ const AdminTimesheets = () => {
                                         <td className="py-3 px-4 border-r border-gray-100 align-top">
                                             {day.timesheet && day.timesheet.entries && day.timesheet.entries.length > 0 ? (
                                                 <div className="space-y-2">
-                                                    {day.timesheet.entries.map(entry => {
+                                                    {day.timesheet.entries.filter(e => e.is_deleted != 1).map(entry => {
                                                         const task = tasks.find(t => t.id == (entry.taskId || entry.task_id));
                                                         let timeDiffElement = null;
                                                         if (task && task.eta) {
@@ -283,7 +283,7 @@ const AdminTimesheets = () => {
                                                         }
 
                                                         return (
-                                                            <div key={entry.id} className={clsx("text-sm", entry.is_deleted == 1 ? "line-through text-gray-400" : "text-gray-700")}>
+                                                            <div key={entry.id} className="text-sm text-gray-700">
                                                                 <span className="font-medium text-gray-900 mr-2">
                                                                     {entry.startTime} - {entry.endTime} ({entry.duration}h
                                                                     {timeDiffElement}):
