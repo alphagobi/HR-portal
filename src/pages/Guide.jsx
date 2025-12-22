@@ -6,95 +6,99 @@ import {
     Calendar,
     DollarSign,
     FileText,
-    Megaphone,
-    ChevronRight
+    Megaphone
 } from 'lucide-react';
 
 const Guide = () => {
     const sections = [
         {
-            id: 'tasks',
-            title: "Task Management",
-            icon: <CheckSquare className="w-6 h-6 text-green-600" />,
+            id: 'dashboard',
+            title: "Dashboard (The Hub)",
+            icon: <LayoutDashboard className="w-6 h-6 text-indigo-600" />,
             usage: "Daily",
-            description: "Manage your daily work items. This is your primary workspace.",
+            description: "Your central workspace for executing tasks and logging work.",
             steps: [
-                "Navigate to the **Tasks** page from the sidebar.",
-                "Click the **+ New Task** button.",
-                "Select a **Project Code** (e.g., General, Client Work).",
-                "Enter a clear **Task Description** of what you plan to do.",
-                "Set the **Planned Date** (defaults to today).",
-                "Once you finish a task, click the **checkbox** to mark it as 'Done'.",
-                "**Note:** Tasks marked as 'Done' will automatically appear in your Timesheet."
+                "**Your Tasks List**: View tasks scheduled for today. Colors indicate status: **Red** (Overdue), **Yellow** (Due Today), **Green** (Future).",
+                "**Start Working**: Click on a task in the list to expand it.",
+                "**Log Task Completion**: This is how you finish a task. \n   - Enter **Time Spent (Mins)** (e.g., 60).\n   - Add **Remarks** (optional).\n   - Click **Log & Complete**.",
+                "**Logged Today**: Once logged, the entry moves to the 'Logged Today' widget on the left.",
+                "**Edit/Undo**: You can edit (Pencil icon) or delete (Trash icon) log entries from the 'Logged Today' list if you made a mistake."
+            ]
+        },
+        {
+            id: 'planner',
+            title: "Task Planner (Planning)",
+            icon: <CheckSquare className="w-6 h-6 text-green-600" />,
+            usage: "Daily / Weekly",
+            description: "Plan your future work. Use this page to populate your Dashboard.",
+            steps: [
+                "Navigate to **Tasks** from the sidebar.",
+                "Click **+ Add Task**.",
+                "**Required Fields**:\n   - **Date**: When do you plan to do this?\n   - **Task Description**: What needs to be done?\n   - **ETA (Minutes)**: Estimated time (Required).",
+                "**Framework** (Optional): Link the task to a strategic framework item.",
+                "**Recurring**: Toggle 'Recurring Task?' for items that repeat (Daily/Weekly).",
+                "**Note**: You *plan* here, but you *complete* tasks on the Dashboard."
             ]
         },
         {
             id: 'timesheets',
             title: "Timesheets",
             icon: <Clock className="w-6 h-6 text-blue-600" />,
-            usage: "Daily",
-            description: "Log your work hours. Accurate timesheets ensure proper tracking.",
+            usage: "Daily Review",
+            description: "Review and submit your work logs.",
             steps: [
-                "Go to the **Timesheet** page.",
-                "Your **completed tasks** for the day are automatically added as entries.",
-                "Review the **Duration** for each entry. Adjust if necessary.",
-                "If you did work not captured in tasks, use the **Add Entry** button.",
-                "Verify the **Total Hours** at the bottom matches your working day.",
-                "Click **Submit** at the end of the day or week as per policy."
+                "Go to **Timesheet**.",
+                "Your timesheet is **auto-filled** based on the tasks you completed in the Dashboard.",
+                "**Manual Entry**: If you did work not in your plan, use 'Add Entry' here.",
+                "**Verify Total**: Ensure your 'Total Hours' matches your actual working day.",
+                "**Submit**: Submit your timesheet at the end of the day or week."
             ]
         },
         {
             id: 'announcements',
             title: "Announcements",
             icon: <Megaphone className="w-6 h-6 text-red-600" />,
-            usage: "Scanning",
-            description: "Stay updated with important company news and alerts.",
+            usage: "As Needed",
+            description: "Company updates and alerts.",
             steps: [
-                "Check the **Announcements** page or the Dashboard widget.",
-                "Unread announcements will have a **badge** indicator.",
-                "Click on an announcement to read the full details.",
-                "Some announcements require acknowledgment. Click the **Acknowledge** button to confirm you've read it."
+                "Check the **Announcements** page for new messages.",
+                "Look for the **Red Badge** on the sidebar indicating unread items.",
+                "**Acknowledge**: Some important announcements require you to click 'Acknowledge' to confirm receipt."
             ]
         },
         {
             id: 'leaves',
-            title: "Leaves & Time Off",
+            title: "Leaves",
             icon: <Calendar className="w-6 h-6 text-orange-600" />,
-            usage: "Occasional",
-            description: "Apply for leaves and managing your time off balance.",
+            usage: "As Needed",
+            description: "Leave management.",
             steps: [
-                "Navigate to the **Leaves** page.",
-                "Click **Apply Leave** to open the request form.",
-                "Select the **Leave Type** (Sick, Casual, Earned).",
-                "Choose the **From** and **To** dates.",
-                "Add a brief **Reason** for the leave.",
-                "Click **Submit**. You can track the status (Pending/Approved) in the 'My Leaves' list."
+                "Click **Apply Leave** on the Leaves page.",
+                "Select **Leave Type** and Dates.",
+                "Submit and track approval status in the **My Leaves** list."
             ]
         },
         {
             id: 'reimbursements',
             title: "Reimbursements",
             icon: <DollarSign className="w-6 h-6 text-purple-600" />,
-            usage: "Occasional",
-            description: "Claim business-related expenses.",
+            usage: "As Needed",
+            description: "Expense claims.",
             steps: [
-                "Go to the **Reimbursements** page.",
-                "Click **New Claim**.",
-                "Enter the **Expense Type** (Travel, Food, etc.) and **Amount**.",
-                "**Upload** a clear photo or PDF of the receipt/bill (Required).",
-                "Submit the claim. You will be notified once Finance approves or rejects it."
+                "Click **New Claim** on the Reimbursements page.",
+                "Enter details and **Upload Receipt** (Required).",
+                "Submit for Finance approval."
             ]
         },
         {
             id: 'policies',
-            title: "Company Policies",
+            title: "Policies",
             icon: <FileText className="w-6 h-6 text-gray-600" />,
-            usage: "Occasional",
-            description: "Reference guide for company rules and regulations.",
+            usage: "Reference",
+            description: "Employee handbook and rules.",
             steps: [
-                "Visit the **Policies** page to access the employee handbook.",
-                "Click on a policy document to **view or download** it.",
-                "When a policy is updated, you may be asked to **Acknowledge** the new version."
+                "View and download company policy documents.",
+                "**Acknowledge** updated policies when prompted."
             ]
         }
     ];
@@ -104,7 +108,7 @@ const Guide = () => {
             <div className="text-center mb-10">
                 <h1 className="text-3xl font-bold text-gray-900">How to Use the Employee Portal</h1>
                 <p className="mt-3 text-gray-600 text-lg max-w-2xl mx-auto">
-                    A step-by-step guide to your daily workflows, ordered by frequency of use.
+                    Master your daily workflow: Plan in Tasks, Execute in Dashboard.
                 </p>
             </div>
 
@@ -124,10 +128,9 @@ const Guide = () => {
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                                         <h2 className="text-xl font-bold text-gray-900">{section.title}</h2>
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                            ${section.usage === 'Daily' ? 'bg-green-100 text-green-800' :
-                                                section.usage === 'Scanning' ? 'bg-blue-100 text-blue-800' :
-                                                    'bg-gray-100 text-gray-800'}`}>
-                                            {section.usage} Use
+                                            ${section.usage.includes('Daily') ? 'bg-green-100 text-green-800' :
+                                                'bg-gray-100 text-gray-800'}`}>
+                                            {section.usage}
                                         </span>
                                     </div>
                                     <p className="text-gray-600 mb-6">{section.description}</p>
@@ -135,14 +138,14 @@ const Guide = () => {
                                     {/* Steps */}
                                     <div className="bg-gray-50 rounded-lg p-5 border border-gray-100">
                                         <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">How to use:</h3>
-                                        <ul className="space-y-3">
+                                        <ul className="space-y-4">
                                             {section.steps.map((step, idx) => (
                                                 <li key={idx} className="flex items-start gap-3 text-sm text-gray-700">
                                                     <span className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-indigo-100 text-indigo-600 font-bold text-xs mt-0.5">
                                                         {idx + 1}
                                                     </span>
-                                                    <span className="leading-relaxed" dangerouslySetInnerHTML={{
-                                                        __html: step.replace(/\*\*(.*?)\*\*/g, '<span class="font-semibold text-gray-900">$1</span>')
+                                                    <span className="leading-relaxed whitespace-pre-wrap" dangerouslySetInnerHTML={{
+                                                        __html: step.replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-gray-900">$1</span>')
                                                     }} />
                                                 </li>
                                             ))}

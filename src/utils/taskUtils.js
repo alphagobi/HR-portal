@@ -8,26 +8,24 @@ export const getTaskStatusColor = (plannedDate, isCompleted = false) => {
         };
     }
 
-    const taskDate = new Date(plannedDate);
-    const todayDate = new Date();
+    // Use simple string comparison to avoid timezone issues
+    // Ensure plannedDate is YYYY-MM-DD
+    const taskDateStr = new Date(plannedDate).toISOString().split('T')[0];
+    const todayDateStr = new Date().toISOString().split('T')[0];
 
-    // Reset times to compare only dates
-    taskDate.setHours(0, 0, 0, 0);
-    todayDate.setHours(0, 0, 0, 0);
-
-    if (taskDate.getTime() < todayDate.getTime()) {
+    if (taskDateStr < todayDateStr) {
         return {
             bg: 'bg-red-100',
             text: 'text-red-700',
             border: 'border-red-200',
             dot: 'bg-red-600' // Overdue
         };
-    } else if (taskDate.getTime() === todayDate.getTime()) {
+    } else if (taskDateStr === todayDateStr) {
         return {
             bg: 'bg-yellow-100',
             text: 'text-yellow-700',
             border: 'border-yellow-200',
-            dot: 'bg-yellow-500' // Standard readable Yellow
+            dot: 'bg-yellow-500' // Due Today
         };
     } else {
         return {

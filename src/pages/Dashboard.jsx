@@ -218,11 +218,21 @@ const Dashboard = () => {
             // Finding the actual entry in the main list to mark deleted
             const entryToDelete = loggedEntries[entryIndex];
 
-            // Backend expects missing entries to be soft-deleted. Filter it out instead of marking is_deleted.
-            const updatedEntries = todaySheet.entries.filter(e =>
-                !((e.id && e.id === entryToDelete.id) ||
-                    (e.description === entryToDelete.description && e.duration === entryToDelete.duration && e.taskId === entryToDelete.taskId))
-            );
+            // Robust Filtering: Prioritize ID, then TaskID, then Content
+            const updatedEntries = todaySheet.entries.filter(e => {
+                // 1. Strict ID Match (If both have IDs)
+                if (e.id && entryToDelete.id) {
+                    return e.id !== entryToDelete.id;
+                }
+                // 2. Strict Task ID Match (If both have Task IDs - Unique for recurring)
+                if (e.taskId && entryToDelete.taskId) {
+                    return e.taskId !== entryToDelete.taskId;
+                }
+                // 3. Last Resort: Content Match (Only if IDs/TaskIDs missing)
+                // This prevents deleting duplicates if they have unique TaskIDs but we fell through
+                // But if we are here, means IDs matched (or both undefined).
+                return !(e.description === entryToDelete.description && e.duration === entryToDelete.duration);
+            });
 
             await saveTimesheet({
                 date: today,
@@ -478,7 +488,7 @@ const Dashboard = () => {
                                     const color = getTaskStatusColor(task?.planned_date, task?.is_completed);
 
                                     return (
-                                        <div key={index} className="group hover:bg-gray-50 rounded-lg -mx-2 transition-colors">
+                                        <div key={entry.id || index} className="group hover:bg-gray-50 rounded-lg -mx-2 transition-colors">
                                             {/* Entry Row */}
                                             <div className="flex justify-between items-center text-sm p-2">
                                                 <div className="flex items-center gap-3 min-w-0 flex-1">
