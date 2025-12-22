@@ -6,6 +6,8 @@ const Reimbursements = () => {
     const [claims, setClaims] = useState([]);
     const [loading, setLoading] = useState(true);
     const [newClaim, setNewClaim] = useState({ category: 'Travel', amount: '', description: '', date: '' });
+    const [filter, setFilter] = useState('all'); // 'all' or 'mine'
+    const currentUser = JSON.parse(localStorage.getItem('hr_current_user'));
 
     useEffect(() => {
         const fetchClaims = async () => {
@@ -144,37 +146,59 @@ const Reimbursements = () => {
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                             <h2 className="text-lg font-bold text-gray-900">Claim History</h2>
-                            <div className="flex gap-2">
-                                <span className="text-xs font-medium px-2 py-1 bg-gray-100 rounded-full text-gray-600">Total Pending: ₹45.00</span>
+                            <div className="flex items-center gap-4">
+                                <div className="flex bg-gray-100 p-1 rounded-lg">
+                                    <button
+                                        onClick={() => setFilter('all')}
+                                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${filter === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+                                    >
+                                        All Claims
+                                    </button>
+                                    <button
+                                        onClick={() => setFilter('mine')}
+                                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${filter === 'mine' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+                                    >
+                                        My Claims
+                                    </button>
+                                </div>
+                                <span className="text-xs font-medium px-2 py-1 bg-indigo-50 text-indigo-700 rounded-full">
+                                    Total Pending: ₹{claims.filter(c => c.status === 'Pending').reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0).toFixed(2)}
+                                </span>
                             </div>
                         </div>
                         <div className="divide-y divide-gray-100">
                             {loading ? (
                                 <div className="p-6 text-center text-gray-500">Loading claims...</div>
                             ) : (
-                                claims.map((claim) => (
-                                    <div key={claim.id} className="p-6 hover:bg-gray-50 transition-colors flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                        <div className="flex items-start gap-4">
-                                            <div className="p-3 bg-indigo-50 rounded-lg text-indigo-600">
-                                                <IndianRupee size={24} />
-                                            </div>
-                                            <div>
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <h3 className="font-semibold text-gray-900">{claim.category}</h3>
-                                                    <span className="text-sm font-bold text-gray-900">₹{claim.amount}</span>
+                                claims
+                                    .filter(claim => filter === 'all' || claim.employee_id === currentUser?.id)
+                                    .map((claim) => (
+                                        <div key={claim.id} className="p-6 hover:bg-gray-50 transition-colors flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                            <div className="flex items-start gap-4">
+                                                <div className="p-3 bg-indigo-50 rounded-lg text-indigo-600">
+                                                    <IndianRupee size={24} />
                                                 </div>
-                                                <p className="text-sm text-gray-500">{claim.date}</p>
-                                                <p className="text-sm text-gray-600 mt-1">{claim.description}</p>
+                                                <div>
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <h3 className="font-semibold text-gray-900">{claim.category}</h3>
+                                                        <span className="text-sm font-bold text-gray-900">₹{claim.amount}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                                                        <span className="font-medium text-gray-700">{claim.employee_name || 'Unknown'}</span>
+                                                        <span>•</span>
+                                                        <span>{claim.date}</span>
+                                                    </div>
+                                                    <p className="text-sm text-gray-600 mt-1">{claim.description}</p>
+                                                </div>
+                                            </div>
+                                            <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(claim.status)}`}>
+                                                {claim.status === 'Approved' && <CheckCircle size={14} />}
+                                                {claim.status === 'Pending' && <Clock size={14} />}
+                                                {claim.status === 'Rejected' && <XCircle size={14} />}
+                                                {claim.status}
                                             </div>
                                         </div>
-                                        <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(claim.status)}`}>
-                                            {claim.status === 'Approved' && <CheckCircle size={14} />}
-                                            {claim.status === 'Pending' && <Clock size={14} />}
-                                            {claim.status === 'Rejected' && <XCircle size={14} />}
-                                            {claim.status}
-                                        </div>
-                                    </div>
-                                ))
+                                    ))
                             )}
                         </div>
                     </div>

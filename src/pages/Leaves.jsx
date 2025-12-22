@@ -71,8 +71,8 @@ const Leaves = () => {
             id: Date.now(), // Temporary ID
             status: 'Pending',
             days: 1, // Mock calculation
-            startDate: newRequest.startDate,
-            endDate: newRequest.endDate
+            start_date: newRequest.startDate,
+            end_date: newRequest.endDate
         };
 
         setLeaves([uiRequest, ...leaves]);
@@ -270,7 +270,7 @@ const Leaves = () => {
                                             <div className="flex items-center gap-2 text-xs text-gray-500">
                                                 <Calendar size={14} />
                                                 <span className="font-medium">
-                                                    {new Date(leave.start_date).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                                                    {leave.start_date ? new Date(leave.start_date).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : 'Date Pending'}
                                                 </span>
                                             </div>
                                             <p className="text-sm text-gray-600 truncate max-w-md" title={leave.reason}>{leave.reason}</p>
