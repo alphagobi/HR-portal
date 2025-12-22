@@ -12,6 +12,7 @@ import Leaves from './pages/Leaves';
 import Calendar from './pages/Calendar';
 import Reimbursements from './pages/Reimbursements';
 import Announcements from './pages/Announcements';
+import Guide from './pages/Guide';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminLeaves from './pages/admin/AdminLeaves';
 import AdminTimesheets from './pages/admin/AdminTimesheets';
@@ -44,6 +45,7 @@ function App() {
           <Route path="calendar" element={<Calendar />} />
           <Route path="reimbursements" element={<Reimbursements />} />
           <Route path="announcements" element={<Announcements />} />
+          <Route path="guide" element={<Guide />} />
         </Route>
 
         {/* Admin Routes - Protected & Admin Only */}
