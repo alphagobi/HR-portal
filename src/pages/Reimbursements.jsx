@@ -6,14 +6,15 @@ const Reimbursements = () => {
     const [claims, setClaims] = useState([]);
     const [loading, setLoading] = useState(true);
     const [newClaim, setNewClaim] = useState({ category: 'Travel', amount: '', description: '', date: '' });
-    const [filter, setFilter] = useState('all'); // 'all' or 'mine'
     const currentUser = JSON.parse(localStorage.getItem('hr_current_user'));
 
     useEffect(() => {
         const fetchClaims = async () => {
             try {
-                const data = await getClaims();
-                setClaims(data);
+                if (currentUser?.id) {
+                    const data = await getClaims(currentUser.id);
+                    setClaims(data);
+                }
             } catch (error) {
                 console.error("Failed to fetch claims", error);
             } finally {
@@ -145,22 +146,8 @@ const Reimbursements = () => {
                 <div className="lg:col-span-2">
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                            <h2 className="text-lg font-bold text-gray-900">Claim History</h2>
+                            <h2 className="text-lg font-bold text-gray-900">My Claim History</h2>
                             <div className="flex items-center gap-4">
-                                <div className="flex bg-gray-100 p-1 rounded-lg">
-                                    <button
-                                        onClick={() => setFilter('all')}
-                                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${filter === 'all' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
-                                    >
-                                        All Claims
-                                    </button>
-                                    <button
-                                        onClick={() => setFilter('mine')}
-                                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${filter === 'mine' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
-                                    >
-                                        My Claims
-                                    </button>
-                                </div>
                                 <span className="text-xs font-medium px-2 py-1 bg-indigo-50 text-indigo-700 rounded-full">
                                     Total Pending: ₹{claims.filter(c => c.status === 'Pending').reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0).toFixed(2)}
                                 </span>
@@ -170,35 +157,37 @@ const Reimbursements = () => {
                             {loading ? (
                                 <div className="p-6 text-center text-gray-500">Loading claims...</div>
                             ) : (
-                                claims
-                                    .filter(claim => filter === 'all' || claim.employee_id === currentUser?.id)
-                                    .map((claim) => (
-                                        <div key={claim.id} className="p-6 hover:bg-gray-50 transition-colors flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                                            <div className="flex items-start gap-4">
-                                                <div className="p-3 bg-indigo-50 rounded-lg text-indigo-600">
-                                                    <IndianRupee size={24} />
-                                                </div>
-                                                <div>
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <h3 className="font-semibold text-gray-900">{claim.category}</h3>
-                                                        <span className="text-sm font-bold text-gray-900">₹{claim.amount}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                                                        <span className="font-medium text-gray-700">{claim.employee_name || 'Unknown'}</span>
-                                                        <span>•</span>
-                                                        <span>{claim.date}</span>
-                                                    </div>
-                                                    <p className="text-sm text-gray-600 mt-1">{claim.description}</p>
-                                                </div>
+
+                                claims.map((claim) => (
+                                    <div key={claim.id} className="p-6 hover:bg-gray-50 transition-colors flex flex-col sm:flex-row justify-between items-start gap-4">
+                                        <div className="flex items-start gap-4 w-full">
+                                            <div className="p-3 bg-indigo-50 rounded-lg text-indigo-600 shrink-0">
+                                                <IndianRupee size={24} />
                                             </div>
-                                            <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(claim.status)}`}>
-                                                {claim.status === 'Approved' && <CheckCircle size={14} />}
-                                                {claim.status === 'Pending' && <Clock size={14} />}
-                                                {claim.status === 'Rejected' && <XCircle size={14} />}
-                                                {claim.status}
+                                            <div className="flex-1">
+                                                <div className="flex justify-between items-start">
+                                                    <div>
+                                                        <h3 className="text-gray-900 font-medium mb-1">{claim.description}</h3>
+                                                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                                                            <span className="bg-gray-100 px-2 py-0.5 rounded text-gray-600 uppercase tracking-wide text-[10px] font-bold">
+                                                                {claim.category}
+                                                            </span>
+                                                            <span>•</span>
+                                                            <span>{claim.date}</span>
+                                                        </div>
+                                                    </div>
+                                                    <span className="text-lg font-bold text-gray-900 ml-4 whitespace-nowrap">₹{claim.amount}</span>
+                                                </div>
                                             </div>
                                         </div>
-                                    ))
+                                        <div className={`shrink-0 flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(claim.status)} self-start sm:self-center`}>
+                                            {claim.status === 'Approved' && <CheckCircle size={14} />}
+                                            {claim.status === 'Pending' && <Clock size={14} />}
+                                            {claim.status === 'Rejected' && <XCircle size={14} />}
+                                            {claim.status}
+                                        </div>
+                                    </div>
+                                ))
                             )}
                         </div>
                     </div>
