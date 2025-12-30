@@ -21,7 +21,8 @@ const SortableItem = ({ id, item, index, onRemove, onUpdate }) => {
     };
 
     return (
-        <div ref={setNodeRef} style={style} className="flex items-center gap-2 mb-2 bg-gray-50 p-2 rounded-md border border-gray-100 group">
+import { startOfWeek, endOfWeek, eachDayOfInterval, format, parseISO, isSameDay, isToday } from 'date-fns';
+    import { getUserSetting, saveUserSetting } from '../services/userSettingsService';
             <div {...attributes} {...listeners} className="cursor-grab text-gray-400 hover:text-gray-600">
                 <GripVertical size={16} />
             </div>
@@ -48,13 +49,76 @@ const SortableItem = ({ id, item, index, onRemove, onUpdate }) => {
             <button onClick={() => onRemove(index)} className="text-gray-400 hover:text-red-500 transition-colors">
                 <Trash2 size={16} />
             </button>
-        </div>
+        </div >
     );
 };
 
 const Dashboard = () => {
     const location = useLocation();
     const [loading, setLoading] = useState(true);
+
+    const [coreHours, setCoreHours] = useState({ working_days: [], working_slots: [] });
+    const [isEditingCoreHours, setIsEditingCoreHours] = useState(false);
+    const [tempCoreHours, setTempCoreHours] = useState({ working_days: [], working_slots: [] });
+
+    useEffect(() => {
+        if (user?.id) {
+            fetchCoreHours();
+        }
+    }, [user?.id]);
+
+    const fetchCoreHours = async () => {
+        const settings = await getUserSetting(user.id, 'core_working_hours');
+        if (settings) {
+            setCoreHours(settings);
+            setTempCoreHours(settings);
+        } else {
+            // Default presets
+            const defaultSettings = {
+                working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+                working_slots: [{ start: '09:00', end: '13:00' }, { start: '14:00', end: '18:00' }]
+            };
+            setCoreHours(defaultSettings);
+            setTempCoreHours(defaultSettings);
+        }
+    };
+
+    const handleSaveCoreHours = async () => {
+        await saveUserSetting(user.id, 'core_working_hours', tempCoreHours);
+        setCoreHours(tempCoreHours);
+        setIsEditingCoreHours(false);
+    };
+
+    const toggleDay = (day) => {
+        setTempCoreHours(prev => {
+            const days = prev.working_days.includes(day)
+                ? prev.working_days.filter(d => d !== day)
+                : [...prev.working_days, day];
+            return { ...prev, working_days: days };
+        });
+    };
+
+    const updateSlot = (index, field, value) => {
+        setTempCoreHours(prev => {
+            const slots = [...prev.working_slots];
+            slots[index] = { ...slots[index], [field]: value };
+            return { ...prev, working_slots: slots };
+        });
+    };
+
+    const addSlot = () => {
+        setTempCoreHours(prev => ({
+            ...prev,
+            working_slots: [...prev.working_slots, { start: '09:00', end: '17:00' }]
+        }));
+    };
+
+    const removeSlot = (index) => {
+        setTempCoreHours(prev => ({
+            ...prev,
+            working_slots: prev.working_slots.filter((_, i) => i !== index)
+        }));
+    };
 
     // Tasks State
     const [tasks, setTasks] = useState([]);
@@ -94,6 +158,70 @@ const Dashboard = () => {
     useEffect(() => {
         fetchDashboardData();
     }, []);
+
+    const [coreHours, setCoreHours] = useState({ working_days: [], working_slots: [] });
+    const [isEditingCoreHours, setIsEditingCoreHours] = useState(false);
+    const [tempCoreHours, setTempCoreHours] = useState({ working_days: [], working_slots: [] });
+
+    useEffect(() => {
+        if (user?.id) {
+            fetchDashboardData();
+            fetchCoreHours();
+        }
+    }, [user?.id]);
+
+    const fetchCoreHours = async () => {
+        const settings = await getUserSetting(user.id, 'core_working_hours');
+        if (settings) {
+            setCoreHours(settings);
+            setTempCoreHours(settings);
+        } else {
+            // Default presets
+            const defaultSettings = {
+                working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+                working_slots: [{ start: '09:00', end: '13:00' }, { start: '14:00', end: '18:00' }]
+            };
+            setCoreHours(defaultSettings);
+            setTempCoreHours(defaultSettings);
+        }
+    };
+
+    const handleSaveCoreHours = async () => {
+        await saveUserSetting(user.id, 'core_working_hours', tempCoreHours);
+        setCoreHours(tempCoreHours);
+        setIsEditingCoreHours(false);
+    };
+
+    const toggleDay = (day) => {
+        setTempCoreHours(prev => {
+            const days = prev.working_days.includes(day)
+                ? prev.working_days.filter(d => d !== day)
+                : [...prev.working_days, day];
+            return { ...prev, working_days: days };
+        });
+    };
+
+    const updateSlot = (index, field, value) => {
+        setTempCoreHours(prev => {
+            const slots = [...prev.working_slots];
+            slots[index] = { ...slots[index], [field]: value };
+            return { ...prev, working_slots: slots };
+        });
+    };
+
+    const addSlot = () => {
+        setTempCoreHours(prev => ({
+            ...prev,
+            working_slots: [...prev.working_slots, { start: '09:00', end: '17:00' }]
+        }));
+    };
+
+    const removeSlot = (index) => {
+        setTempCoreHours(prev => ({
+            ...prev,
+            working_slots: prev.working_slots.filter((_, i) => i !== index)
+        }));
+    };
 
     const fetchDashboardData = async () => {
         if (!user?.id) return;
@@ -383,8 +511,90 @@ const Dashboard = () => {
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mt-6">
-                {/* Left Column (5/12 width) - Framework & Logged Tasks */}
+                {/* Left Column (5/12 width) - Core Hours & Framework & Logged Tasks */}
                 <div className="lg:col-span-5 space-y-6">
+
+                    {/* Core Working Hours - New Widget */}
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-base font-bold text-gray-900">Core Working Hours</h2>
+                            <button onClick={() => isEditingCoreHours ? handleSaveCoreHours() : setIsEditingCoreHours(true)} className="text-gray-400 hover:text-indigo-600 transition-colors">
+                                {isEditingCoreHours ? <Save size={16} /> : <Pencil size={14} />}
+                            </button>
+                        </div>
+
+                        {!isEditingCoreHours ? (
+                            <div className="space-y-4">
+                                <div>
+                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Days</h3>
+                                    <div className="flex gap-2 flex-wrap">
+                                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                                            <span key={day} className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-colors ${coreHours.working_days.includes(day) ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-50 text-gray-400'}`}>
+                                                {day.charAt(0)}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Hours</h3>
+                                    <div className="space-y-2">
+                                        {coreHours.working_slots.map((slot, i) => (
+                                            <div key={i} className="flex justify-between items-center text-sm text-gray-700 bg-gray-50 px-3 py-2 rounded-md border border-gray-100">
+                                                <div className="flex items-center gap-2">
+                                                    <Clock size={14} className="text-gray-400" />
+                                                    <span className="font-mono font-medium">{slot.start} - {slot.end}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="space-y-5">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-700 mb-2">Select Days</label>
+                                    <div className="flex gap-1.5 flex-wrap">
+                                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                                            <button
+                                                key={day}
+                                                onClick={() => toggleDay(day)}
+                                                className={`px-2 py-1.5 rounded text-xs font-bold transition-colors border ${tempCoreHours.working_days.includes(day) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
+                                            >
+                                                {day}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-700 mb-2">Time Slots</label>
+                                    <div className="space-y-2">
+                                        {tempCoreHours.working_slots.map((slot, i) => (
+                                            <div key={i} className="flex items-center gap-2">
+                                                <input
+                                                    type="time"
+                                                    value={slot.start}
+                                                    onChange={(e) => updateSlot(i, 'start', e.target.value)}
+                                                    className="text-xs p-1.5 border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                                                />
+                                                <span className="text-gray-300">-</span>
+                                                <input
+                                                    type="time"
+                                                    value={slot.end}
+                                                    onChange={(e) => updateSlot(i, 'end', e.target.value)}
+                                                    className="text-xs p-1.5 border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                                                />
+                                                <button onClick={() => removeSlot(i)} className="text-gray-300 hover:text-red-500 transition-colors p-1"><Trash2 size={14} /></button>
+                                            </div>
+                                        ))}
+                                        <button onClick={addSlot} className="text-xs text-indigo-600 font-bold hover:text-indigo-800 flex items-center gap-1 mt-1">
+                                            <Plus size={12} /> Add Slot
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
                     {/* Widget 1: Framework Allocations */}
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[280px]">
                         <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2">
