@@ -283,7 +283,7 @@ const AdminTimesheets = () => {
                                                         }
 
                                                         return (
-                                                            <div key={entry.id} className="text-sm text-gray-700">
+                                                            <div key={entry.id} className="text-sm text-gray-700 whitespace-pre-wrap">
                                                                 <span className="font-medium text-gray-900 mr-2">
                                                                     {entry.startTime} - {entry.endTime} ({entry.duration}h
                                                                     {timeDiffElement}):

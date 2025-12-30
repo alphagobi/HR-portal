@@ -524,7 +524,7 @@ const Dashboard = () => {
                                                         </span>
                                                         {/* Show remarks if they exist and are different from Title */}
                                                         {entry.description && task && entry.description !== task.task_content && (
-                                                            <span className="text-xs text-gray-400 truncate">
+                                                            <span className="text-xs text-gray-400 truncate whitespace-pre-wrap">
                                                                 {entry.description}
                                                             </span>
                                                         )}
@@ -575,7 +575,7 @@ const Dashboard = () => {
                                                         <div>
                                                             <textarea
                                                                 placeholder="Remarks"
-                                                                className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white h-16 resize-none"
+                                                                className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white h-32"
                                                                 value={editForm.remarks}
                                                                 onChange={(e) => setEditForm(prev => ({ ...prev, remarks: e.target.value }))}
                                                             />
@@ -678,7 +678,7 @@ const Dashboard = () => {
                                                         <div>
                                                             <textarea
                                                                 placeholder="Remarks (Optional)"
-                                                                className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white h-16 resize-none"
+                                                                className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white h-32"
                                                                 value={logForm.remarks}
                                                                 onChange={(e) => setLogForm(prev => ({ ...prev, remarks: e.target.value }))}
                                                             />
