@@ -78,7 +78,7 @@ const Dashboard = () => {
     // Reuse logForm for editing to keep it consistent (duration in mins, remarks)
     // We can use a separate state if we want to avoid conflicts, but reusing logic is fine if we are careful.
     // Let's use a separate state to be safe and clear.
-    const [editForm, setEditForm] = useState({ duration: '', remarks: '' });
+    const [editForm, setEditForm] = useState({ duration: '', remarks: '', taskId: '' });
 
     // Draggable Sensor Setup
     const sensors = useSensors(
@@ -258,7 +258,7 @@ const Dashboard = () => {
     const startEditingEntry = (entry, task) => {
         if (editingEntryId === entry.id) {
             setEditingEntryId(null);
-            setEditForm({ duration: '', remarks: '' });
+            setEditForm({ duration: '', remarks: '', taskId: '' });
         } else {
             setEditingEntryId(entry.id);
             // Convert hours to minutes for the form
@@ -274,7 +274,8 @@ const Dashboard = () => {
 
             setEditForm({
                 duration: mins.toString(),
-                remarks: remarks
+                remarks: remarks,
+                taskId: entry.taskId || entry.task_id || ''
             });
         }
     };
@@ -306,7 +307,7 @@ const Dashboard = () => {
             const newDescription = editForm.remarks || task?.task_content || "Work Logged";
 
             const updatedEntries = todaySheet.entries.map(e =>
-                e.id === entry.id ? { ...e, duration: durationInHours, description: newDescription } : e
+                e.id === entry.id ? { ...e, duration: durationInHours, description: newDescription, taskId: editForm.taskId || null } : e
             );
 
             await saveTimesheet({
@@ -317,7 +318,7 @@ const Dashboard = () => {
             });
 
             setEditingEntryId(null);
-            setEditForm({ duration: '', remarks: '' });
+            setEditForm({ duration: '', remarks: '', taskId: '' });
             fetchDashboardData();
         } catch (error) {
             console.error("Failed to update entry", error);
@@ -519,7 +520,7 @@ const Dashboard = () => {
                                                     <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors ${color.dot}`}></div>
                                                     <div className="flex flex-col min-w-0">
                                                         {/* Always show Task Content as Title if linked, else Entry Description */}
-                                                        <span className={`font-medium truncate transition-colors ${color.text}`}>
+                                                        <span className={`font-medium transition-colors whitespace-pre-wrap ${color.text}`}>
                                                             {task?.task_content || entry.description || "Work Logged"}
                                                         </span>
                                                         {/* Show remarks if they exist and are different from Title */}
@@ -551,6 +552,19 @@ const Dashboard = () => {
                                             {editingEntryId === entry.id && (
                                                 <div className="px-4 pb-4 pt-2 bg-gray-50/50 border-t border-gray-100 mx-2 mb-2 rounded-b-md">
                                                     <div className="space-y-3">
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-gray-700 mb-1">Associate Task</label>
+                                                            <select
+                                                                className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white"
+                                                                value={editForm.taskId}
+                                                                onChange={(e) => setEditForm(prev => ({ ...prev, taskId: e.target.value }))}
+                                                            >
+                                                                <option value="">-- No Task (General Note) --</option>
+                                                                {allTasksList.map(t => (
+                                                                    <option key={t.id} value={t.id}>{t.task_content}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
                                                         <div className="grid grid-cols-2 gap-4">
                                                             <div>
                                                                 <label className="block text-xs font-medium text-gray-700 mb-1">Time Spent (Mins)</label>
