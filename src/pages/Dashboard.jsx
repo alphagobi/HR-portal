@@ -11,6 +11,9 @@ import { CSS } from '@dnd-kit/utilities';
 import { saveFrameworkAllocations } from '../services/frameworkService';
 import { getTaskStatusColor } from '../utils/taskUtils';
 
+import { startOfWeek, endOfWeek, eachDayOfInterval, format, parseISO, isSameDay, isToday } from 'date-fns';
+import { getUserSetting, saveUserSetting } from '../services/userSettingsService';
+
 // Moved SortableItem outside to prevent re-mounting on every render (Focus Loss Fix)
 const SortableItem = ({ id, item, index, onRemove, onUpdate }) => {
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: id });
@@ -21,9 +24,7 @@ const SortableItem = ({ id, item, index, onRemove, onUpdate }) => {
     };
 
     return (
-import { startOfWeek, endOfWeek, eachDayOfInterval, format, parseISO, isSameDay, isToday } from 'date-fns';
-    import { getUserSetting, saveUserSetting } from '../services/userSettingsService';
-            <div {...attributes} {...listeners} className="cursor-grab text-gray-400 hover:text-gray-600">
+        <div ref={setNodeRef} style={style} className="flex items-center gap-2 mb-2 bg-gray-50 p-2 rounded-md border border-gray-100 group">
                 <GripVertical size={16} />
             </div>
             <input
