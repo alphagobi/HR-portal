@@ -514,9 +514,9 @@ const Dashboard = () => {
                                     return (
                                         <div key={entry.id || index} className="group hover:bg-gray-50 rounded-lg -mx-2 transition-colors">
                                             {/* Entry Row */}
-                                            <div className="flex justify-between items-center text-sm p-2">
-                                                <div className="flex items-center gap-3 min-w-0 flex-1">
-                                                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors ${color.dot}`}></div>
+                                            <div className="flex justify-between items-start text-sm p-2">
+                                                <div className="flex items-start gap-3 min-w-0 flex-1">
+                                                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors mt-1.5 ${color.dot}`}></div>
                                                     <div className="flex flex-col min-w-0">
                                                         {/* Always show Task Content as Title if linked, else Entry Description */}
                                                         <span className={`font-medium transition-colors whitespace-pre-wrap ${color.text}`}>
