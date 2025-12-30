@@ -90,7 +90,7 @@ elseif ($method === 'POST') {
             $processedIds = [];
 
             $insertEntry = $pdo->prepare("INSERT INTO timesheet_entries (timesheet_id, start_time, end_time, duration, description, project, task_id, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-            $updateEntry = $pdo->prepare("UPDATE timesheet_entries SET start_time = ?, end_time = ?, duration = ?, description = ?, project = ?, is_edited = ? WHERE id = ?");
+            $updateEntry = $pdo->prepare("UPDATE timesheet_entries SET start_time = ?, end_time = ?, duration = ?, description = ?, project = ?, task_id = ?, type = ?, is_edited = ? WHERE id = ?");
             // History table might need update if we want to track duration changes, but for now let's keep it simple or update it too if schema allows.
             // Assuming history table only tracks start/end/desc for now. We can skip history for duration or add it later if requested.
             // For now, we'll just track description changes in history if duration changes? 
@@ -140,9 +140,12 @@ elseif ($method === 'POST') {
                         ]);
                         
                         // Update with is_edited = true
-                        $updateEntry->execute([$startTime, $endTime, $duration, $description, $project, 1, $entryId]);
+                        $updateEntry->execute([$startTime, $endTime, $duration, $description, $project, $taskId, $type, 1, $entryId]);
                     } else {
-                         $pdo->prepare("UPDATE timesheet_entries SET start_time = ?, end_time = ?, duration = ?, description = ?, project = ? WHERE id = ?")->execute([$startTime, $endTime, $duration, $description, $project, $entryId]);
+                         // Even if content didn't change, we might be updating the Link (taskId), so we MUST update.
+                         // Optimization: Check if taskId changed too?
+                         // For now, just update everything to be safe.
+                         $updateEntry->execute([$startTime, $endTime, $duration, $description, $project, $taskId, $type, 0, $entryId]);
                     }
 
                 } else {
