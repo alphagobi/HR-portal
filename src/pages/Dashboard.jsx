@@ -524,7 +524,7 @@ const Dashboard = () => {
                                                         </span>
                                                         {/* Show remarks if they exist and are different from Title */}
                                                         {entry.description && task && entry.description !== task.task_content && (
-                                                            <span className="text-xs text-gray-400 truncate whitespace-pre-wrap">
+                                                            <span className="text-xs text-gray-400 whitespace-pre-wrap">
                                                                 {entry.description}
                                                             </span>
                                                         )}

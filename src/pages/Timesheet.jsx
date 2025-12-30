@@ -287,17 +287,29 @@ const Timesheet = () => {
                                         const color = getTaskStatusColor(task?.planned_date, task?.is_completed);
 
                                         return (
-                                            <div key={entry.id} className="flex items-center justify-between text-sm">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-2 h-2 rounded-full ${color.dot}`}></div>
-                                                    <span className={`font-medium ${color.text} whitespace-pre-wrap`}>{entry.description}</span>
+                                            <div key={entry.id} className="flex flex-col gap-1 text-sm mb-3">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex items-start gap-3">
+                                                        <div className={`w-2 h-2 rounded-full mt-1.5 ${color.dot}`}></div>
+                                                        <span className={`font-medium ${color.text}`}>
+                                                            {task?.task_content || entry.description}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+                                                        <span className={`text-xs px-2 py-0.5 rounded-full ${entry.type === 'planned' ? 'bg-green-50 text-green-700' : 'bg-orange-50 text-orange-700'}`}>
+                                                            {entry.type === 'planned' ? 'Planned' : 'Unplanned'}
+                                                        </span>
+                                                        <span className="font-medium text-gray-900">{entry.duration} hrs</span>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-3">
-                                                    <span className={`text-xs px-2 py-0.5 rounded-full ${entry.type === 'planned' ? 'bg-green-50 text-green-700' : 'bg-orange-50 text-orange-700'}`}>
-                                                        {entry.type === 'planned' ? 'Planned' : 'Unplanned'}
-                                                    </span>
-                                                    <span className="font-medium text-gray-900">{entry.duration} hrs</span>
-                                                </div>
+                                                {/* Show remarks if they exist and are different from Title */}
+                                                {entry.description && task && entry.description !== task.task_content && (
+                                                    <div className="pl-5 ml-0.5">
+                                                        <span className="text-gray-500 text-xs whitespace-pre-wrap block border-l-2 border-gray-100 pl-2">
+                                                            {entry.description}
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
                                         );
                                     })}
