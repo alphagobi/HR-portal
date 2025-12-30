@@ -58,68 +58,7 @@ const Dashboard = () => {
     const location = useLocation();
     const [loading, setLoading] = useState(true);
 
-    const [coreHours, setCoreHours] = useState({ working_days: [], working_slots: [] });
-    const [isEditingCoreHours, setIsEditingCoreHours] = useState(false);
-    const [tempCoreHours, setTempCoreHours] = useState({ working_days: [], working_slots: [] });
 
-    useEffect(() => {
-        if (user?.id) {
-            fetchCoreHours();
-        }
-    }, [user?.id]);
-
-    const fetchCoreHours = async () => {
-        const settings = await getUserSetting(user.id, 'core_working_hours');
-        if (settings) {
-            setCoreHours(settings);
-            setTempCoreHours(settings);
-        } else {
-            // Default presets
-            const defaultSettings = {
-                working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-                working_slots: [{ start: '09:00', end: '13:00' }, { start: '14:00', end: '18:00' }]
-            };
-            setCoreHours(defaultSettings);
-            setTempCoreHours(defaultSettings);
-        }
-    };
-
-    const handleSaveCoreHours = async () => {
-        await saveUserSetting(user.id, 'core_working_hours', tempCoreHours);
-        setCoreHours(tempCoreHours);
-        setIsEditingCoreHours(false);
-    };
-
-    const toggleDay = (day) => {
-        setTempCoreHours(prev => {
-            const days = prev.working_days.includes(day)
-                ? prev.working_days.filter(d => d !== day)
-                : [...prev.working_days, day];
-            return { ...prev, working_days: days };
-        });
-    };
-
-    const updateSlot = (index, field, value) => {
-        setTempCoreHours(prev => {
-            const slots = [...prev.working_slots];
-            slots[index] = { ...slots[index], [field]: value };
-            return { ...prev, working_slots: slots };
-        });
-    };
-
-    const addSlot = () => {
-        setTempCoreHours(prev => ({
-            ...prev,
-            working_slots: [...prev.working_slots, { start: '09:00', end: '17:00' }]
-        }));
-    };
-
-    const removeSlot = (index) => {
-        setTempCoreHours(prev => ({
-            ...prev,
-            working_slots: prev.working_slots.filter((_, i) => i !== index)
-        }));
-    };
 
     // Tasks State
     const [tasks, setTasks] = useState([]);
