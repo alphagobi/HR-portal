@@ -25,8 +25,8 @@ const SortableItem = ({ id, item, index, onRemove, onUpdate }) => {
 
     return (
         <div ref={setNodeRef} style={style} className="flex items-center gap-2 mb-2 bg-gray-50 p-2 rounded-md border border-gray-100 group">
-                <GripVertical size={16} />
-            </div>
+            <GripVertical size={16} />
+
             <input
                 type="text"
                 value={item.category_name}
