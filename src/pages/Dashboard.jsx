@@ -456,8 +456,8 @@ const Dashboard = () => {
 
                     {/* Row 1, Col 1: Core Working Hours */}
                     <div className="col-span-1">
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 min-h-[250px] h-full">
-                            <div className="flex justify-between items-center mb-3">
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 h-[260px]">
+                            <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-sm font-bold text-gray-900">Core Hours</h2>
                                 <button onClick={() => isEditingCoreHours ? handleSaveCoreHours() : setIsEditingCoreHours(true)} className="text-gray-400 hover:text-indigo-600 transition-colors">
                                     {isEditingCoreHours ? <Save size={14} /> : <Pencil size={13} />}
@@ -465,9 +465,10 @@ const Dashboard = () => {
                             </div>
 
                             {!isEditingCoreHours ? (
-                                <div className="space-y-3">
+                                <div className="space-y-5">
                                     <div>
-                                        <div className="flex gap-1 flex-wrap mb-2">
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Active Days</span>
+                                        <div className="flex gap-1 flex-wrap">
                                             {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => {
                                                 const dayFull = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i];
                                                 return (
@@ -478,21 +479,24 @@ const Dashboard = () => {
                                             })}
                                         </div>
                                     </div>
-                                    <div className="space-y-1.5">
-                                        {coreHours.working_slots.map((slot, i) => (
-                                            <div key={i} className="flex justify-between items-center text-xs text-gray-700 bg-gray-50 px-2.5 py-1.5 rounded-md border border-gray-100">
-                                                <div className="flex items-center gap-2">
-                                                    <Clock size={12} className="text-gray-400" />
-                                                    <span className="font-mono font-medium">{slot.start} - {slot.end}</span>
+                                    <div>
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Schedule</span>
+                                        <div className="space-y-1.5">
+                                            {coreHours.working_slots.map((slot, i) => (
+                                                <div key={i} className="flex justify-between items-center text-xs text-gray-700 bg-gray-50 px-2.5 py-1.5 rounded-md border border-gray-100">
+                                                    <div className="flex items-center gap-2">
+                                                        <Clock size={12} className="text-gray-400" />
+                                                        <span className="font-mono font-medium">{slot.start} - {slot.end}</span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                             ) : (
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Days</label>
+                                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Active Days</label>
                                         <div className="flex gap-1 flex-wrap">
                                             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
                                                 <button
@@ -506,8 +510,8 @@ const Dashboard = () => {
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Slots</label>
-                                        <div className="space-y-1.5">
+                                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Schedule</label>
+                                        <div className="space-y-1.5 overflow-y-auto max-h-[90px] pr-1 no-scrollbar">
                                             {tempCoreHours.working_slots.map((slot, i) => (
                                                 <div key={i} className="flex items-center gap-1">
                                                     <input
@@ -538,7 +542,7 @@ const Dashboard = () => {
 
                     {/* Row 1, Col 2: Framework Allocations (Moved from Bottom) */}
                     <div className="col-span-1">
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col min-h-[280px] h-full">
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[260px]">
                             <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2">
                                 <h2 className="text-base font-bold text-gray-900">Framework</h2>
                                 {!isEditingFramework && (
@@ -619,7 +623,7 @@ const Dashboard = () => {
 
                     {/* Row 2: Logged Today (Full Width - Col Span 2) */}
                     <div className="col-span-2">
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-420px)] min-h-[300px]">
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-424px)] min-h-[300px]">
                             <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2 flex-shrink-0">
                                 <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
                                     <Clock size={18} className="text-indigo-600" />
