@@ -452,27 +452,27 @@ const Dashboard = () => {
         <div className="p-6 max-w-full mx-6 space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mt-6">
                 {/* Left Column (5/12 width) - Grid Layout (Row 1 Split, Row 2 Full) */}
-                <div className="lg:col-span-5 grid grid-cols-2 gap-6 items-start content-start">
+                <div className="lg:col-span-5 grid grid-cols-12 gap-6 items-start content-start">
 
-                    {/* Row 1, Col 1: Core Working Hours */}
-                    <div className="col-span-1">
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 h-[260px]">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-sm font-bold text-gray-900">Core Hours</h2>
+                    {/* Row 1, Col 1: Core Working Hours (1/3 width = 4/12) */}
+                    <div className="col-span-4">
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 h-[260px]">
+                            <div className="flex justify-between items-center mb-3">
+                                <h2 className="text-xs font-bold text-gray-900">Core Hours</h2>
                                 <button onClick={() => isEditingCoreHours ? handleSaveCoreHours() : setIsEditingCoreHours(true)} className="text-gray-400 hover:text-indigo-600 transition-colors">
-                                    {isEditingCoreHours ? <Save size={14} /> : <Pencil size={13} />}
+                                    {isEditingCoreHours ? <Save size={12} /> : <Pencil size={11} />}
                                 </button>
                             </div>
 
                             {!isEditingCoreHours ? (
-                                <div className="space-y-5">
+                                <div className="space-y-4">
                                     <div>
-                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Active Days</span>
+                                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Active Days</span>
                                         <div className="flex gap-1 flex-wrap">
                                             {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => {
                                                 const dayFull = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i];
                                                 return (
-                                                    <span key={i} className={`w-7 h-7 flex items-center justify-center rounded-full text-[10px] font-bold transition-colors ${coreHours.working_days.includes(dayFull) ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-50 text-gray-400'}`}>
+                                                    <span key={i} className={`w-6 h-6 flex items-center justify-center rounded-full text-[9px] font-bold transition-colors ${coreHours.working_days.includes(dayFull) ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-50 text-gray-400'}`}>
                                                         {day}
                                                     </span>
                                                 )
@@ -480,29 +480,26 @@ const Dashboard = () => {
                                         </div>
                                     </div>
                                     <div>
-                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Schedule</span>
-                                        <div className="space-y-1.5">
+                                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Schedule</span>
+                                        <div className="grid grid-cols-2 gap-1.5">
                                             {coreHours.working_slots.map((slot, i) => (
-                                                <div key={i} className="flex justify-between items-center text-xs text-gray-700 bg-gray-50 px-2.5 py-1.5 rounded-md border border-gray-100">
-                                                    <div className="flex items-center gap-2">
-                                                        <Clock size={12} className="text-gray-400" />
-                                                        <span className="font-mono font-medium">{slot.start} - {slot.end}</span>
-                                                    </div>
+                                                <div key={i} className="flex justify-center items-center text-[10px] text-gray-700 bg-gray-50 py-1.5 rounded border border-gray-100 font-mono font-medium">
+                                                    {slot.start} - {slot.end}
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
                                 </div>
                             ) : (
-                                <div className="space-y-4">
+                                <div className="space-y-3">
                                     <div>
-                                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Active Days</label>
-                                        <div className="flex gap-1 flex-wrap">
+                                        <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Active Days</label>
+                                        <div className="flex gap-1 flex-wrap justify-between">
                                             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
                                                 <button
                                                     key={day}
                                                     onClick={() => toggleDay(day)}
-                                                    className={`w-7 h-7 rounded text-[10px] font-bold transition-colors border flex items-center justify-center ${tempCoreHours.working_days.includes(day) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
+                                                    className={`w-6 h-6 rounded text-[9px] font-bold transition-colors border flex items-center justify-center ${tempCoreHours.working_days.includes(day) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
                                                 >
                                                     {day.charAt(0)}
                                                 </button>
@@ -510,28 +507,28 @@ const Dashboard = () => {
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Schedule</label>
-                                        <div className="space-y-1.5 overflow-y-auto max-h-[90px] pr-1 no-scrollbar">
+                                        <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Schedule</label>
+                                        <div className="space-y-1.5 overflow-y-auto max-h-[100px] pr-1 no-scrollbar">
                                             {tempCoreHours.working_slots.map((slot, i) => (
                                                 <div key={i} className="flex items-center gap-1">
                                                     <input
                                                         type="time"
                                                         value={slot.start}
                                                         onChange={(e) => updateSlot(i, 'start', e.target.value)}
-                                                        className="text-[10px] p-1 border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 outline-none w-16"
+                                                        className="text-[9px] p-0.5 border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 outline-none w-14 text-center"
                                                     />
-                                                    <span className="text-gray-300">-</span>
+                                                    <span className="text-gray-300 text-[9px]">-</span>
                                                     <input
                                                         type="time"
                                                         value={slot.end}
                                                         onChange={(e) => updateSlot(i, 'end', e.target.value)}
-                                                        className="text-[10px] p-1 border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 outline-none w-16"
+                                                        className="text-[9px] p-0.5 border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 outline-none w-14 text-center"
                                                     />
-                                                    <button onClick={() => removeSlot(i)} className="text-gray-300 hover:text-red-500 transition-colors p-1"><Trash2 size={12} /></button>
+                                                    <button onClick={() => removeSlot(i)} className="text-gray-300 hover:text-red-500 transition-colors p-0.5"><Trash2 size={10} /></button>
                                                 </div>
                                             ))}
-                                            <button onClick={addSlot} className="text-[10px] text-indigo-600 font-bold hover:text-indigo-800 flex items-center gap-1 mt-1">
-                                                <Plus size={10} /> Add
+                                            <button onClick={addSlot} className="text-[9px] text-indigo-600 font-bold hover:text-indigo-800 flex items-center gap-1 mt-1">
+                                                <Plus size={9} /> Add
                                             </button>
                                         </div>
                                     </div>
@@ -540,8 +537,8 @@ const Dashboard = () => {
                         </div>
                     </div>
 
-                    {/* Row 1, Col 2: Framework Allocations (Moved from Bottom) */}
-                    <div className="col-span-1">
+                    {/* Row 1, Col 2: Framework Allocations (2/3 width = 8/12) */}
+                    <div className="col-span-8">
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[260px]">
                             <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2">
                                 <h2 className="text-base font-bold text-gray-900">Framework</h2>
