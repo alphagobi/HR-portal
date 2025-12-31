@@ -449,86 +449,85 @@ const Dashboard = () => {
     const counts = getTaskCounts();
 
     return (
-        <div className="p-6 max-w-7xl mx-auto space-y-8">
+        <div className="p-6 max-w-full mx-6 space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mt-6">
-                {/* Left Column (6/12 width) - Grid Layout (Row 1 Split, Row 2 Full) */}
-                <div className="lg:col-span-6 grid grid-cols-2 gap-6 items-start content-start">
+                {/* Left Column (5/12 width) - Grid Layout (Row 1 Split, Row 2 Full) */}
+                <div className="lg:col-span-5 grid grid-cols-2 gap-6 items-start content-start">
 
                     {/* Row 1, Col 1: Core Working Hours */}
                     <div className="col-span-1">
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 min-h-[280px] h-full">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-base font-bold text-gray-900">Core Working Hours</h2>
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 min-h-[250px] h-full">
+                            <div className="flex justify-between items-center mb-3">
+                                <h2 className="text-sm font-bold text-gray-900">Core Hours</h2>
                                 <button onClick={() => isEditingCoreHours ? handleSaveCoreHours() : setIsEditingCoreHours(true)} className="text-gray-400 hover:text-indigo-600 transition-colors">
-                                    {isEditingCoreHours ? <Save size={16} /> : <Pencil size={14} />}
+                                    {isEditingCoreHours ? <Save size={14} /> : <Pencil size={13} />}
                                 </button>
                             </div>
 
                             {!isEditingCoreHours ? (
-                                <div className="space-y-4">
+                                <div className="space-y-3">
                                     <div>
-                                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Days</h3>
-                                        <div className="flex gap-2 flex-wrap">
-                                            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                                                <span key={day} className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-colors ${coreHours.working_days.includes(day) ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-50 text-gray-400'}`}>
-                                                    {day.charAt(0)}
-                                                </span>
-                                            ))}
+                                        <div className="flex gap-1 flex-wrap mb-2">
+                                            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => {
+                                                const dayFull = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i];
+                                                return (
+                                                    <span key={i} className={`w-7 h-7 flex items-center justify-center rounded-full text-[10px] font-bold transition-colors ${coreHours.working_days.includes(dayFull) ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-50 text-gray-400'}`}>
+                                                        {day}
+                                                    </span>
+                                                )
+                                            })}
                                         </div>
                                     </div>
-                                    <div>
-                                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Hours</h3>
-                                        <div className="space-y-2">
-                                            {coreHours.working_slots.map((slot, i) => (
-                                                <div key={i} className="flex justify-between items-center text-sm text-gray-700 bg-gray-50 px-3 py-2 rounded-md border border-gray-100">
-                                                    <div className="flex items-center gap-2">
-                                                        <Clock size={14} className="text-gray-400" />
-                                                        <span className="font-mono font-medium">{slot.start} - {slot.end}</span>
-                                                    </div>
+                                    <div className="space-y-1.5">
+                                        {coreHours.working_slots.map((slot, i) => (
+                                            <div key={i} className="flex justify-between items-center text-xs text-gray-700 bg-gray-50 px-2.5 py-1.5 rounded-md border border-gray-100">
+                                                <div className="flex items-center gap-2">
+                                                    <Clock size={12} className="text-gray-400" />
+                                                    <span className="font-mono font-medium">{slot.start} - {slot.end}</span>
                                                 </div>
-                                            ))}
-                                        </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             ) : (
-                                <div className="space-y-5">
+                                <div className="space-y-4">
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-700 mb-2">Select Days</label>
-                                        <div className="flex gap-1.5 flex-wrap">
+                                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Days</label>
+                                        <div className="flex gap-1 flex-wrap">
                                             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
                                                 <button
                                                     key={day}
                                                     onClick={() => toggleDay(day)}
-                                                    className={`px-2 py-1.5 rounded text-xs font-bold transition-colors border ${tempCoreHours.working_days.includes(day) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
+                                                    className={`w-7 h-7 rounded text-[10px] font-bold transition-colors border flex items-center justify-center ${tempCoreHours.working_days.includes(day) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
                                                 >
-                                                    {day}
+                                                    {day.charAt(0)}
                                                 </button>
                                             ))}
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-700 mb-2">Time Slots</label>
-                                        <div className="space-y-2">
+                                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Slots</label>
+                                        <div className="space-y-1.5">
                                             {tempCoreHours.working_slots.map((slot, i) => (
-                                                <div key={i} className="flex items-center gap-2">
+                                                <div key={i} className="flex items-center gap-1">
                                                     <input
                                                         type="time"
                                                         value={slot.start}
                                                         onChange={(e) => updateSlot(i, 'start', e.target.value)}
-                                                        className="text-xs p-1.5 border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                                                        className="text-[10px] p-1 border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 outline-none w-16"
                                                     />
                                                     <span className="text-gray-300">-</span>
                                                     <input
                                                         type="time"
                                                         value={slot.end}
                                                         onChange={(e) => updateSlot(i, 'end', e.target.value)}
-                                                        className="text-xs p-1.5 border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                                                        className="text-[10px] p-1 border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 outline-none w-16"
                                                     />
-                                                    <button onClick={() => removeSlot(i)} className="text-gray-300 hover:text-red-500 transition-colors p-1"><Trash2 size={14} /></button>
+                                                    <button onClick={() => removeSlot(i)} className="text-gray-300 hover:text-red-500 transition-colors p-1"><Trash2 size={12} /></button>
                                                 </div>
                                             ))}
-                                            <button onClick={addSlot} className="text-xs text-indigo-600 font-bold hover:text-indigo-800 flex items-center gap-1 mt-1">
-                                                <Plus size={12} /> Add Slot
+                                            <button onClick={addSlot} className="text-[10px] text-indigo-600 font-bold hover:text-indigo-800 flex items-center gap-1 mt-1">
+                                                <Plus size={10} /> Add
                                             </button>
                                         </div>
                                     </div>
@@ -747,8 +746,8 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                {/* Right Column (6/12 width) - Tasks List */}
-                <div className="lg:col-span-6">
+                {/* Right Column (7/12 width) - Tasks List */}
+                <div className="lg:col-span-7">
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-140px)] min-h-[600px]">
                         {/* Fixed height to match approx height of left column items (280 + 296 + 24 gap = 600) */}
                         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
