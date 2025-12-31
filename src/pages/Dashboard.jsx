@@ -451,13 +451,12 @@ const Dashboard = () => {
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mt-6">
-                {/* Left Column (5/12 width) - Grid Track Layout */}
-                <div className="lg:col-span-5 grid grid-cols-2 gap-6 items-start">
+                {/* Left Column (5/12 width) - Grid Layout (Row 1 Split, Row 2 Full) */}
+                <div className="lg:col-span-5 grid grid-cols-2 gap-6 items-start content-start">
 
-                    {/* Column 1: Core Hours & Framework */}
-                    <div className="space-y-6">
-                        {/* Core Working Hours */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 min-h-[280px]">
+                    {/* Row 1, Col 1: Core Working Hours */}
+                    <div className="col-span-1">
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 min-h-[280px] h-full">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-base font-bold text-gray-900">Core Working Hours</h2>
                                 <button onClick={() => isEditingCoreHours ? handleSaveCoreHours() : setIsEditingCoreHours(true)} className="text-gray-400 hover:text-indigo-600 transition-colors">
@@ -536,9 +535,11 @@ const Dashboard = () => {
                                 </div>
                             )}
                         </div>
+                    </div>
 
-                        {/* Framework Allocations */}
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-420px)] min-h-[300px]">
+                    {/* Row 1, Col 2: Framework Allocations (Moved from Bottom) */}
+                    <div className="col-span-1">
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col min-h-[280px] h-full">
                             <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2">
                                 <h2 className="text-base font-bold text-gray-900">Framework</h2>
                                 {!isEditingFramework && (
@@ -617,14 +618,8 @@ const Dashboard = () => {
                         </div>
                     </div>
 
-                    {/* Column 2: Empty Placeholder & Logged Today */}
-                    <div className="space-y-6">
-                        {/* Empty Placeholder */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 min-h-[280px]">
-                            {/* Empty Content as requested */}
-                        </div>
-
-                        {/* Logged Today */}
+                    {/* Row 2: Logged Today (Full Width - Col Span 2) */}
+                    <div className="col-span-2">
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-420px)] min-h-[300px]">
                             <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2 flex-shrink-0">
                                 <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
