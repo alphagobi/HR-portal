@@ -457,7 +457,7 @@ const Dashboard = () => {
                     {/* Row 1: Split Core Hours & Placeholder */}
                     <div className="grid grid-cols-2 gap-6 bg-transparent">
                         {/* Core Working Hours - New Widget */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 min-h-[180px]">
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 min-h-[280px]">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-base font-bold text-gray-900">Core Working Hours</h2>
                                 <button onClick={() => isEditingCoreHours ? handleSaveCoreHours() : setIsEditingCoreHours(true)} className="text-gray-400 hover:text-indigo-600 transition-colors">
@@ -469,9 +469,9 @@ const Dashboard = () => {
                                 <div className="space-y-4">
                                     <div>
                                         <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Days</h3>
-                                        <div className="flex gap-1 flex-wrap">
+                                        <div className="flex gap-2 flex-wrap">
                                             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                                                <span key={day} className={`w-6 h-6 flex items-center justify-center rounded-full text-[10px] font-bold transition-colors ${coreHours.working_days.includes(day) ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-50 text-gray-400'}`}>
+                                                <span key={day} className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-colors ${coreHours.working_days.includes(day) ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-50 text-gray-400'}`}>
                                                     {day.charAt(0)}
                                                 </span>
                                             ))}
@@ -479,11 +479,11 @@ const Dashboard = () => {
                                     </div>
                                     <div>
                                         <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Hours</h3>
-                                        <div className="space-y-1">
+                                        <div className="space-y-2">
                                             {coreHours.working_slots.map((slot, i) => (
-                                                <div key={i} className="flex justify-between items-center text-xs text-gray-700 bg-gray-50 px-2 py-1.5 rounded-md border border-gray-100">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <Clock size={12} className="text-gray-400" />
+                                                <div key={i} className="flex justify-between items-center text-sm text-gray-700 bg-gray-50 px-3 py-2 rounded-md border border-gray-100">
+                                                    <div className="flex items-center gap-2">
+                                                        <Clock size={14} className="text-gray-400" />
                                                         <span className="font-mono font-medium">{slot.start} - {slot.end}</span>
                                                     </div>
                                                 </div>
@@ -492,44 +492,44 @@ const Dashboard = () => {
                                     </div>
                                 </div>
                             ) : (
-                                <div className="space-y-3">
+                                <div className="space-y-5">
                                     <div>
-                                        <label className="block text-[10px] font-medium text-gray-700 mb-1">Select Days</label>
-                                        <div className="flex gap-1 flex-wrap">
+                                        <label className="block text-xs font-medium text-gray-700 mb-2">Select Days</label>
+                                        <div className="flex gap-1.5 flex-wrap">
                                             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
                                                 <button
                                                     key={day}
                                                     onClick={() => toggleDay(day)}
-                                                    className={`px-1.5 py-1 rounded text-[10px] font-bold transition-colors border ${tempCoreHours.working_days.includes(day) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
+                                                    className={`px-2 py-1.5 rounded text-xs font-bold transition-colors border ${tempCoreHours.working_days.includes(day) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
                                                 >
-                                                    {day.substring(0, 2)}
+                                                    {day}
                                                 </button>
                                             ))}
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="block text-[10px] font-medium text-gray-700 mb-1">Time Slots</label>
-                                        <div className="space-y-1">
+                                        <label className="block text-xs font-medium text-gray-700 mb-2">Time Slots</label>
+                                        <div className="space-y-2">
                                             {tempCoreHours.working_slots.map((slot, i) => (
-                                                <div key={i} className="flex items-center gap-1">
+                                                <div key={i} className="flex items-center gap-2">
                                                     <input
                                                         type="time"
                                                         value={slot.start}
                                                         onChange={(e) => updateSlot(i, 'start', e.target.value)}
-                                                        className="w-16 text-[10px] p-1 border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                                                        className="text-xs p-1.5 border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                                                     />
-                                                    <span className="text-gray-300 text-[10px]">-</span>
+                                                    <span className="text-gray-300">-</span>
                                                     <input
                                                         type="time"
                                                         value={slot.end}
                                                         onChange={(e) => updateSlot(i, 'end', e.target.value)}
-                                                        className="w-16 text-[10px] p-1 border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                                                        className="text-xs p-1.5 border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                                                     />
-                                                    <button onClick={() => removeSlot(i)} className="text-gray-300 hover:text-red-500 transition-colors p-0.5"><Trash2 size={12} /></button>
+                                                    <button onClick={() => removeSlot(i)} className="text-gray-300 hover:text-red-500 transition-colors p-1"><Trash2 size={14} /></button>
                                                 </div>
                                             ))}
-                                            <button onClick={addSlot} className="text-[10px] text-indigo-600 font-bold hover:text-indigo-800 flex items-center gap-1 mt-1">
-                                                <Plus size={10} /> Add
+                                            <button onClick={addSlot} className="text-xs text-indigo-600 font-bold hover:text-indigo-800 flex items-center gap-1 mt-1">
+                                                <Plus size={12} /> Add Slot
                                             </button>
                                         </div>
                                     </div>
@@ -538,220 +538,213 @@ const Dashboard = () => {
                         </div>
 
                         {/* Empty Placeholder */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 min-h-[180px]">
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 min-h-[280px]">
                             {/* Empty Content as requested */}
                         </div>
                     </div>
 
-                    {/* Row 2: Merged Framework & Logged Today Container */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-270px)] min-h-[500px]">
-
-                        {/* Section 1: Framework Allocations */}
-                        <div className="flex-none mb-4">
-                            <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-50">
-                                <h2 className="text-base font-bold text-gray-900">Framework</h2>
-                                {!isEditingFramework && (
-                                    <button onClick={() => setIsEditingFramework(true)} className="text-gray-400 hover:text-indigo-600 transition-colors">
-                                        <Pencil size={14} />
-                                    </button>
-                                )}
-                            </div>
-
-                            {!isEditingFramework ? (
-                                <div className="space-y-3 max-h-[180px] overflow-y-auto no-scrollbar">
-                                    {allocations.map((item, idx) => (
-                                        <div key={idx} className="flex justify-between items-center">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${['bg-indigo-500', 'bg-blue-500', 'bg-purple-500', 'bg-pink-500'][idx % 4]}`}></div>
-                                                <span className="text-sm font-bold text-gray-700">{item.category_name}</span>
-                                            </div>
-                                            <div className="text-right">
-                                                <span className="text-sm font-bold text-gray-900">{item.percentage}%</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {frameworkTotal < 100 && (
-                                        <div className="flex justify-between items-center">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-2 h-2 rounded-full flex-shrink-0 bg-gray-300"></div>
-                                                <span className="text-sm font-bold text-gray-400">Unplanned</span>
-                                            </div>
-                                            <div className="text-right">
-                                                <span className="text-sm font-bold text-gray-400">{100 - frameworkTotal}%</span>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="flex flex-col bg-white z-10 max-h-[200px]">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Editing...</span>
-                                        <div className="flex gap-2">
-                                            <button onClick={() => handleSaveFramework()} className="text-green-600 hover:text-green-700" title="Save">
-                                                <Save size={16} />
-                                            </button>
-                                            <button onClick={() => { setIsEditingFramework(false); setTempAllocations(allocations); }} className="text-red-400 hover:text-red-500" title="Cancel">
-                                                <X size={16} />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                                        <SortableContext items={tempAllocations.map(i => i.id || i.tempId)} strategy={verticalListSortingStrategy}>
-                                            <div className="flex-1 overflow-y-auto pr-1 no-scrollbar">
-                                                {tempAllocations.map((item, index) => (
-                                                    <SortableItem
-                                                        key={item.id || item.tempId}
-                                                        id={item.id || item.tempId}
-                                                        item={item}
-                                                        index={index}
-                                                        onRemove={handleRemoveAllocation}
-                                                        onUpdate={handleUpdateAllocation}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </SortableContext>
-                                    </DndContext>
-
-                                    <div className="mt-2 pt-2 border-t border-gray-50 flex justify-between items-center">
-                                        <button onClick={handleAddAllocation} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
-                                            <Plus size={14} /> Add Item
-                                        </button>
-                                        <span className={`text-xs font-bold ${tempAllocations.reduce((sum, i) => sum + (parseInt(i.percentage) || 0), 0) > 100 ? "text-red-500" : "text-gray-400"}`}>
-                                            Total: {tempAllocations.reduce((sum, i) => sum + (parseInt(i.percentage) || 0), 0)}%
-                                        </span>
-                                    </div>
-                                </div>
+                    {/* Widget 1: Framework Allocations */}
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[280px]">
+                        <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2">
+                            <h2 className="text-base font-bold text-gray-900">Framework</h2>
+                            {!isEditingFramework && (
+                                <button onClick={() => setIsEditingFramework(true)} className="text-gray-400 hover:text-indigo-600 transition-colors">
+                                    <Pencil size={14} />
+                                </button>
                             )}
                         </div>
 
-                        {/* Divider */}
-                        <div className="border-t border-gray-100 my-4"></div>
-
-                        {/* Section 2: Logged Today */}
-                        <div className="flex-1 flex flex-col min-h-0">
-                            <div className="flex justify-between items-center mb-4 pb-2">
-                                <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                                    <Clock size={18} className="text-indigo-600" />
-                                    Logged Today
-                                </h2>
-                                <span className="text-sm font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-md">
-                                    {loggedEntries.reduce((acc, curr) => acc + parseFloat(curr.duration || 0), 0).toFixed(2)} hrs
-                                </span>
-                            </div>
-                            <div className="space-y-3 flex-1 overflow-y-auto overflow-x-hidden pr-1 no-scrollbar">
-                                {loggedEntries.length === 0 ? (
-                                    <div className="text-center py-6">
-                                        <Clock size={32} className="mx-auto text-gray-200 mb-2" />
-                                        <p className="text-sm text-gray-400 italic">No work logged yet.</p>
+                        {!isEditingFramework ? (
+                            <div className="flex-1 overflow-y-auto space-y-4 no-scrollbar">
+                                {allocations.map((item, idx) => (
+                                    <div key={idx} className="flex justify-between items-center">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${['bg-indigo-500', 'bg-blue-500', 'bg-purple-500', 'bg-pink-500'][idx % 4]}`}></div>
+                                            <span className="text-sm font-bold text-gray-700">{item.category_name}</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-sm font-bold text-gray-900">{item.percentage}%</span>
+                                        </div>
                                     </div>
-                                ) : (
-                                    loggedEntries.map((entry, index) => {
-                                        const task = allTasksList.find(t => t.id == (entry.taskId || entry.task_id)) || allTasksList.find(t => t.task_content === entry.description);
-                                        // Use actual completion status so Green shows for completed tasks
-                                        const color = getTaskStatusColor(task?.planned_date, task?.is_completed);
+                                ))}
+                                {frameworkTotal < 100 && (
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-2 h-2 rounded-full flex-shrink-0 bg-gray-300"></div>
+                                            <span className="text-sm font-bold text-gray-400">Unplanned</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-sm font-bold text-gray-400">{100 - frameworkTotal}%</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex flex-col min-h-0 bg-white z-10">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Editing...</span>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => handleSaveFramework()} className="text-green-600 hover:text-green-700" title="Save">
+                                            <Save size={16} />
+                                        </button>
+                                        <button onClick={() => { setIsEditingFramework(false); setTempAllocations(allocations); }} className="text-red-400 hover:text-red-500" title="Cancel">
+                                            <X size={16} />
+                                        </button>
+                                    </div>
+                                </div>
 
-                                        // ETA vs Actual Calculation
-                                        let timeDiffElement = null;
-                                        if (task && task.eta) {
-                                            const etaMins = parseInt(task.eta);
-                                            const actualMins = parseFloat(entry.duration) * 60;
-                                            const diff = Math.round(actualMins - etaMins);
+                                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                                    <SortableContext items={tempAllocations.map(i => i.id || i.tempId)} strategy={verticalListSortingStrategy}>
+                                        <div className="flex-1 overflow-y-auto pr-1">
+                                            {tempAllocations.map((item, index) => (
+                                                <SortableItem
+                                                    key={item.id || item.tempId}
+                                                    id={item.id || item.tempId}
+                                                    item={item}
+                                                    index={index}
+                                                    onRemove={handleRemoveAllocation}
+                                                    onUpdate={handleUpdateAllocation}
+                                                />
+                                            ))}
+                                        </div>
+                                    </SortableContext>
+                                </DndContext>
 
-                                            if (diff < 0) {
-                                                // Saved time (Green)
-                                                timeDiffElement = (
-                                                    <span className="text-xs font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded ml-2" title="Time Saved">
-                                                        {diff}m
-                                                    </span>
-                                                );
-                                            } else if (diff > 0) {
-                                                // Over time (Red)
-                                                timeDiffElement = (
-                                                    <span className="text-xs font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded ml-2" title="Time Overrun">
-                                                        +{diff}m
-                                                    </span>
-                                                );
-                                            }
+                                <div className="mt-2 pt-2 border-t border-gray-50 flex justify-between items-center">
+                                    <button onClick={handleAddAllocation} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+                                        <Plus size={14} /> Add Item
+                                    </button>
+                                    <span className={`text-xs font-bold ${tempAllocations.reduce((sum, i) => sum + (parseInt(i.percentage) || 0), 0) > 100 ? "text-red-500" : "text-gray-400"}`}>
+                                        Total: {tempAllocations.reduce((sum, i) => sum + (parseInt(i.percentage) || 0), 0)}%
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Widget 2: Logged Today */}
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-420px)] min-h-[300px]">
+                        <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2 flex-shrink-0">
+                            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                                <Clock size={18} className="text-indigo-600" />
+                                Logged Today
+                            </h2>
+                            <span className="text-sm font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-md">
+                                {loggedEntries.reduce((acc, curr) => acc + parseFloat(curr.duration || 0), 0).toFixed(2)} hrs
+                            </span>
+                        </div>
+                        <div className="space-y-3 flex-1 overflow-y-auto overflow-x-hidden pr-1 no-scrollbar">
+                            {loggedEntries.length === 0 ? (
+                                <div className="text-center py-6">
+                                    <Clock size={32} className="mx-auto text-gray-200 mb-2" />
+                                    <p className="text-sm text-gray-400 italic">No work logged yet.</p>
+                                </div>
+                            ) : (
+                                loggedEntries.map((entry, index) => {
+                                    const task = allTasksList.find(t => t.id == (entry.taskId || entry.task_id)) || allTasksList.find(t => t.task_content === entry.description);
+                                    // Use actual completion status so Green shows for completed tasks
+                                    const color = getTaskStatusColor(task?.planned_date, task?.is_completed);
+
+                                    // ETA vs Actual Calculation
+                                    let timeDiffElement = null;
+                                    if (task && task.eta) {
+                                        const etaMins = parseInt(task.eta);
+                                        const actualMins = parseFloat(entry.duration) * 60;
+                                        const diff = Math.round(actualMins - etaMins);
+
+                                        if (diff < 0) {
+                                            // Saved time (Green)
+                                            timeDiffElement = (
+                                                <span className="text-xs font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded ml-2" title="Time Saved">
+                                                    {diff}m
+                                                </span>
+                                            );
+                                        } else if (diff > 0) {
+                                            // Over time (Red)
+                                            timeDiffElement = (
+                                                <span className="text-xs font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded ml-2" title="Time Overrun">
+                                                    +{diff}m
+                                                </span>
+                                            );
                                         }
+                                    }
 
-                                        return (
-                                            <div key={entry.id || index} className="group hover:bg-gray-50 rounded-lg -mx-2 transition-colors">
-                                                {/* Entry Row */}
-                                                <div className="flex justify-between items-start text-sm p-2">
-                                                    <div className="flex items-start gap-3 min-w-0 flex-1">
-                                                        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors mt-1.5 ${color.dot}`}></div>
-                                                        <div className="flex flex-col min-w-0">
-                                                            {/* Always show Task Content as Title if linked, else Entry Description */}
-                                                            <span className={`font-medium transition-colors whitespace-pre-wrap ${color.text}`}>
-                                                                {task?.task_content || entry.description || "Work Logged"}
+                                    return (
+                                        <div key={entry.id || index} className="group hover:bg-gray-50 rounded-lg -mx-2 transition-colors">
+                                            {/* Entry Row */}
+                                            <div className="flex justify-between items-start text-sm p-2">
+                                                <div className="flex items-start gap-3 min-w-0 flex-1">
+                                                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors mt-1.5 ${color.dot}`}></div>
+                                                    <div className="flex flex-col min-w-0">
+                                                        {/* Always show Task Content as Title if linked, else Entry Description */}
+                                                        <span className={`font-medium transition-colors whitespace-pre-wrap ${color.text}`}>
+                                                            {task?.task_content || entry.description || "Work Logged"}
+                                                        </span>
+                                                        {/* Show remarks if they exist and are different from Title */}
+                                                        {entry.description && task && entry.description !== task.task_content && (
+                                                            <span className="text-xs text-gray-400 whitespace-pre-wrap">
+                                                                {entry.description}
                                                             </span>
-                                                            {/* Show remarks if they exist and are different from Title */}
-                                                            {entry.description && task && entry.description !== task.task_content && (
-                                                                <span className="text-xs text-gray-400 whitespace-pre-wrap">
-                                                                    {entry.description}
-                                                                </span>
-                                                            )}
-                                                        </div>
+                                                        )}
                                                     </div>
-                                                    <div className="flex items-center gap-3 pl-3">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <span className="font-bold text-gray-900">{entry.duration}</span>
-                                                            <span className="text-xs text-gray-500 font-medium">hrs</span>
-                                                            {timeDiffElement}
+                                                </div>
+                                                <div className="flex items-center gap-3 pl-3">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="font-bold text-gray-900">{entry.duration}</span>
+                                                        <span className="text-xs text-gray-500 font-medium">hrs</span>
+                                                        {timeDiffElement}
+                                                    </div>
+                                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button onClick={() => startEditingEntry(entry, task)} className="text-gray-400 hover:text-indigo-600">
+                                                            <Pencil size={14} />
+                                                        </button>
+                                                        <button onClick={() => handleDeleteEntry(index, task)} className="text-gray-400 hover:text-red-500">
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Edit Dropdown Form */}
+                                            {editingEntryId === entry.id && (
+                                                <div className="px-4 pb-4 pt-2 bg-gray-50/50 border-t border-gray-100 mx-2 mb-2 rounded-b-md">
+                                                    <div className="space-y-3">
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div>
+                                                                <label className="block text-xs font-medium text-gray-700 mb-1">Time Spent (Mins)</label>
+                                                                <input
+                                                                    type="number"
+                                                                    required
+                                                                    placeholder="e.g. 60"
+                                                                    className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white"
+                                                                    value={editForm.duration}
+                                                                    onChange={(e) => setEditForm(prev => ({ ...prev, duration: e.target.value }))}
+                                                                />
+                                                            </div>
+                                                            <div className="flex items-end">
+                                                                <button
+                                                                    onClick={() => handleUpdateEntry(entry, task)}
+                                                                    className="w-full text-sm bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors font-medium shadow-sm flex justify-center items-center gap-2"
+                                                                >
+                                                                    <Save size={14} /> Update Log
+                                                                </button>
+                                                            </div>
                                                         </div>
-                                                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <button onClick={() => startEditingEntry(entry, task)} className="text-gray-400 hover:text-indigo-600">
-                                                                <Pencil size={14} />
-                                                            </button>
-                                                            <button onClick={() => handleDeleteEntry(index, task)} className="text-gray-400 hover:text-red-500">
-                                                                <Trash2 size={14} />
-                                                            </button>
+                                                        <div>
+                                                            <textarea
+                                                                placeholder="Remarks"
+                                                                className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white h-32"
+                                                                value={editForm.remarks}
+                                                                onChange={(e) => setEditForm(prev => ({ ...prev, remarks: e.target.value }))}
+                                                            />
                                                         </div>
                                                     </div>
                                                 </div>
-
-                                                {/* Edit Dropdown Form */}
-                                                {editingEntryId === entry.id && (
-                                                    <div className="px-4 pb-4 pt-2 bg-gray-50/50 border-t border-gray-100 mx-2 mb-2 rounded-b-md">
-                                                        <div className="space-y-3">
-                                                            <div className="grid grid-cols-2 gap-4">
-                                                                <div>
-                                                                    <label className="block text-xs font-medium text-gray-700 mb-1">Time Spent (Mins)</label>
-                                                                    <input
-                                                                        type="number"
-                                                                        required
-                                                                        placeholder="e.g. 60"
-                                                                        className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white"
-                                                                        value={editForm.duration}
-                                                                        onChange={(e) => setEditForm(prev => ({ ...prev, duration: e.target.value }))}
-                                                                    />
-                                                                </div>
-                                                                <div className="flex items-end">
-                                                                    <button
-                                                                        onClick={() => handleUpdateEntry(entry, task)}
-                                                                        className="w-full text-sm bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors font-medium shadow-sm flex justify-center items-center gap-2"
-                                                                    >
-                                                                        <Save size={14} /> Update Log
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                            <div>
-                                                                <textarea
-                                                                    placeholder="Remarks"
-                                                                    className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white h-32"
-                                                                    value={editForm.remarks}
-                                                                    onChange={(e) => setEditForm(prev => ({ ...prev, remarks: e.target.value }))}
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })
-                                )}
-                            </div>
+                                            )}
+                                        </div>
+                                    );
+                                })
+                            )}
                         </div>
                     </div>
                 </div>
