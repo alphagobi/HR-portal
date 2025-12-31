@@ -451,8 +451,8 @@ const Dashboard = () => {
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mt-6">
-                {/* Left Column (5/12 width) - Grid Layout (Row 1 Split, Row 2 Full) */}
-                <div className="lg:col-span-5 grid grid-cols-2 gap-6 items-start content-start">
+                {/* Left Column (6/12 width) - Grid Layout (Row 1 Split, Row 2 Full) */}
+                <div className="lg:col-span-6 grid grid-cols-2 gap-6 items-start content-start">
 
                     {/* Row 1, Col 1: Core Working Hours */}
                     <div className="col-span-1">
@@ -747,8 +747,8 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                {/* Right Column (7/12 width) - Tasks List */}
-                <div className="lg:col-span-7">
+                {/* Right Column (6/12 width) - Tasks List */}
+                <div className="lg:col-span-6">
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-140px)] min-h-[600px]">
                         {/* Fixed height to match approx height of left column items (280 + 296 + 24 gap = 600) */}
                         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
