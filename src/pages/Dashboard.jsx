@@ -618,8 +618,8 @@ const Dashboard = () => {
                         </div>
                     </div>
 
-                    {/* Row 2: Logged Today (Full Width - Col Span 2) */}
-                    <div className="col-span-2">
+                    {/* Row 2: Logged Today (Full Width - Col Span 12) */}
+                    <div className="col-span-12">
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-424px)] min-h-[300px]">
                             <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2 flex-shrink-0">
                                 <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
