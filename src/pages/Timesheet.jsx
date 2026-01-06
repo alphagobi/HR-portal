@@ -315,6 +315,18 @@ const Timesheet = () => {
                                     })}
 
                                 </div>
+
+                                {/* Admin Remarks Section */}
+                                {(sheet.admin_remarks || sheet.adminRemarks) && (
+                                    <div className="mt-4 pt-3 border-t border-gray-100 bg-yellow-50 rounded-lg p-3">
+                                        <p className="text-xs font-bold text-yellow-800 uppercase tracking-wide mb-1">
+                                            Admin Comments
+                                        </p>
+                                        <p className="text-sm text-gray-800 whitespace-pre-wrap">
+                                            {sheet.admin_remarks || sheet.adminRemarks}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>

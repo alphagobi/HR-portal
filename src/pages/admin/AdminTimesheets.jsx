@@ -154,7 +154,7 @@ const AdminTimesheets = () => {
             });
             // Refresh local state purely for UI responsiveness or re-fetch
             const newTimesheets = timesheets.map(t =>
-                (t.id === item.timesheet.id) ? { ...t, adminRemarks: finalRemark } : t
+                (t.id === item.timesheet.id) ? { ...t, adminRemarks: finalRemark, admin_remarks: finalRemark } : t
             );
             setTimesheets(newTimesheets);
         } else {
@@ -358,7 +358,7 @@ const AdminTimesheets = () => {
                                                 type="text"
                                                 className="w-full text-sm border-b border-transparent focus:border-indigo-500 focus:ring-0 bg-transparent outline-none transition-colors placeholder-gray-300"
                                                 placeholder="Add comment..."
-                                                defaultValue={day.timesheet?.adminRemarks || ''}
+                                                defaultValue={day.timesheet?.admin_remarks || day.timesheet?.adminRemarks || ''}
                                                 onBlur={(e) => handleSaveRemark(day, e.target.value)}
                                             />
                                         </td>
