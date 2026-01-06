@@ -1,15 +1,8 @@
 <?php
 require_once 'config.php';
 
-// --- Auto-Migration to ensure 'framework_id' column exists ---
-try {
-    $check = $pdo->query("SHOW COLUMNS FROM planned_tasks LIKE 'framework_id'");
-    if ($check->rowCount() == 0) {
-        $pdo->exec("ALTER TABLE planned_tasks ADD COLUMN framework_id INT DEFAULT NULL");
-    }
-} catch (Exception $e) {
-    // Ignore migration errors
-}
+// --- Auto-Migration block removed for performance ---
+// Ensure 'framework_id' column exists in your database manually if missing.
 
 $method = $_SERVER['REQUEST_METHOD'];
 
