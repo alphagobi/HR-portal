@@ -195,7 +195,6 @@ const AdminLeaves = () => {
                                                     </div>
                                                     <div>
                                                         <p className="font-medium text-gray-900">{leave.employee_name || 'Unknown'}</p>
-                                                        <p className="text-xs text-gray-500">ID: {leave.employee_id}</p>
                                                     </div>
                                                 </div>
                                             </td>
@@ -282,7 +281,6 @@ const AdminLeaves = () => {
                                                 </div>
                                                 <div>
                                                     <p className="font-medium text-gray-900">{user.name || 'Unknown'}</p>
-                                                    <p className="text-xs text-gray-500">ID: {user.id}</p>
                                                 </div>
                                             </div>
                                         </td>
