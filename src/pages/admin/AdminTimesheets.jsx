@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getTimesheets, saveTimesheet } from '../../services/timesheetService';
 import { getLeaves } from '../../services/leaveService';
 import { getTasks } from '../../services/taskService';
+import { getTaskStatusColor } from '../../utils/taskUtils';
 import { ChevronDown, ChevronUp, Search, Calendar, ChevronRight, ChevronLeft, Save, User, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -341,6 +342,8 @@ const AdminTimesheets = () => {
                                                 <div className="space-y-2">
                                                     {day.timesheet.entries.filter(e => e.is_deleted != 1).map(entry => {
                                                         const task = tasks.find(t => t.id == (entry.taskId || entry.task_id));
+                                                        const color = getTaskStatusColor(task?.planned_date, task?.is_completed);
+
                                                         let timeDiffElement = null;
                                                         if (task && task.eta) {
                                                             const etaMins = parseInt(task.eta);
@@ -355,12 +358,28 @@ const AdminTimesheets = () => {
                                                         }
 
                                                         return (
-                                                            <div key={entry.id} className="text-sm text-gray-700 whitespace-pre-wrap">
-                                                                <span className="font-medium text-gray-900 mr-2">
-                                                                    {entry.startTime} - {entry.endTime} ({entry.duration}h
-                                                                    {timeDiffElement}):
-                                                                </span>
-                                                                {entry.description}
+                                                            <div key={entry.id} className="text-sm mb-3">
+                                                                <div className="flex items-start justify-between">
+                                                                    <div className="flex items-start gap-2">
+                                                                        <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${color.dot}`}></div>
+                                                                        <div className="flex flex-col">
+                                                                            <span className={`font-medium ${color.text}`}>
+                                                                                {task?.task_content || entry.description}
+                                                                            </span>
+                                                                            {/* Show remarks if they exist and are different from Title */}
+                                                                            {entry.description && task && entry.description !== task.task_content && (
+                                                                                <div className="text-gray-500 text-xs mt-0.5 whitespace-pre-wrap">
+                                                                                    {entry.description}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="text-xs text-gray-400 whitespace-nowrap ml-2 flex flex-col items-end">
+                                                                        <span>{entry.startTime} - {entry.endTime}</span>
+                                                                        <span className="font-medium text-gray-700">({entry.duration}h{timeDiffElement})</span>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         );
                                                     })}
