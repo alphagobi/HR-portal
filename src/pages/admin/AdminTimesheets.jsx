@@ -5,6 +5,7 @@ import { getTasks } from '../../services/taskService';
 import { getTaskStatusColor } from '../../utils/taskUtils';
 import { ChevronDown, ChevronUp, Search, Calendar, ChevronRight, ChevronLeft, Save, User, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
+import ExpandableText from '../../components/ExpandableText';
 
 const AdminTimesheets = () => {
     const [timesheets, setTimesheets] = useState([]);
@@ -368,8 +369,8 @@ const AdminTimesheets = () => {
                                                                             </span>
                                                                             {/* Show remarks if they exist and are different from Title */}
                                                                             {entry.description && task && entry.description !== task.task_content && (
-                                                                                <div className="text-gray-500 text-xs mt-0.5 whitespace-pre-wrap">
-                                                                                    {entry.description}
+                                                                                <div className="text-gray-600 text-sm mt-1">
+                                                                                    <ExpandableText text={entry.description} limit={100} />
                                                                                 </div>
                                                                             )}
                                                                         </div>
