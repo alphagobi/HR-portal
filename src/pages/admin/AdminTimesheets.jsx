@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getTimesheets, saveTimesheet } from '../../services/timesheetService';
+import { getLeaves } from '../../services/leaveService';
 import { getTasks } from '../../services/taskService';
 import { ChevronDown, ChevronUp, Search, Calendar, ChevronRight, ChevronLeft, Save, User, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
@@ -8,6 +9,7 @@ const AdminTimesheets = () => {
     const [timesheets, setTimesheets] = useState([]);
     const [tasks, setTasks] = useState([]);
     const [events, setEvents] = useState([]);
+    const [leaves, setLeaves] = useState([]);
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -26,7 +28,7 @@ const AdminTimesheets = () => {
         if (selectedEmployee && timesheets.length > 0) {
             generateSpreadsheetData();
         }
-    }, [selectedEmployee, currentMonth, timesheets, tasks, events]);
+    }, [selectedEmployee, currentMonth, timesheets, tasks, events, leaves]);
 
     const fetchAllData = async () => {
         setLoading(true);
@@ -75,12 +77,23 @@ const AdminTimesheets = () => {
         }
     };
 
-    // When employee changes, fetch their specific tasks
+    // When employee changes, fetch their specific tasks and leaves
     useEffect(() => {
         if (selectedEmployee) {
             fetchEmployeeTasks(selectedEmployee.id);
+            fetchEmployeeLeaves(selectedEmployee.id);
         }
     }, [selectedEmployee]);
+
+    const fetchEmployeeLeaves = async (employeeId) => {
+        try {
+            const result = await getLeaves(employeeId);
+            setLeaves(result.leaves || []);
+        } catch (error) {
+            console.error("Failed to fetch leaves", error);
+            setLeaves([]);
+        }
+    };
 
 
 
@@ -100,6 +113,18 @@ const AdminTimesheets = () => {
             const holiday = events.find(e => e.date === dateStr && e.is_holiday == 1);
             const isSunday = dayOfWeek === 0;
 
+            // Check for Leave
+            const leave = leaves.find(l => {
+                if (l.status !== 'Approved') return false;
+                const start = new Date(l.start_date);
+                const end = new Date(l.end_date);
+                start.setHours(0, 0, 0, 0);
+                end.setHours(0, 0, 0, 0);
+                return date >= start && date <= end;
+            });
+
+            const isLeave = !!leave;
+
             // Get Plan (Tasks)
             const daysTasks = tasks.filter(t => t.planned_date === dateStr);
 
@@ -116,7 +141,9 @@ const AdminTimesheets = () => {
                 isSunday: isSunday,
                 holidayName: holiday?.title || 'SUNDAY',
                 tasks: daysTasks,
-                timesheet: daysTimesheet || null
+                timesheet: daysTimesheet || null,
+                isLeave: isLeave,
+                leaveDetails: leave
             });
         }
         setSpreadsheetData(data);
@@ -264,6 +291,18 @@ const AdminTimesheets = () => {
                                             <td className="py-1 px-4 font-medium text-gray-800 border-r border-yellow-200 text-sm">{day.date}</td>
                                             <td colSpan="3" className="py-1 px-4 text-center font-bold text-gray-600 tracking-wider uppercase text-xs">
                                                 {day.holidayName}
+                                            </td>
+                                        </tr>
+                                    );
+                                }
+
+                                // Leave Row
+                                if (day.isLeave) {
+                                    return (
+                                        <tr key={day.date} className="bg-red-50 border-b border-gray-200">
+                                            <td className="py-1 px-4 font-medium text-gray-800 border-r border-red-100 text-sm">{day.date}</td>
+                                            <td colSpan="3" className="py-1 px-4 text-center font-bold text-red-800 tracking-wider uppercase text-xs">
+                                                {day.leaveDetails?.type} {day.leaveDetails?.reason ? `- ${day.leaveDetails.reason}` : ''}
                                             </td>
                                         </tr>
                                     );

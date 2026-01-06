@@ -344,7 +344,7 @@ const Timesheet = () => {
                                         {new Date(sheet.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                                         {sheet.isOnLeave && (
                                             <span className="text-xs font-bold bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full ml-2">
-                                                On Leave ({sheet.leaveDetails?.type})
+                                                {sheet.leaveDetails?.type} {sheet.leaveDetails?.reason && `- ${sheet.leaveDetails.reason}`}
                                             </span>
                                         )}
                                     </h3>
