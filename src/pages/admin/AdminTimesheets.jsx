@@ -28,7 +28,7 @@ const AdminTimesheets = () => {
     }, []);
 
     useEffect(() => {
-        if (selectedEmployee && timesheets.length > 0) {
+        if (selectedEmployee) {
             generateSpreadsheetData();
         }
     }, [selectedEmployee, currentMonth, timesheets, tasks, events, leaves]);
@@ -45,10 +45,8 @@ const AdminTimesheets = () => {
             setTimesheets(timesheetData);
             setEvents(calendarData);
 
-            // Filter out admin and format for dropdown
-            const emps = allUsers
-                .filter(u => u.role !== 'admin')
-                .map(u => ({ id: u.id, name: u.name }));
+            // Format users for dropdown (include everyone)
+            const emps = allUsers.map(u => ({ id: u.id, name: u.name }));
 
             setEmployees(emps);
 
