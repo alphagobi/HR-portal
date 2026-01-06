@@ -13,16 +13,16 @@ export const getTaskStatusColor = (plannedDate, isCompleted = false) => {
     const taskDateStr = new Date(plannedDate).toISOString().split('T')[0];
     const todayDateStr = new Date().toISOString().split('T')[0];
 
-    // FIX: Check isCompleted first!
+    // FIX: Removed checking isCompleted first!
     // Handle various truthy values (1, "1", true)
-    if (isCompleted === true || isCompleted === 1 || isCompleted === '1') {
-        return {
-            bg: 'bg-green-100',
-            text: 'text-green-700',
-            border: 'border-green-200',
-            dot: 'bg-green-500' // Completed
-        };
-    }
+    // if (isCompleted === true || isCompleted === 1 || isCompleted === '1') {
+    //     return {
+    //         bg: 'bg-green-100',
+    //         text: 'text-green-700',
+    //         border: 'border-green-200',
+    //         dot: 'bg-green-500' // Completed
+    //     };
+    // }
 
     if (taskDateStr < todayDateStr) {
         return {
