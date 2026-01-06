@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getTimesheets, saveTimesheet } from '../../services/timesheetService';
 import { getLeaves } from '../../services/leaveService';
 import { getTasks } from '../../services/taskService';
+import { getAllUsers } from '../../services/authService';
 import { getTaskStatusColor } from '../../utils/taskUtils';
 import { ChevronDown, ChevronUp, Search, Calendar, ChevronRight, ChevronLeft, Save, User, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
@@ -35,26 +36,20 @@ const AdminTimesheets = () => {
     const fetchAllData = async () => {
         setLoading(true);
         try {
-            const [timesheetData, calendarData] = await Promise.all([
+            const [timesheetData, calendarData, allUsers] = await Promise.all([
                 getTimesheets(),
-                fetch('/api/calendar.php').then(res => res.json())
+                fetch('/api/calendar.php').then(res => res.json()),
+                getAllUsers()
             ]);
 
             setTimesheets(timesheetData);
             setEvents(calendarData);
 
-            // Extract unique employees
-            const emps = [];
-            const empMap = new Map();
-            timesheetData.forEach(t => {
-                // EXCLUDE ADMIN FROM EMPLOYEE LIST
-                if (t.email === 'admin@company.com') return;
+            // Filter out admin and format for dropdown
+            const emps = allUsers
+                .filter(u => u.role !== 'admin')
+                .map(u => ({ id: u.id, name: u.name }));
 
-                if (!empMap.has(t.employee_id)) {
-                    empMap.set(t.employee_id, true);
-                    emps.push({ id: t.employee_id, name: t.employee_name });
-                }
-            });
             setEmployees(emps);
 
             // Auto-select first employee if available
