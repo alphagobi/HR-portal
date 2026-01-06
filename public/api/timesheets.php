@@ -25,27 +25,13 @@ if ($method === 'GET') {
     }
     $timesheets = $stmt->fetchAll();
 
-    // 2. Optimization: Get all entries in ONE query
-    $timesheetIds = array_column($timesheets, 'id');
-    
-    if (!empty($timesheetIds)) {
-        $placeholders = implode(',', array_fill(0, count($timesheetIds), '?'));
-        $stmtEntries = $pdo->prepare("SELECT id, timesheet_id, start_time as startTime, end_time as endTime, duration, description, project, task_id, type, is_edited, is_deleted FROM timesheet_entries WHERE timesheet_id IN ($placeholders)");
-        $stmtEntries->execute($timesheetIds);
-        $allEntries = $stmtEntries->fetchAll();
-
-        // Group by timesheet_id
-        $entriesBySheet = [];
-        foreach ($allEntries as $entry) {
-            $entriesBySheet[$entry['timesheet_id']][] = $entry;
-        }
-
-        foreach ($timesheets as &$sheet) {
-            $sheet['entries'] = $entriesBySheet[$sheet['id']] ?? [];
-        }
-    } else {
-        // No timesheets found, so no entries
-        // Loop not needed strictly as $timesheets is empty, but good for safety if logic changes
+    // 2. Get Entries for each timesheet
+    // Reverted to loop as per user feedback on performance
+    // The added index on timesheet_entries(timesheet_id) will still make this faster than before
+    foreach ($timesheets as &$sheet) {
+        $stmtEntries = $pdo->prepare("SELECT id, timesheet_id, start_time as startTime, end_time as endTime, duration, description, project, task_id, type, is_edited, is_deleted FROM timesheet_entries WHERE timesheet_id = ?");
+        $stmtEntries->execute([$sheet['id']]);
+        $sheet['entries'] = $stmtEntries->fetchAll();
     }
 
     echo json_encode($timesheets);
