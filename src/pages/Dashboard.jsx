@@ -649,7 +649,7 @@ const Dashboard = () => {
                     </div>
 
                     {/* 2. Framework (Moved Up) */}
-                    <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[220px]">
+                    <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[280px]">
                         <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2">
                             <h2 className="text-base font-bold text-gray-900">Framework</h2>
                             {!isEditingFramework && (
@@ -782,9 +782,29 @@ const Dashboard = () => {
                                                     <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors mt-1.5 ${color.dot}`}></div>
                                                     <div className="flex flex-col min-w-0">
                                                         {/* Always show Task Content as Title if linked, else Entry Description */}
-                                                        <span className={`font-medium transition-colors whitespace-pre-wrap ${color.text}`}>
-                                                            {task?.task_content || entry.description || "Work Logged"}
-                                                        </span>
+                                                        {(!task || (entry.description && entry.description !== task.task_content)) ? (
+                                                            // Case: Ad-hoc entry OR Entry description differs from Task Title -> Show description as main or secondary?
+                                                            // Logic: If task exists, title is task_content. Remark is separate.
+                                                            // If NO task, entry.description IS the title.
+                                                            task ? (
+                                                                <span className={`font-medium transition-colors whitespace-pre-wrap ${color.text}`}>
+                                                                    {task.task_content}
+                                                                </span>
+                                                            ) : (
+                                                                // No task, use ExpandableText for description as title
+                                                                <ExpandableText
+                                                                    text={entry.description || "Work Logged"}
+                                                                    limit={60}
+                                                                    className={`font-medium transition-colors ${color.text}`}
+                                                                    textClassName="" // No border for main title
+                                                                />
+                                                            )
+                                                        ) : (
+                                                            <span className={`font-medium transition-colors whitespace-pre-wrap ${color.text}`}>
+                                                                {task?.task_content || "Work Logged"}
+                                                            </span>
+                                                        )}
+
                                                         {/* Show remarks if they exist and are different from Title */}
                                                         {entry.description && task && entry.description !== task.task_content && (
                                                             <div className="mt-0.5">

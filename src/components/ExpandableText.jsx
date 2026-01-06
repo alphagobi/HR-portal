@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const ExpandableText = ({ text, limit = 100 }) => {
+const ExpandableText = ({ text, limit = 100, className = "text-xs text-gray-500", textClassName = "border-l-2 border-gray-100 pl-2" }) => {
     const [isExpanded, setIsExpanded] = useState(false);
 
     if (!text) return null;
@@ -8,9 +8,11 @@ const ExpandableText = ({ text, limit = 100 }) => {
     // If text is short, just render it without interaction
     if (text.length <= limit) {
         return (
-            <span className="text-xs text-gray-500 whitespace-pre-wrap block border-l-2 border-gray-100 pl-2">
-                {text}
-            </span>
+            <div className={className}>
+                <span className={`whitespace-pre-wrap block ${textClassName}`}>
+                    {text}
+                </span>
+            </div>
         );
     }
 
@@ -20,10 +22,10 @@ const ExpandableText = ({ text, limit = 100 }) => {
     };
 
     return (
-        <div className="text-xs text-gray-500">
+        <div className={className}>
             <div
                 onClick={isExpanded ? toggle : undefined}
-                className={`whitespace-pre-wrap border-l-2 border-gray-100 pl-2 ${isExpanded ? 'cursor-pointer' : 'line-clamp-2 overflow-hidden text-ellipsis'}`}
+                className={`whitespace-pre-wrap ${textClassName} ${isExpanded ? 'cursor-pointer' : 'line-clamp-2 overflow-hidden text-ellipsis'}`}
                 title={!isExpanded ? "Click 'See more' to expand" : "Click to collapse"}
             >
                 {text}
