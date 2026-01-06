@@ -7,7 +7,12 @@ import {
     Calendar,
     Users,
     LayoutTemplate,
-    IndianRupee
+    IndianRupee,
+    CheckSquare,
+    Megaphone,
+    Menu,
+    X,
+    LogOut
 } from 'lucide-react';
 import { logout, getCurrentUser } from '../services/authService';
 import { getLeaves } from '../services/leaveService';
