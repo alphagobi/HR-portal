@@ -48,7 +48,7 @@ const AdminLayout = () => {
         { path: '/admin/clients', icon: Users, label: 'Clients' },
         { path: '/admin/users', icon: Users, label: 'Employees' },
         { path: '/admin/timesheets', icon: Clock, label: 'Timesheets' },
-        { path: '/admin/frameworks', icon: LayoutTemplate, label: 'Frameworks' },
+        { path: '/admin/frameworks', icon: LayoutTemplate, label: 'Team' },
         { path: '/admin/leaves', icon: CheckSquare, label: 'Leave Approvals', badge: unreadLeaves },
         { path: '/admin/calendar', icon: Calendar, label: 'Calendar' },
         { path: '/admin/reimbursements', icon: IndianRupee, label: 'Reimbursements' },

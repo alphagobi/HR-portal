@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAllUsers, createUser, updateUser, deleteUser } from '../../services/authService';
-import { UserPlus, Search, Mail, Briefcase, Shield, Edit, Trash2 } from 'lucide-react';
+import { getUserSetting } from '../../services/userSettingsService';
+import { UserPlus, Search, Mail, Briefcase, Shield, Edit, Trash2, Clock, X } from 'lucide-react';
 
 const AdminUsers = () => {
     const [users, setUsers] = useState([]);
@@ -17,6 +18,12 @@ const AdminUsers = () => {
         informed_leave_limit: 6,
         emergency_leave_limit: 6
     });
+
+    // Core Hours Modal State
+    const [showCoreHoursModal, setShowCoreHoursModal] = useState(false);
+    const [viewingUser, setViewingUser] = useState(null);
+    const [userCoreHours, setUserCoreHours] = useState(null);
+    const [loadingCoreHours, setLoadingCoreHours] = useState(false);
 
     useEffect(() => {
         fetchUsers();
@@ -65,6 +72,26 @@ const AdminUsers = () => {
             await fetchUsers();
             setLoading(false);
         }
+    };
+
+    const handleViewCoreHours = async (user) => {
+        setViewingUser(user);
+        setShowCoreHoursModal(true);
+        setLoadingCoreHours(true);
+        try {
+            const settings = await getUserSetting(user.id, 'core_hours');
+            setUserCoreHours(settings);
+        } catch (error) {
+            console.error("Failed to load core hours", error);
+        } finally {
+            setLoadingCoreHours(false);
+        }
+    };
+
+    const closeCoreHoursModal = () => {
+        setShowCoreHoursModal(false);
+        setViewingUser(null);
+        setUserCoreHours(null);
     };
 
     const closeModal = () => {
@@ -142,6 +169,13 @@ const AdminUsers = () => {
                                         {/* Protect admin@company.com from actions */}
                                         {user.email !== 'admin@company.com' && (
                                             <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => handleViewCoreHours(user)}
+                                                    className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                                                    title="View Core Hours"
+                                                >
+                                                    <Clock size={18} />
+                                                </button>
                                                 <button
                                                     onClick={() => handleEdit(user)}
                                                     className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
@@ -282,6 +316,79 @@ const AdminUsers = () => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* View Core Hours Modal */}
+            {showCoreHoursModal && viewingUser && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 relative">
+                        <button
+                            onClick={closeCoreHoursModal}
+                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                        >
+                            <X size={20} />
+                        </button>
+
+                        <h2 className="text-xl font-bold text-gray-900 mb-1">Core Working Hours</h2>
+                        <p className="text-sm text-gray-500 mb-6">Settings for {viewingUser.name}</p>
+
+                        {loadingCoreHours ? (
+                            <div className="text-center py-8 text-gray-400">Loading...</div>
+                        ) : !userCoreHours ? (
+                            <div className="text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                                <Clock size={32} className="mx-auto text-gray-300 mb-2" />
+                                <p className="text-gray-500 font-medium">No Core Hours Configured</p>
+                                <p className="text-xs text-gray-400">User hasn't set up their schedule yet.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-6">
+                                {/* Days */}
+                                <div>
+                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Working Days</h3>
+                                    <div className="flex gap-2 flex-wrap">
+                                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                                            <div
+                                                key={day}
+                                                className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${userCoreHours.working_days.includes(day)
+                                                        ? 'bg-green-100 text-green-700'
+                                                        : 'bg-gray-100 text-gray-400'
+                                                    }`}
+                                            >
+                                                {day.charAt(0)}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Hours */}
+                                <div>
+                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Time Slots</h3>
+                                    {userCoreHours.working_slots && userCoreHours.working_slots.length > 0 ? (
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {userCoreHours.working_slots.map((slot, idx) => (
+                                                <div key={idx} className="bg-gray-50 p-2 rounded text-sm text-gray-700 font-medium text-center border border-gray-100">
+                                                    {slot.start} - {slot.end}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-gray-400 italic">No time slots defined.</p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="mt-8 pt-4 border-t border-gray-100 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={closeCoreHoursModal}
+                                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
+                            >
+                                Close
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
