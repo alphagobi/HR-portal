@@ -105,51 +105,70 @@ const AdminReimbursements = () => {
             {/* Content Area */}
             {viewMode === 'summary' ? (
                 // --- Summary View ---
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {summaryList.length === 0 ? (
-                        <div className="col-span-full text-center py-12 text-gray-400 bg-white rounded-xl border border-gray-100 border-dashed">
-                            No claims found for this month.
-                        </div>
-                    ) : (
-                        summaryList.map(emp => (
-                            <div key={emp.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold">
-                                            {emp.name.charAt(0)}
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-gray-900">{emp.name}</h3>
-                                            <span className="text-xs text-gray-500">{emp.totalClaims} Claims Total</span>
-                                        </div>
-                                    </div>
-                                    {emp.pendingCount > 0 && (
-                                        <span className="bg-yellow-100 text-yellow-700 text-xs font-bold px-2 py-1 rounded-full">
-                                            {emp.pendingCount} Pending
-                                        </span>
-                                    )}
-                                </div>
-
-                                <div className="mb-6 p-3 bg-gray-50 rounded-lg">
-                                    <p className="text-sm text-gray-500 mb-1">Total Pending Amount</p>
-                                    <div className="flex items-center text-2xl font-bold text-gray-900">
-                                        <IndianRupee size={20} />
-                                        {emp.pendingAmount.toFixed(2)}
-                                    </div>
-                                </div>
-
-                                <button
-                                    onClick={() => {
-                                        setSelectedEmployee(emp);
-                                        setViewMode('details');
-                                    }}
-                                    className="w-full py-2 bg-indigo-50 text-indigo-700 font-medium rounded-lg hover:bg-indigo-100 transition-colors flex items-center justify-center gap-2"
-                                >
-                                    View Details
-                                </button>
-                            </div>
-                        ))
-                    )}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead className="bg-gray-50 border-b border-gray-100">
+                                <tr>
+                                    <th className="p-4 font-medium text-gray-500">Employee</th>
+                                    <th className="p-4 font-medium text-gray-500">Total Claims</th>
+                                    <th className="p-4 font-medium text-gray-500">Pending Claims</th>
+                                    <th className="p-4 font-medium text-gray-500">Total Pending Amount</th>
+                                    <th className="p-4 font-medium text-gray-500">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {summaryList.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="5" className="p-8 text-center text-gray-500">
+                                            No claims found for this month.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    summaryList.map(emp => (
+                                        <tr key={emp.id} className="hover:bg-gray-50 transition-colors">
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-xs">
+                                                        {emp.name.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-medium text-gray-900">{emp.name}</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="p-4 text-sm text-gray-900">
+                                                {emp.totalClaims}
+                                            </td>
+                                            <td className="p-4">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${emp.pendingCount > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600'
+                                                    }`}>
+                                                    {emp.pendingCount} Pending
+                                                </span>
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="flex items-center text-gray-900 font-bold">
+                                                    <IndianRupee size={16} />
+                                                    <span>{emp.pendingAmount.toFixed(2)}</span>
+                                                </div>
+                                            </td>
+                                            <td className="p-4">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedEmployee(emp);
+                                                        setViewMode('details');
+                                                    }}
+                                                    className="text-indigo-600 hover:text-indigo-800 text-sm font-medium hover:underline"
+                                                >
+                                                    View Details
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             ) : (
                 // --- Detailed View ---
