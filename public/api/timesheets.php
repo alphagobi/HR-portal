@@ -21,7 +21,7 @@ if ($method === 'GET') {
         $stmt = $pdo->prepare("SELECT * FROM timesheets WHERE employee_id = ? ORDER BY date DESC");
         $stmt->execute([$employee_id]);
     } else {
-        $stmt = $pdo->query("SELECT t.*, u.name as employee_name, u.role FROM timesheets t JOIN users u ON t.employee_id = u.id ORDER BY t.date DESC");
+        $stmt = $pdo->query("SELECT t.*, u.name as employee_name, u.role, u.email FROM timesheets t JOIN users u ON t.employee_id = u.id ORDER BY t.date DESC");
     }
     $timesheets = $stmt->fetchAll();
 

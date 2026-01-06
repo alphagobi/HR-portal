@@ -44,7 +44,7 @@ const AdminTimesheets = () => {
             const empMap = new Map();
             timesheetData.forEach(t => {
                 // EXCLUDE ADMIN FROM EMPLOYEE LIST
-                if (t.role === 'admin') return;
+                if (t.email === 'admin@company.com') return;
 
                 if (!empMap.has(t.employee_id)) {
                     empMap.set(t.employee_id, true);
