@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getTimesheets, saveTimesheet } from '../../services/timesheetService';
 import { getTasks } from '../../services/taskService';
-import { ChevronDown, ChevronUp, Search, Calendar, ChevronRight, ChevronLeft, Save, User } from 'lucide-react';
+import { ChevronDown, ChevronUp, Search, Calendar, ChevronRight, ChevronLeft, Save, User, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
 
 const AdminTimesheets = () => {
@@ -122,9 +122,9 @@ const AdminTimesheets = () => {
         setSpreadsheetData(data);
     };
 
-    const handleSaveRemark = async (item, newRemark) => {
-        // Validation: Ignore empty or unchanged comments
-        if (!newRemark || newRemark.trim() === "") {
+    const handleSaveRemark = async (item, newRemark, isDelete = false) => {
+        // Validation: Ignore empty or unchanged comments UNLESS deleting
+        if (!isDelete && (!newRemark || newRemark.trim() === "")) {
             return;
         }
         const currentRemark = item.timesheet?.adminRemarks || "";
@@ -354,13 +354,28 @@ const AdminTimesheets = () => {
 
                                         {/* Comments Column */}
                                         <td className="py-3 px-4 align-top">
-                                            <input
-                                                type="text"
-                                                className="w-full text-sm border-b border-transparent focus:border-indigo-500 focus:ring-0 bg-transparent outline-none transition-colors placeholder-gray-300"
-                                                placeholder="Add comment..."
-                                                defaultValue={day.timesheet?.admin_remarks || day.timesheet?.adminRemarks || ''}
-                                                onBlur={(e) => handleSaveRemark(day, e.target.value)}
-                                            />
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="text"
+                                                    className="w-full text-sm border-b border-transparent focus:border-indigo-500 focus:ring-0 bg-transparent outline-none transition-colors placeholder-gray-300"
+                                                    placeholder="Add comment..."
+                                                    defaultValue={day.timesheet?.admin_remarks || day.timesheet?.adminRemarks || ''}
+                                                    onBlur={(e) => handleSaveRemark(day, e.target.value)}
+                                                />
+                                                {(day.timesheet?.admin_remarks || day.timesheet?.adminRemarks) && (
+                                                    <button
+                                                        onClick={() => {
+                                                            const input = document.activeElement.parentElement.querySelector('input');
+                                                            if (input) input.value = '';
+                                                            handleSaveRemark(day, '', true);
+                                                        }}
+                                                        className="text-gray-400 hover:text-red-500 transition-colors"
+                                                        title="Delete comment"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 );
