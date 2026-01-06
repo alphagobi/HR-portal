@@ -13,6 +13,7 @@ import { getTaskStatusColor } from '../utils/taskUtils';
 
 import { startOfWeek, endOfWeek, eachDayOfInterval, format, parseISO, isSameDay, isToday } from 'date-fns';
 import { getUserSetting, saveUserSetting } from '../services/userSettingsService';
+import { getLeaves } from '../services/leaveService';
 
 // Moved SortableItem outside to prevent re-mounting on every render (Focus Loss Fix)
 const SortableItem = ({ id, item, index, onRemove, onUpdate }) => {
@@ -68,6 +69,7 @@ const Dashboard = () => {
     const [frameworkTotal, setFrameworkTotal] = useState(0);
     const [isEditingFramework, setIsEditingFramework] = useState(false);
     const [tempAllocations, setTempAllocations] = useState([]);
+    const [upcomingLeaves, setUpcomingLeaves] = useState([]);
 
     // Logging State (Dropdown/Inline)
     const [expandedTaskId, setExpandedTaskId] = useState(null);
@@ -190,6 +192,15 @@ const Dashboard = () => {
 
             const total = sortedData.reduce((sum, item) => sum + parseInt(item.percentage), 0);
             setFrameworkTotal(total);
+
+            // 4. Fetch Leaves for "Upcoming Leaves" widget
+            const leavesResult = await getLeaves(user.id);
+            const leavesData = leavesResult.leaves || [];
+            // Filter: Approved and End Date >= Today
+            const futureLeaves = leavesData.filter(l =>
+                l.status === 'Approved' && new Date(l.end_date) >= new Date(new Date().setHours(0, 0, 0, 0))
+            ).sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+            setUpcomingLeaves(futureLeaves);
 
         } catch (error) {
             console.error("Failed to fetch dashboard data", error);
@@ -455,7 +466,7 @@ const Dashboard = () => {
                 <div className="lg:col-span-5 grid grid-cols-12 gap-6 items-start content-start">
 
                     {/* Row 1, Col 1: Core Working Hours (1/3 width = 4/12) */}
-                    <div className="col-span-4">
+                    <div className="col-span-4 space-y-6">
                         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 h-[260px]">
                             <div className="flex justify-between items-center mb-3">
                                 <h2 className="text-xs font-bold text-gray-900">Core Hours</h2>
@@ -534,6 +545,39 @@ const Dashboard = () => {
                                     </div>
                                 </div>
                             )}
+                        </div>
+
+                        {/* Row 1, Col 1.5: Upcoming Leaves */}
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 h-[260px] flex flex-col">
+                            <h2 className="text-xs font-bold text-gray-900 mb-3 flex items-center gap-2">
+                                <Calendar size={14} className="text-purple-600" />
+                                Upcoming Leaves
+                            </h2>
+
+                            <div className="flex-1 overflow-y-auto no-scrollbar space-y-2">
+                                {upcomingLeaves.length === 0 ? (
+                                    <div className="h-full flex flex-col items-center justify-center text-gray-400">
+                                        <p className="text-[10px] italic">No upcoming leaves</p>
+                                    </div>
+                                ) : (
+                                    upcomingLeaves.map((leave, i) => (
+                                        <div key={i} className="bg-purple-50 p-2 rounded-lg border border-purple-100">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <p className="text-[10px] font-bold text-purple-900">{leave.type}</p>
+                                                    <p className="text-[10px] text-purple-700 mt-0.5">
+                                                        {new Date(leave.start_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                                        {leave.start_date !== leave.end_date && ` - ${new Date(leave.end_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`}
+                                                    </p>
+                                                </div>
+                                                <span className="text-[9px] bg-white text-purple-600 px-1.5 py-0.5 rounded border border-purple-100 font-bold">
+                                                    {Math.ceil((new Date(leave.end_date) - new Date(leave.start_date)) / (1000 * 60 * 60 * 24)) + 1}d
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
                         </div>
                     </div>
 

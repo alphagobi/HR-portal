@@ -123,15 +123,21 @@ const AdminTimesheets = () => {
     };
 
     const handleSaveRemark = async (item, newRemark, isDelete = false) => {
-        // Validation: Ignore empty or unchanged comments UNLESS deleting
-        if (!isDelete && (!newRemark || newRemark.trim() === "")) {
-            return;
+        // Get existing remark safely (check both snake_case from DB and camelCase from local updates)
+        const currentRemark = item.timesheet?.admin_remarks || item.timesheet?.adminRemarks || "";
+        const trimmedNew = newRemark ? newRemark.trim() : "";
+
+        // Validation: Ignore empty if not deleting and not clearing an existing remark
+        if (!isDelete && trimmedNew === "") {
+            // If nothing exists, nothing to save
+            if (!currentRemark) return;
+            // If something exists, leaving it empty means we might want to delete... 
+            // But usually safety check prevents accidental clear. 
+            // Let's assume manual clear (empty string) is intentional IF existing is present.
         }
-        const currentRemark = item.timesheet?.adminRemarks || "";
-        // If the current remark already contains the new remark (e.g. just prefix difference), we might want to skip, 
-        // but strictly checking overlap is safer.
-        // Simple check: if unchanged from what was passed (which is usually the current DB value unless edited)
-        if (newRemark === currentRemark) {
+
+        // If strictly unchanged (and not a forced delete action)
+        if (trimmedNew === currentRemark && !isDelete) {
             return;
         }
 

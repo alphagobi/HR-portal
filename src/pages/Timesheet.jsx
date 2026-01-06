@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getTimesheets } from '../services/timesheetService';
+import { getLeaves } from '../services/leaveService';
 import { getTasks } from '../services/taskService';
 import { getTaskStatusColor } from '../utils/taskUtils';
 import { getCurrentUser } from '../services/authService';
@@ -51,13 +52,45 @@ const Timesheet = () => {
 
         // Process & Merge Data
         try {
+            // Fetch Leaves (Independent)
+            let leavesData = [];
+            try {
+                const result = await getLeaves(user.id);
+                leavesData = result.leaves || []; // getLeaves returns object with leaves, limits, usage
+            } catch (error) {
+                console.error("Failed to fetch leaves", error);
+            }
+
             let fullHistory = Array.isArray(tsData) ? [...tsData] : [];
             const taskList = Array.isArray(tasksData) ? tasksData : [];
+
+            // 0. Identify Approved Leave Days
+            const leaveDays = new Set();
+            const leaveMap = {}; // date -> leave details
+
+            leavesData.forEach(leave => {
+                if (leave.status === 'Approved') {
+                    const start = new Date(leave.start_date);
+                    const end = new Date(leave.end_date);
+
+                    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                        const dateStr = d.toISOString().split('T')[0];
+                        leaveDays.add(dateStr);
+                        leaveMap[dateStr] = leave;
+                    }
+                }
+            });
 
             // 1. Identify tasks already logged in real timesheets to avoid duplicates
             const loggedTaskIds = new Set();
             const loggedTaskDescriptions = new Set();
             fullHistory.forEach(sheet => {
+                // Mark existing sheets as "On Leave" if applicable
+                if (leaveDays.has(sheet.date)) {
+                    sheet.isOnLeave = true;
+                    sheet.leaveDetails = leaveMap[sheet.date];
+                }
+
                 if (sheet.entries) {
                     sheet.entries.forEach(entry => {
                         if (entry.taskId || entry.task_id) loggedTaskIds.add(String(entry.taskId || entry.task_id));
@@ -75,6 +108,24 @@ const Timesheet = () => {
 
             // 3. Convert Orphans to Virtual Timesheets
             const virtualSheets = [];
+
+            // 3.1 Create Virtual Sheets for Leaves (if no real sheet exists)
+            leaveDays.forEach(date => {
+                const hasSheet = fullHistory.some(s => s.date === date);
+                if (!hasSheet) {
+                    virtualSheets.push({
+                        id: `leave-${date}`,
+                        date: date,
+                        employee_id: user.id,
+                        employee_name: user.name,
+                        entries: [],
+                        isVirtual: true,
+                        isOnLeave: true,
+                        leaveDetails: leaveMap[date]
+                    });
+                }
+            });
+
             orphanedTasks.forEach(task => {
                 // Use planned_date for grouping (since we don't have exact completed_at if not logged)
                 const date = task.planned_date || new Date().toISOString().split('T')[0];
@@ -93,7 +144,7 @@ const Timesheet = () => {
                             employee_id: user.id,
                             employee_name: user.name,
                             entries: [],
-                            isVirtual: true // flag
+                            isVirtual: true
                         };
                         virtualSheets.push(sheet);
                     }
@@ -134,7 +185,26 @@ const Timesheet = () => {
             // 5. Sort by Date DESC
             fullHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-            setTimesheets(fullHistory);
+            // Unique Filter (in case logic added duplicate virtual sheets)
+            const uniqueHistory = [];
+            const dateMap = new Set();
+            fullHistory.forEach(item => {
+                if (!dateMap.has(item.date)) {
+                    dateMap.add(item.date);
+                    uniqueHistory.push(item);
+                } else {
+                    // Merge entries if duplicate date found (e.g. virtual leave sheet + virtual task sheet overlap?)
+                    // The logic above separates them, but date-based lookup should prevent duplicates.
+                    // However, `leaveDays.forEach` creates a sheet if `!hasSheet`. 
+                    // `orphanedTasks.forEach` creates a sheet if `!sheet` (in virtual) and `!realSheetIndex`.
+                    // If a date has BOTH a leave AND an orphaned task, but no real sheet:
+                    // 1. `leaveDays` creates `virtualSheets` entry.
+                    // 2. `orphanedTasks` finds it via `virtualSheets.find`.
+                    // So it should be fine.  But let's be safe.
+                }
+            });
+
+            setTimesheets(uniqueHistory); // Use filtered list
             setTasks(taskList);
 
         } catch (error) {
@@ -270,8 +340,13 @@ const Timesheet = () => {
                             <div key={sheet.id} className="p-6 hover:bg-gray-50 transition-colors">
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                                        <Calendar size={18} className="text-indigo-600" />
+                                        <Calendar size={18} className={sheet.isOnLeave ? "text-purple-600" : "text-indigo-600"} />
                                         {new Date(sheet.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                                        {sheet.isOnLeave && (
+                                            <span className="text-xs font-bold bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full ml-2">
+                                                On Leave ({sheet.leaveDetails?.type})
+                                            </span>
+                                        )}
                                     </h3>
                                     <span className="text-sm font-medium text-gray-500">
                                         {sheet.entries
