@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getClaims, updateClaimStatus } from '../../services/reimbursementService';
-import { CheckCircle, XCircle, DollarSign, FileText, Search, Filter, Download } from 'lucide-react';
+import { CheckCircle, XCircle, IndianRupee, FileText, Search, Filter, Download } from 'lucide-react';
 
 const AdminReimbursements = () => {
     const [claims, setClaims] = useState([]);
@@ -101,7 +101,10 @@ const AdminReimbursements = () => {
                                         <span className="text-sm text-gray-900">{claim.category}</span>
                                     </td>
                                     <td className="p-4">
-                                        <span className="font-medium text-gray-900">${Number(claim.amount).toFixed(2)}</span>
+                                        <div className="flex items-center text-gray-900 font-medium">
+                                            <IndianRupee size={16} />
+                                            <span>{Number(claim.amount).toFixed(2)}</span>
+                                        </div>
                                     </td>
                                     <td className="p-4">
                                         <p className="text-sm text-gray-600 max-w-xs truncate" title={claim.description}>

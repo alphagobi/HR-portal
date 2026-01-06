@@ -59,6 +59,10 @@ const Layout = () => {
         { name: 'User Guide', path: '/guide', icon: HelpCircle },
     ];
 
+    if (user?.role === 'admin') {
+        navItems.push({ name: 'Admin Panel', path: '/admin', icon: LayoutDashboard });
+    }
+
     const handleLogout = () => {
         logout();
     };
@@ -137,17 +141,6 @@ const Layout = () => {
                         </button>
                     </div>
 
-                    {user?.role === 'admin' && (
-                        <div className="p-4 border-t border-gray-200 bg-indigo-50">
-                            <Link
-                                to="/admin"
-                                className="flex items-center gap-3 px-4 py-3 w-full text-indigo-700 hover:bg-indigo-100 rounded-lg transition-colors"
-                            >
-                                <LayoutDashboard size={20} />
-                                <span className="font-medium">Admin Panel</span>
-                            </Link>
-                        </div>
-                    )}
                 </aside>
 
                 {/* Main Content */}

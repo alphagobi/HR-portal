@@ -5,15 +5,9 @@ import {
     FileText,
     Clock,
     Calendar,
-    DollarSign,
-    Menu,
-    X,
-    LogOut,
-    ShieldCheck,
-    CheckSquare,
-    Megaphone,
     Users,
-    LayoutTemplate
+    LayoutTemplate,
+    IndianRupee
 } from 'lucide-react';
 import { logout, getCurrentUser } from '../services/authService';
 import { getLeaves } from '../services/leaveService';
@@ -52,7 +46,8 @@ const AdminLayout = () => {
         { path: '/admin/frameworks', icon: LayoutTemplate, label: 'Frameworks' },
         { path: '/admin/leaves', icon: CheckSquare, label: 'Leave Approvals', badge: unreadLeaves },
         { path: '/admin/calendar', icon: Calendar, label: 'Calendar' },
-        { path: '/admin/reimbursements', icon: DollarSign, label: 'Reimbursements' },
+        { path: '/admin/reimbursements', icon: IndianRupee, label: 'Reimbursements' },
+        { path: '/', icon: LayoutDashboard, label: 'Employee Portal' },
         { path: '/admin/invoices', icon: FileText, label: 'Invoices' },
         { path: '/admin/announcements', icon: Megaphone, label: 'Announcements' },
         { path: '/admin/policies', icon: FileText, label: 'Policies' },
@@ -115,13 +110,6 @@ const AdminLayout = () => {
                 </nav>
 
                 <div className="p-4 border-t border-slate-800">
-                    <Link
-                        to="/"
-                        className="flex items-center gap-3 px-4 py-3 w-full text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors mb-2"
-                    >
-                        <LayoutDashboard size={20} />
-                        <span className="font-medium">Employee Portal</span>
-                    </Link>
                     <button
                         onClick={handleLogout}
                         className="flex items-center gap-3 px-4 py-3 w-full text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"

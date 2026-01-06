@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Calendar, DollarSign, Bell } from 'lucide-react';
+import { Users, Calendar, IndianRupee, Bell } from 'lucide-react';
 import { getLeaves } from '../../services/leaveService';
 import { getClaims } from '../../services/reimbursementService';
 
@@ -39,7 +39,7 @@ const AdminDashboard = () => {
 
     const statCards = [
         { label: 'Pending Leaves', value: stats.pendingLeaves, icon: Calendar, color: 'bg-orange-500' },
-        { label: 'Pending Claims', value: stats.pendingClaims, icon: DollarSign, color: 'bg-emerald-500' },
+        { label: 'Pending Claims', value: stats.pendingClaims, icon: IndianRupee, color: 'bg-emerald-500' },
         { label: 'Total Employees', value: stats.totalEmployees, icon: Users, color: 'bg-blue-500' },
         { label: 'Announcements', value: stats.activeAnnouncements, icon: Bell, color: 'bg-purple-500' },
     ];
