@@ -14,6 +14,7 @@ import { getTaskStatusColor } from '../utils/taskUtils';
 import { startOfWeek, endOfWeek, eachDayOfInterval, format, parseISO, isSameDay, isToday } from 'date-fns';
 import { getUserSetting, saveUserSetting } from '../services/userSettingsService';
 import { getLeaves } from '../services/leaveService';
+import ExpandableText from '../components/ExpandableText';
 
 // Moved SortableItem outside to prevent re-mounting on every render (Focus Loss Fix)
 const SortableItem = ({ id, item, index, onRemove, onUpdate }) => {
@@ -523,13 +524,13 @@ const Dashboard = () => {
     }) : null;
 
     return (
-        <div className="p-6 max-w-full mx-6 space-y-8">
+        <div className="p-6 max-w-full mx-6 space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
                 {/* Left Column (5/12 width) - Vertical Stack */}
-                <div className="lg:col-span-5 flex flex-col space-y-6">
+                <div className="lg:col-span-5 flex flex-col space-y-5">
 
                     {/* 1. Core Working Hours */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 relative">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 relative">
                         <div className="absolute top-4 right-4">
                             <button onClick={() => isEditingCoreHours ? handleSaveCoreHours() : setIsEditingCoreHours(true)} className="text-gray-400 hover:text-indigo-600 transition-colors">
                                 {isEditingCoreHours ? <Save size={14} /> : <Pencil size={14} />}
@@ -648,7 +649,7 @@ const Dashboard = () => {
                     </div>
 
                     {/* 2. Framework (Moved Up) */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[260px]">
+                    <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[220px]">
                         <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2">
                             <h2 className="text-base font-bold text-gray-900">Framework</h2>
                             {!isEditingFramework && (
@@ -727,7 +728,7 @@ const Dashboard = () => {
                     </div>
 
                     {/* 3. Logged Today */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-424px)] min-h-[300px]">
+                    <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-440px)] min-h-[250px]">
                         <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2 flex-shrink-0">
                             <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
                                 <Clock size={18} className="text-indigo-600" />
@@ -786,9 +787,9 @@ const Dashboard = () => {
                                                         </span>
                                                         {/* Show remarks if they exist and are different from Title */}
                                                         {entry.description && task && entry.description !== task.task_content && (
-                                                            <span className="text-xs text-gray-400 whitespace-pre-wrap">
-                                                                {entry.description}
-                                                            </span>
+                                                            <div className="mt-0.5">
+                                                                <ExpandableText text={entry.description} limit={60} />
+                                                            </div>
                                                         )}
                                                     </div>
                                                 </div>
@@ -849,15 +850,15 @@ const Dashboard = () => {
                                     );
                                 })
                             )}
-                        </div>
-                    </div>
-                </div>
+                        </div >
+                    </div >
+                </div >
 
                 {/* Right Column (7/12 width) - Tasks List */}
                 <div className="lg:col-span-7 h-full">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-full min-h-[500px]">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-full min-h-[450px]">
                         {/* Fixed height to match approx height of left column items (280 + 296 + 24 gap = 600) */}
-                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center relative">
+                        <div className="p-5 border-b border-gray-100 flex justify-between items-center relative">
                             {isTodayLeave && (
                                 <div className="absolute inset-0 bg-white/90 z-20 flex items-center justify-center backdrop-blur-[1px] rounded-t-xl">
                                     <div className="flex items-center gap-2 text-purple-600 font-bold bg-purple-50 px-4 py-2 rounded-lg border border-purple-100 shadow-sm">

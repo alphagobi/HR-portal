@@ -6,6 +6,7 @@ import { getTaskStatusColor } from '../utils/taskUtils';
 import { getCurrentUser } from '../services/authService';
 import { Calendar, ChevronLeft, ChevronRight, Clock, Filter } from 'lucide-react';
 import clsx from 'clsx';
+import ExpandableText from '../components/ExpandableText';
 
 const Timesheet = () => {
     const [viewMode, setViewMode] = useState('monthly'); // 'daily', 'weekly', 'monthly'
@@ -379,10 +380,8 @@ const Timesheet = () => {
                                                 </div>
                                                 {/* Show remarks if they exist and are different from Title */}
                                                 {entry.description && task && entry.description !== task.task_content && (
-                                                    <div className="pl-5 ml-0.5">
-                                                        <span className="text-gray-500 text-xs whitespace-pre-wrap block border-l-2 border-gray-100 pl-2">
-                                                            {entry.description}
-                                                        </span>
+                                                    <div className="pl-5 ml-0.5 mt-1">
+                                                        <ExpandableText text={entry.description} limit={120} />
                                                     </div>
                                                 )}
                                             </div>
