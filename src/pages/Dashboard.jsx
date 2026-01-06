@@ -459,6 +459,27 @@ const Dashboard = () => {
 
     const counts = getTaskCounts();
 
+    // Check if today is a leave day
+    const isTodayLeave = upcomingLeaves.some(l => {
+        const todayD = new Date();
+        todayD.setHours(0, 0, 0, 0);
+        const start = new Date(l.start_date);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(l.end_date);
+        end.setHours(0, 0, 0, 0);
+        return todayD >= start && todayD <= end;
+    });
+
+    const currentLeave = isTodayLeave ? upcomingLeaves.find(l => {
+        const todayD = new Date();
+        todayD.setHours(0, 0, 0, 0);
+        const start = new Date(l.start_date);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(l.end_date);
+        end.setHours(0, 0, 0, 0);
+        return todayD >= start && todayD <= end;
+    }) : null;
+
     return (
         <div className="p-6 max-w-full mx-6 space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mt-6">
@@ -795,7 +816,15 @@ const Dashboard = () => {
                 <div className="lg:col-span-7">
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-140px)] min-h-[600px]">
                         {/* Fixed height to match approx height of left column items (280 + 296 + 24 gap = 600) */}
-                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center relative">
+                            {isTodayLeave && (
+                                <div className="absolute inset-0 bg-white/90 z-20 flex items-center justify-center backdrop-blur-[1px] rounded-t-xl">
+                                    <div className="flex items-center gap-2 text-purple-600 font-bold bg-purple-50 px-4 py-2 rounded-lg border border-purple-100 shadow-sm">
+                                        <Calendar size={18} />
+                                        <span>You are on leave today ({currentLeave?.type}). Log work blocked.</span>
+                                    </div>
+                                </div>
+                            )}
                             <h2 className="text-lg font-bold text-gray-900">Your Tasks</h2>
                             <div className="flex gap-2">
                                 {/* Red - Overdue */}
@@ -829,8 +858,8 @@ const Dashboard = () => {
                                         <div key={task.id} className="group hover:bg-gray-50 transition-colors">
                                             {/* Task Row */}
                                             <div
-                                                className="grid grid-cols-12 gap-4 items-center cursor-pointer px-6 py-3"
-                                                onClick={() => toggleTaskExpand(task)}
+                                                className={`grid grid-cols-12 gap-4 items-center px-6 py-3 ${isTodayLeave ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                                                onClick={() => !isTodayLeave && toggleTaskExpand(task)}
                                             >
                                                 <div className="col-span-6 flex items-center gap-3 overflow-hidden">
                                                     <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getTaskStatusColor(task.planned_date).dot}`}></div>
