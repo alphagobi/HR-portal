@@ -296,7 +296,11 @@ const Dashboard = () => {
         try {
             const timesheetsData = await getTimesheets(user.id);
             const todaySheet = timesheetsData.find(t => t.date === today);
-            const currentEntries = todaySheet ? todaySheet.entries.filter(e => e.is_deleted != 1) : [];
+            // Fix: Normalize existing entries to ensure taskId is set (backend expects taskId, fetches return task_id)
+            const currentEntries = todaySheet ? todaySheet.entries.filter(e => e.is_deleted != 1).map(e => ({
+                ...e,
+                taskId: e.taskId || e.task_id
+            })) : [];
 
             const durationInHours = (parseFloat(logForm.duration) / 60).toFixed(2);
 
@@ -354,7 +358,10 @@ const Dashboard = () => {
                 // This prevents deleting duplicates if they have unique TaskIDs but we fell through
                 // But if we are here, means IDs matched (or both undefined).
                 return !(e.description === entryToDelete.description && e.duration === entryToDelete.duration);
-            });
+            }).map(e => ({
+                ...e,
+                taskId: e.taskId || e.task_id // Normalize for backend
+            }));
 
             await saveTimesheet({
                 date: today,
@@ -427,9 +434,13 @@ const Dashboard = () => {
             // So `entry.description` essentially becomes the "Remarks".
             const newDescription = editForm.remarks || task?.task_content || "Work Logged";
 
-            const updatedEntries = todaySheet.entries.map(e =>
-                e.id === entry.id ? { ...e, duration: durationInHours, description: newDescription } : e
-            );
+            const updatedEntries = todaySheet.entries.map(e => {
+                const updated = e.id === entry.id ? { ...e, duration: durationInHours, description: newDescription } : e;
+                return {
+                    ...updated,
+                    taskId: updated.taskId || updated.task_id // Normalize for backend
+                };
+            });
 
             await saveTimesheet({
                 date: today,
