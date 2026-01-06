@@ -9,6 +9,7 @@ const AdminUsers = () => {
     const [showModal, setShowModal] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [newUser, setNewUser] = useState({
+        id: '',
         name: '',
         email: '',
         password: '',
@@ -40,7 +41,7 @@ const AdminUsers = () => {
         setLoading(true);
 
         if (editingId) {
-            await updateUser(editingId, newUser);
+            await updateUser(editingId, { ...newUser, new_id: newUser.id });
         } else {
             await createUser(newUser);
         }
@@ -52,6 +53,7 @@ const AdminUsers = () => {
 
     const handleEdit = (user) => {
         setNewUser({
+            id: user.id,
             name: user.name,
             email: user.email,
             password: '', // Don't populate password
@@ -212,6 +214,21 @@ const AdminUsers = () => {
                         </h2>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
+                                <input
+                                    type="number"
+                                    className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    value={newUser.id || ''}
+                                    onChange={(e) => setNewUser({ ...newUser, id: e.target.value })}
+                                    disabled={!editingId} // Only allow changing ID for existing users (re-assignment) or maybe for new too? Auto-increment usually handles new. Let's assume re-assignment for now. Actually, user said "assign id", implying maybe creating with specific ID? But DB is auto-increment. Let's stick to "changing" behavior for now as per "if the id is change".
+                                    // Wait, if auto-increment, creating with specific ID requires turning off auto-increment or insert override. 
+                                    // The implementation plan mainly talks about "Update users table ID".
+                                    // Let's allow editing ID only when editingId is present.
+                                    placeholder={editingId ? newUser.id : "Auto-generated"}
+                                />
+                                {editingId && <p className="text-xs text-red-500 mt-1">Warning: Changing ID updates all related records.</p>}
+                            </div>
+                            <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                                 <input
                                     type="text"
@@ -352,8 +369,8 @@ const AdminUsers = () => {
                                             <div
                                                 key={day}
                                                 className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${userCoreHours.working_days.includes(day)
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'bg-gray-100 text-gray-400'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-gray-100 text-gray-400'
                                                     }`}
                                             >
                                                 {day.charAt(0)}
