@@ -202,6 +202,13 @@ const Dashboard = () => {
             ).sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
             setUpcomingLeaves(futureLeaves);
 
+            // 5. Fetch Calendar Events for Holidays
+            const eventsRes = await fetch('/api/calendar.php');
+            if (eventsRes.ok) {
+                const events = await eventsRes.json();
+                setCalendarEvents(events.filter(e => e.is_holiday == 1));
+            }
+
         } catch (error) {
             console.error("Failed to fetch dashboard data", error);
         } finally {
@@ -209,7 +216,42 @@ const Dashboard = () => {
         }
     };
 
+    const [calendarEvents, setCalendarEvents] = useState([]);
 
+    const getWeekDays = () => {
+        const start = startOfWeek(new Date(), { weekStartsOn: 1 }); // Monday
+        return Array.from({ length: 7 }, (_, i) => {
+            const date = new Date(start);
+            date.setDate(date.getDate() + i);
+            return date;
+        });
+    };
+
+    const getDayStatus = (date) => {
+        const dateStr = format(date, 'yyyy-MM-dd');
+        const dayName = format(date, 'EEE'); // Mon, Tue...
+
+        // 1. Check for Leave (Highest Priority for Red)
+        const isLeave = upcomingLeaves.some(leave => {
+            const start = new Date(leave.start_date);
+            const end = new Date(leave.end_date);
+            return date >= start && date <= end;
+        });
+        if (isLeave) return 'red';
+
+        // 2. Check for Company Holiday (Yellow)
+        const isHoliday = calendarEvents.some(e => e.date === dateStr);
+        if (isHoliday) return 'yellow';
+
+        // 3. Check for Sunday (Yellow)
+        if (date.getDay() === 0) return 'yellow';
+
+        // 4. Check for Core Day (Green if active, Red if inactive)
+        const isCore = coreHours.working_days.includes(dayName);
+        return isCore ? 'green' : 'red';
+    };
+
+    const weekDays = getWeekDays();
 
 
     const getTaskCounts = () => {
@@ -497,21 +539,65 @@ const Dashboard = () => {
                         {!isEditingCoreHours ? (
                             <div className="grid grid-cols-2 gap-8">
                                 <div>
-                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Core Working Days</h3>
-                                    <div className="text-sm font-bold text-gray-900">
-                                        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].filter((_, i) =>
-                                            coreHours.working_days.includes(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i])
-                                        ).join(' ')}
+                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Core Working Days</h3>
+                                    <div className="space-y-2">
+                                        {/* Row 1: M T W T */}
+                                        <div className="flex gap-2">
+                                            {weekDays.slice(0, 4).map((date, i) => {
+                                                const status = getDayStatus(date);
+                                                const dayLetter = format(date, 'EEEEE'); // M, T, W...
+                                                let bgClass = 'bg-gray-100 text-gray-400';
+
+                                                if (status === 'green') bgClass = 'bg-green-100 text-green-700';
+                                                else if (status === 'yellow') bgClass = 'bg-yellow-100 text-yellow-700';
+                                                else if (status === 'red') bgClass = 'bg-red-100 text-red-700';
+
+                                                return (
+                                                    <span key={i} className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${bgClass}`}>
+                                                        {dayLetter}
+                                                    </span>
+                                                );
+                                            })}
+                                        </div>
+                                        {/* Row 2: F S S (Centered or Left Aligned?) - Left aligned to match top row visually */}
+                                        <div className="flex gap-2">
+                                            {weekDays.slice(4, 7).map((date, i) => {
+                                                const status = getDayStatus(date);
+                                                const dayLetter = format(date, 'EEEEE');
+                                                let bgClass = 'bg-gray-100 text-gray-400';
+
+                                                if (status === 'green') bgClass = 'bg-green-100 text-green-700';
+                                                else if (status === 'yellow') bgClass = 'bg-yellow-100 text-yellow-700';
+                                                else if (status === 'red') bgClass = 'bg-red-100 text-red-700';
+
+                                                return (
+                                                    <span key={i} className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${bgClass}`}>
+                                                        {dayLetter}
+                                                    </span>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 </div>
                                 <div>
-                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Core Working Hours</h3>
-                                    <div className="space-y-1">
-                                        {coreHours.working_slots.map((slot, i) => (
-                                            <div key={i} className="text-sm font-medium text-gray-900">
-                                                {slot.start} - {slot.end}
-                                            </div>
-                                        ))}
+                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Core Working Hours</h3>
+                                    <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                                        {/* Column 1: First 3 slots (or half) */}
+                                        <div className="space-y-1">
+                                            {coreHours.working_slots.slice(0, Math.ceil(coreHours.working_slots.length / 2)).map((slot, i) => (
+                                                <div key={i} className="text-sm font-medium text-gray-900">
+                                                    {slot.start} - {slot.end}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {/* Column 2: Remaining slots */}
+                                        <div className="space-y-1">
+                                            {coreHours.working_slots.slice(Math.ceil(coreHours.working_slots.length / 2)).map((slot, i) => (
+                                                <div key={i} className="text-sm font-medium text-gray-900">
+                                                    {slot.start} - {slot.end}
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
