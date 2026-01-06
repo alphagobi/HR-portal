@@ -17,11 +17,7 @@ const Login = () => {
 
         try {
             const user = await login(email, password);
-            if (user.role === 'admin') {
-                navigate('/admin');
-            } else {
-                navigate('/');
-            }
+            navigate('/');
         } catch (err) {
             setError('Invalid email or password. Please try again.');
         } finally {

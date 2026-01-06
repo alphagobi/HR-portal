@@ -115,6 +115,13 @@ const AdminLayout = () => {
                 </nav>
 
                 <div className="p-4 border-t border-slate-800">
+                    <Link
+                        to="/"
+                        className="flex items-center gap-3 px-4 py-3 w-full text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors mb-2"
+                    >
+                        <LayoutDashboard size={20} />
+                        <span className="font-medium">Employee Portal</span>
+                    </Link>
                     <button
                         onClick={handleLogout}
                         className="flex items-center gap-3 px-4 py-3 w-full text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
