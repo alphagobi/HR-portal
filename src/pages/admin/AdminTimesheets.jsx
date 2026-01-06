@@ -356,6 +356,7 @@ const AdminTimesheets = () => {
                                         <td className="py-3 px-4 align-top">
                                             <div className="flex items-center gap-2">
                                                 <input
+                                                    key={day.timesheet?.id + '-' + (day.timesheet?.admin_remarks || day.timesheet?.adminRemarks || '')}
                                                     type="text"
                                                     className="w-full text-sm border-b border-transparent focus:border-indigo-500 focus:ring-0 bg-transparent outline-none transition-colors placeholder-gray-300"
                                                     placeholder="Add comment..."
@@ -364,9 +365,8 @@ const AdminTimesheets = () => {
                                                 />
                                                 {(day.timesheet?.admin_remarks || day.timesheet?.adminRemarks) && (
                                                     <button
-                                                        onClick={() => {
-                                                            const input = document.activeElement.parentElement.querySelector('input');
-                                                            if (input) input.value = '';
+                                                        onMouseDown={(e) => {
+                                                            e.preventDefault(); // Prevent blur on input
                                                             handleSaveRemark(day, '', true);
                                                         }}
                                                         className="text-gray-400 hover:text-red-500 transition-colors"
