@@ -597,17 +597,6 @@ const Dashboard = () => {
                                             {weekDays.slice(0, 4).map((date, i) => {
                                                 const dayLetter = format(date, 'EEEEE'); // M, T, W...
 
-                                                if (coreHoursPending) {
-                                                    const dayNameShort = format(date, 'EEE');
-                                                    const isRequested = coreHoursPending.working_days.includes(dayNameShort);
-
-                                                    return (
-                                                        <span key={i} className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold transition-all ${isRequested ? 'bg-orange-50 text-orange-600 border border-orange-200' : 'bg-gray-50 text-gray-300'}`}>
-                                                            {isRequested ? 'C' : dayLetter}
-                                                        </span>
-                                                    );
-                                                }
-
                                                 // Normal State
                                                 const status = getDayStatus(date);
                                                 let bgClass = 'bg-gray-100 text-gray-400';
@@ -627,16 +616,6 @@ const Dashboard = () => {
                                         <div className="flex gap-2">
                                             {weekDays.slice(4, 7).map((date, i) => {
                                                 const dayLetter = format(date, 'EEEEE');
-
-                                                if (coreHoursPending) {
-                                                    const dayNameShort = format(date, 'EEE');
-                                                    const isRequested = coreHoursPending.working_days.includes(dayNameShort);
-                                                    return (
-                                                        <span key={i} className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold transition-all ${isRequested ? 'bg-orange-50 text-orange-600 border border-orange-200' : 'bg-gray-50 text-gray-300'}`}>
-                                                            {isRequested ? 'C' : dayLetter}
-                                                        </span>
-                                                    );
-                                                }
 
                                                 const status = getDayStatus(date);
                                                 let bgClass = 'bg-gray-100 text-gray-400';
@@ -658,11 +637,10 @@ const Dashboard = () => {
                                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Core Working Hours</h3>
                                     <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                                         {/* Display logic for Pending vs Active */}
-                                        {(coreHoursPending || coreHours).working_slots.length > 0 ? (
-                                            (coreHoursPending || coreHours).working_slots.map((slot, i) => (
+                                        {coreHours.working_slots.length > 0 ? (
+                                            coreHours.working_slots.map((slot, i) => (
                                                 <div key={i} className="text-sm font-medium text-gray-900 flex items-center gap-2">
                                                     {slot.start} - {slot.end}
-                                                    {coreHoursPending && <span className="text-[10px] font-bold text-orange-500 bg-orange-50 px-1.5 rounded-full">C</span>}
                                                 </div>
                                             ))
                                         ) : (
