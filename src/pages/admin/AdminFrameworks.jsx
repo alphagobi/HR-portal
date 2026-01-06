@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getAllFrameworkAllocations } from '../../services/frameworkService';
 import { getAllUsers } from '../../services/authService';
-import { getAllUsers } from '../../services/authService';
 import { getUserSetting, saveUserSetting } from '../../services/userSettingsService';
 import { clsx } from 'clsx';
 import { LayoutTemplate, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
@@ -240,8 +239,8 @@ const AdminFrameworks = () => {
                                                                 <div
                                                                     key={day}
                                                                     className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold ${displaySettings.working_days.includes(day)
-                                                                            ? (isPending ? 'bg-orange-100 text-orange-700 ring-1 ring-orange-200' : 'bg-green-100 text-green-700')
-                                                                            : 'bg-gray-100 text-gray-300'
+                                                                        ? (isPending ? 'bg-orange-100 text-orange-700 ring-1 ring-orange-200' : 'bg-green-100 text-green-700')
+                                                                        : 'bg-gray-100 text-gray-300'
                                                                         }`}
                                                                 >
                                                                     {day.charAt(0)}
