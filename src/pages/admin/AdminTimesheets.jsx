@@ -123,14 +123,38 @@ const AdminTimesheets = () => {
     };
 
     const handleSaveRemark = async (item, newRemark) => {
+        // Validation: Ignore empty or unchanged comments
+        if (!newRemark || newRemark.trim() === "") {
+            return;
+        }
+        const currentRemark = item.timesheet?.adminRemarks || "";
+        // If the current remark already contains the new remark (e.g. just prefix difference), we might want to skip, 
+        // but strictly checking overlap is safer.
+        // Simple check: if unchanged from what was passed (which is usually the current DB value unless edited)
+        if (newRemark === currentRemark) {
+            return;
+        }
+
+        // Prepend Admin Name if not empty
+        const currentUser = JSON.parse(localStorage.getItem('hr_current_user'));
+        let finalRemark = newRemark;
+
+        if (newRemark && newRemark.trim() !== "") {
+            const prefix = `${currentUser?.name} :`;
+            if (!newRemark.startsWith(prefix)) {
+                finalRemark = `${prefix} ${newRemark}`;
+            }
+        }
+
         if (item.timesheet) {
             await saveTimesheet({
                 ...item.timesheet,
-                adminRemarks: newRemark
+                employeeId: item.timesheet.employee_id, // Explicitly pass ID to prevent service from using current user
+                adminRemarks: finalRemark
             });
             // Refresh local state purely for UI responsiveness or re-fetch
             const newTimesheets = timesheets.map(t =>
-                (t.id === item.timesheet.id) ? { ...t, adminRemarks: newRemark } : t
+                (t.id === item.timesheet.id) ? { ...t, adminRemarks: finalRemark } : t
             );
             setTimesheets(newTimesheets);
         } else {
@@ -140,7 +164,7 @@ const AdminTimesheets = () => {
                     employeeId: selectedEmployee.id, // Ensure this matches backend expectation (camelCase or snake_case depending on service wrapper)
                     employee_id: selectedEmployee.id, // Send both to be safe or check service
                     date: item.date,
-                    adminRemarks: newRemark,
+                    adminRemarks: finalRemark,
                     entries: []
                 };
                 await saveTimesheet(payload);

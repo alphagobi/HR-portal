@@ -22,7 +22,8 @@ export const saveTimesheet = async (timesheetData) => {
         const user = getCurrentUser();
         const payload = {
             ...timesheetData,
-            employeeId: timesheetData.employeeId || (user ? user.id : null)
+            // PRIORITIZE existing ID (snake_case or camelCase) over current user
+            employeeId: timesheetData.employeeId || timesheetData.employee_id || (user ? user.id : null)
         };
 
         const response = await fetch(API_URL, {
