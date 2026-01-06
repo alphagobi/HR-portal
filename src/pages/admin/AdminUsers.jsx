@@ -139,7 +139,8 @@ const AdminUsers = () => {
                                         </span>
                                     </td>
                                     <td className="p-4">
-                                        {user.role !== 'admin' && (
+                                        {/* Protect admin@company.com from actions */}
+                                        {user.email !== 'admin@company.com' && (
                                             <div className="flex items-center gap-2">
                                                 <button
                                                     onClick={() => handleEdit(user)}
@@ -156,6 +157,9 @@ const AdminUsers = () => {
                                                     <Trash2 size={18} />
                                                 </button>
                                             </div>
+                                        )}
+                                        {user.email === 'admin@company.com' && (
+                                            <span className="text-xs text-gray-400 italic">Protected</span>
                                         )}
                                     </td>
                                 </tr>

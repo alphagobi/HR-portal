@@ -43,6 +43,9 @@ const AdminTimesheets = () => {
             const emps = [];
             const empMap = new Map();
             timesheetData.forEach(t => {
+                // EXCLUDE ADMIN FROM EMPLOYEE LIST
+                if (t.role === 'admin') return;
+
                 if (!empMap.has(t.employee_id)) {
                     empMap.set(t.employee_id, true);
                     emps.push({ id: t.employee_id, name: t.employee_name });
@@ -298,9 +301,25 @@ const AdminTimesheets = () => {
                                                         </span>
                                                         <span className={clsx(
                                                             "text-xs px-2 py-0.5 rounded-full",
-                                                            day.timesheet.status === 'submitted' ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
+                                                            (() => {
+                                                                const today = new Date();
+                                                                today.setHours(0, 0, 0, 0);
+                                                                const sheetDate = new Date(day.date);
+                                                                sheetDate.setHours(0, 0, 0, 0);
+                                                                const isPast = sheetDate < today;
+                                                                // Treat past 'draft' as 'submitted' for display
+                                                                const displayStatus = (isPast && day.timesheet.status === 'draft') ? 'submitted' : day.timesheet.status;
+                                                                return displayStatus === 'submitted' ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700";
+                                                            })()
                                                         )}>
-                                                            {day.timesheet.status}
+                                                            {(() => {
+                                                                const today = new Date();
+                                                                today.setHours(0, 0, 0, 0);
+                                                                const sheetDate = new Date(day.date);
+                                                                sheetDate.setHours(0, 0, 0, 0);
+                                                                const isPast = sheetDate < today;
+                                                                return (isPast && day.timesheet.status === 'draft') ? 'submitted' : day.timesheet.status;
+                                                            })()}
                                                         </span>
                                                     </div>
                                                 </div>
