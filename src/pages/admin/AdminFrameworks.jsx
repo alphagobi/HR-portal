@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { getAllFrameworkAllocations } from '../../services/frameworkService';
 import { getAllUsers } from '../../services/authService';
 import { getUserSetting } from '../../services/userSettingsService';
@@ -194,8 +195,8 @@ const AdminFrameworks = () => {
                                                             <div
                                                                 key={day}
                                                                 className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold ${settings.working_days.includes(day)
-                                                                        ? 'bg-green-100 text-green-700'
-                                                                        : 'bg-gray-100 text-gray-300'
+                                                                    ? 'bg-green-100 text-green-700'
+                                                                    : 'bg-gray-100 text-gray-300'
                                                                     }`}
                                                             >
                                                                 {day.charAt(0)}
