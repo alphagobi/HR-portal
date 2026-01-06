@@ -482,7 +482,7 @@ const Dashboard = () => {
 
     return (
         <div className="p-6 max-w-full mx-6 space-y-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
                 {/* Left Column (5/12 width) - Vertical Stack */}
                 <div className="lg:col-span-5 flex flex-col space-y-6">
 
@@ -496,26 +496,21 @@ const Dashboard = () => {
                         </div>
 
                         {!isEditingCoreHours ? (
-                            <div className="space-y-4">
-                                <div>
-                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Active Days</span>
-                                    <div className="flex gap-1 flex-wrap">
-                                        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => {
-                                            const dayFull = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i];
-                                            return (
-                                                <span key={i} className={`w-6 h-6 flex items-center justify-center rounded-full text-[9px] font-bold transition-colors ${coreHours.working_days.includes(dayFull) ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-50 text-gray-400'}`}>
-                                                    {day}
-                                                </span>
-                                            )
-                                        })}
-                                    </div>
+                            <div className="border border-gray-200 rounded-lg overflow-hidden">
+                                <div className="grid grid-cols-2 border-b border-gray-200 bg-gray-50/50">
+                                    <div className="p-2 text-[10px] font-bold text-gray-900 border-r border-gray-200">Core Hours</div>
+                                    <div className="p-2 text-[10px] font-bold text-gray-900">Hours</div>
                                 </div>
-                                <div>
-                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Schedule</span>
-                                    <div className="grid grid-cols-2 gap-1.5">
+                                <div className="grid grid-cols-2">
+                                    <div className="p-2 text-[10px] font-medium text-gray-600 border-r border-gray-200 flex items-center">
+                                        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].filter((_, i) =>
+                                            coreHours.working_days.includes(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i])
+                                        ).join(' ')}
+                                    </div>
+                                    <div className="p-2 text-[10px] text-gray-600 flex flex-col gap-0.5 justify-center">
                                         {coreHours.working_slots.map((slot, i) => (
-                                            <div key={i} className="flex justify-center items-center text-[10px] text-gray-700 bg-gray-50 py-1.5 rounded border border-gray-100 font-mono font-medium">
-                                                {slot.start} - {slot.end}
+                                            <div key={i}>
+                                                {slot.start} {slot.end}
                                             </div>
                                         ))}
                                     </div>
@@ -774,8 +769,8 @@ const Dashboard = () => {
                 </div>
 
                 {/* Right Column (7/12 width) - Tasks List */}
-                <div className="lg:col-span-7">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-140px)] min-h-[600px]">
+                <div className="lg:col-span-7 h-full">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-full min-h-[500px]">
                         {/* Fixed height to match approx height of left column items (280 + 296 + 24 gap = 600) */}
                         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center relative">
                             {isTodayLeave && (
