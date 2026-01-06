@@ -772,121 +772,119 @@ const Dashboard = () => {
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Right Column (7/12 width) - Tasks List */}
-            <div className="lg:col-span-7">
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-140px)] min-h-[600px]">
-                    {/* Fixed height to match approx height of left column items (280 + 296 + 24 gap = 600) */}
-                    <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center relative">
-                        {isTodayLeave && (
-                            <div className="absolute inset-0 bg-white/90 z-20 flex items-center justify-center backdrop-blur-[1px] rounded-t-xl">
-                                <div className="flex items-center gap-2 text-purple-600 font-bold bg-purple-50 px-4 py-2 rounded-lg border border-purple-100 shadow-sm">
-                                    <Calendar size={18} />
-                                    <span>You are on leave today ({currentLeave?.type}). Log work blocked.</span>
+                {/* Right Column (7/12 width) - Tasks List */}
+                <div className="lg:col-span-7">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-140px)] min-h-[600px]">
+                        {/* Fixed height to match approx height of left column items (280 + 296 + 24 gap = 600) */}
+                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center relative">
+                            {isTodayLeave && (
+                                <div className="absolute inset-0 bg-white/90 z-20 flex items-center justify-center backdrop-blur-[1px] rounded-t-xl">
+                                    <div className="flex items-center gap-2 text-purple-600 font-bold bg-purple-50 px-4 py-2 rounded-lg border border-purple-100 shadow-sm">
+                                        <Calendar size={18} />
+                                        <span>You are on leave today ({currentLeave?.type}). Log work blocked.</span>
+                                    </div>
                                 </div>
+                            )}
+                            <h2 className="text-lg font-bold text-gray-900">Your Tasks</h2>
+                            <div className="flex gap-2">
+                                {/* Red - Overdue */}
+                                <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.overdue > 0 ? 'text-red-700 bg-red-100' : 'text-gray-400 bg-gray-50'}`}>
+                                    {counts.overdue} Red
+                                </span>
+                                {/* Yellow - Due Today */}
+                                <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.dueToday > 0 ? 'text-yellow-800 bg-yellow-100 border border-yellow-200' : 'text-gray-400 bg-gray-50'}`}>
+                                    {counts.dueToday} Yellow
+                                </span>
+                                {/* Green - Future */}
+                                <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.future > 0 ? 'text-green-700 bg-green-100' : 'text-gray-400 bg-gray-50'}`}>
+                                    {counts.future} Green
+                                </span>
                             </div>
-                        )}
-                        <h2 className="text-lg font-bold text-gray-900">Your Tasks</h2>
-                        <div className="flex gap-2">
-                            {/* Red - Overdue */}
-                            <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.overdue > 0 ? 'text-red-700 bg-red-100' : 'text-gray-400 bg-gray-50'}`}>
-                                {counts.overdue} Red
-                            </span>
-                            {/* Yellow - Due Today */}
-                            <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.dueToday > 0 ? 'text-yellow-800 bg-yellow-100 border border-yellow-200' : 'text-gray-400 bg-gray-50'}`}>
-                                {counts.dueToday} Yellow
-                            </span>
-                            {/* Green - Future */}
-                            <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.future > 0 ? 'text-green-700 bg-green-100' : 'text-gray-400 bg-gray-50'}`}>
-                                {counts.future} Green
-                            </span>
                         </div>
-                    </div>
 
-                    {/* Task List Header */}
-                    <div className="px-6 py-3 bg-gray-50/50 border-b border-gray-100 grid grid-cols-12 gap-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        <div className="col-span-6">Task</div>
-                        <div className="col-span-3 text-right">ETA</div>
-                        <div className="col-span-3 text-right">Due Date</div>
-                    </div>
+                        {/* Task List Header */}
+                        <div className="px-6 py-3 bg-gray-50/50 border-b border-gray-100 grid grid-cols-12 gap-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            <div className="col-span-6">Task</div>
+                            <div className="col-span-3 text-right">ETA</div>
+                            <div className="col-span-3 text-right">Due Date</div>
+                        </div>
 
-                    <div className="flex-1 overflow-y-auto no-scrollbar">
-                        {tasks.length === 0 ? (
-                            <p className="text-center text-gray-400 py-10">All caught up!</p>
-                        ) : (
-                            <div className="divide-y divide-gray-50">
-                                {tasks.map(task => (
-                                    <div key={task.id} className="group hover:bg-gray-50 transition-colors">
-                                        {/* Task Row */}
-                                        <div
-                                            className={`grid grid-cols-12 gap-4 items-center px-6 py-3 ${isTodayLeave ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
-                                            onClick={() => !isTodayLeave && toggleTaskExpand(task)}
-                                        >
-                                            <div className="col-span-6 flex items-center gap-3 overflow-hidden">
-                                                <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getTaskStatusColor(task.planned_date).dot}`}></div>
-                                                <span className={`truncate text-sm font-bold ${getTaskStatusColor(task.planned_date).text}`}>
-                                                    {task.task_content}
-                                                </span>
+                        <div className="flex-1 overflow-y-auto no-scrollbar">
+                            {tasks.length === 0 ? (
+                                <p className="text-center text-gray-400 py-10">All caught up!</p>
+                            ) : (
+                                <div className="divide-y divide-gray-50">
+                                    {tasks.map(task => (
+                                        <div key={task.id} className="group hover:bg-gray-50 transition-colors">
+                                            {/* Task Row */}
+                                            <div
+                                                className={`grid grid-cols-12 gap-4 items-center px-6 py-3 ${isTodayLeave ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                                                onClick={() => !isTodayLeave && toggleTaskExpand(task)}
+                                            >
+                                                <div className="col-span-6 flex items-center gap-3 overflow-hidden">
+                                                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getTaskStatusColor(task.planned_date).dot}`}></div>
+                                                    <span className={`truncate text-sm font-bold ${getTaskStatusColor(task.planned_date).text}`}>
+                                                        {task.task_content}
+                                                    </span>
+                                                </div>
+                                                <div className="col-span-3 text-right text-xs font-medium text-gray-500">
+                                                    {task.eta ? `${task.eta}m` : '-'}
+                                                </div>
+                                                <div className="col-span-3 text-right text-xs font-medium text-gray-500">
+                                                    {new Date(task.planned_date).toLocaleDateString()}
+                                                </div>
                                             </div>
-                                            <div className="col-span-3 text-right text-xs font-medium text-gray-500">
-                                                {task.eta ? `${task.eta}m` : '-'}
-                                            </div>
-                                            <div className="col-span-3 text-right text-xs font-medium text-gray-500">
-                                                {new Date(task.planned_date).toLocaleDateString()}
-                                            </div>
-                                        </div>
 
-                                        {/* Dropdown Content */}
-                                        {expandedTaskId === task.id && (
-                                            <div className="px-6 pb-4 bg-gray-50/50 border-t border-gray-100">
-                                                <form onSubmit={(e) => handleLogWork(e, task)} className="mt-4 space-y-3 max-w-lg">
-                                                    <div className="flex items-center justify-between">
-                                                        <h4 className="text-xs font-bold text-gray-500 uppercase">Log Task Completion</h4>
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-4">
+                                            {/* Dropdown Content */}
+                                            {expandedTaskId === task.id && (
+                                                <div className="px-6 pb-4 bg-gray-50/50 border-t border-gray-100">
+                                                    <form onSubmit={(e) => handleLogWork(e, task)} className="mt-4 space-y-3 max-w-lg">
+                                                        <div className="flex items-center justify-between">
+                                                            <h4 className="text-xs font-bold text-gray-500 uppercase">Log Task Completion</h4>
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-4">
+                                                            <div>
+                                                                <label className="block text-xs font-medium text-gray-700 mb-1">Time Spent (Mins)</label>
+                                                                <input
+                                                                    type="number"
+                                                                    required
+                                                                    placeholder="e.g. 60"
+                                                                    className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white"
+                                                                    value={logForm.duration}
+                                                                    onChange={(e) => setLogForm(prev => ({ ...prev, duration: e.target.value }))}
+                                                                />
+                                                            </div>
+                                                            <div className="flex items-end">
+                                                                <button
+                                                                    type="submit"
+                                                                    disabled={isSubmitting}
+                                                                    className="w-full text-sm bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors font-medium shadow-sm"
+                                                                >
+                                                                    {isSubmitting ? 'Saving...' : 'Log & Complete'}
+                                                                </button>
+                                                            </div>
+                                                        </div>
                                                         <div>
-                                                            <label className="block text-xs font-medium text-gray-700 mb-1">Time Spent (Mins)</label>
-                                                            <input
-                                                                type="number"
-                                                                required
-                                                                placeholder="e.g. 60"
-                                                                className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white"
-                                                                value={logForm.duration}
-                                                                onChange={(e) => setLogForm(prev => ({ ...prev, duration: e.target.value }))}
+                                                            <textarea
+                                                                placeholder="Remarks (Optional)"
+                                                                className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white h-32"
+                                                                value={logForm.remarks}
+                                                                onChange={(e) => setLogForm(prev => ({ ...prev, remarks: e.target.value }))}
                                                             />
                                                         </div>
-                                                        <div className="flex items-end">
-                                                            <button
-                                                                type="submit"
-                                                                disabled={isSubmitting}
-                                                                className="w-full text-sm bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors font-medium shadow-sm"
-                                                            >
-                                                                {isSubmitting ? 'Saving...' : 'Log & Complete'}
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <textarea
-                                                            placeholder="Remarks (Optional)"
-                                                            className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white h-32"
-                                                            value={logForm.remarks}
-                                                            onChange={(e) => setLogForm(prev => ({ ...prev, remarks: e.target.value }))}
-                                                        />
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                                                    </form>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        </div >
-    );
+            );
 };
 
-export default Dashboard;
+            export default Dashboard;
