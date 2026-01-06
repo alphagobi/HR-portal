@@ -427,7 +427,7 @@ const AdminTimesheets = () => {
                                                 <input
                                                     key={day.timesheet?.id + '-' + (day.timesheet?.admin_remarks || day.timesheet?.adminRemarks || '')}
                                                     type="text"
-                                                    className="w-full text-lg border-b border-transparent focus:border-indigo-500 focus:ring-0 bg-transparent outline-none transition-colors placeholder-gray-300"
+                                                    className="w-full text-xs border-b border-transparent focus:border-indigo-500 focus:ring-0 bg-transparent outline-none transition-colors placeholder-gray-300"
                                                     placeholder="Add comment..."
                                                     defaultValue={day.timesheet?.admin_remarks || day.timesheet?.adminRemarks || ''}
                                                     onBlur={(e) => handleSaveRemark(day, e.target.value)}

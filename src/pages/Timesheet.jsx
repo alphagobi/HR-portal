@@ -381,10 +381,10 @@ const Timesheet = () => {
                                                 {/* Show remarks if they exist and are different from Title */}
                                                 {entry.description && task && entry.description !== task.task_content && (
                                                     <div className="pl-5 ml-0.5 mt-1">
-                                                        <ExpandableText 
-                                                            text={entry.description} 
-                                                            limit={120} 
-                                                            className="text-lg text-gray-600"
+                                                        <ExpandableText
+                                                            text={entry.description}
+                                                            limit={120}
+                                                            className="text-xs text-gray-600"
                                                         />
                                                     </div>
                                                 )}
@@ -400,7 +400,7 @@ const Timesheet = () => {
                                         <p className="text-xs font-bold text-yellow-800 uppercase tracking-wide mb-1">
                                             Admin Comments
                                         </p>
-                                        <p className="text-lg text-gray-800 whitespace-pre-wrap">
+                                        <p className="text-xs text-gray-800 whitespace-pre-wrap">
                                             {sheet.admin_remarks || sheet.adminRemarks}
                                         </p>
                                     </div>
