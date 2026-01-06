@@ -1,4 +1,0 @@
-- [x] Link Frameworks to Tasks <!-- id: 29 -->
-    - [x] Backend: Add `framework_id` column to `planned_tasks` & update [tasks.php](file:///home/aravinth/Anti%20Gravity/public/api/tasks.php) <!-- id: 30 -->
-    - [x] Frontend: Update [Tasks.jsx](file:///home/aravinth/Anti%20Gravity/src/pages/Tasks.jsx) to fetch frameworks & add selection dropdown <!-- id: 31 -->
-    - [x] Frontend: Create "Framework Analysis" view in [Timesheet.jsx](file:///home/aravinth/Anti%20Gravity/src/pages/Timesheet.jsx) <!-- id: 32 -->

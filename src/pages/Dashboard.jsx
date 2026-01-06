@@ -483,405 +483,289 @@ const Dashboard = () => {
     return (
         <div className="p-6 max-w-full mx-6 space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mt-6">
-                {/* Left Column (5/12 width) - Grid Layout (Row 1 Split, Row 2 Full) */}
-                <div className="lg:col-span-5 grid grid-cols-12 gap-6 items-start content-start">
+                {/* Left Column (5/12 width) - Vertical Stack */}
+                <div className="lg:col-span-5 flex flex-col space-y-6">
 
-                    {/* Row 1, Col 1: Core Working Hours (1/3 width = 4/12) */}
-                    <div className="col-span-4 space-y-6">
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 h-[260px]">
-                            <div className="flex justify-between items-center mb-3">
-                                <h2 className="text-xs font-bold text-gray-900">Core Hours</h2>
-                                <button onClick={() => isEditingCoreHours ? handleSaveCoreHours() : setIsEditingCoreHours(true)} className="text-gray-400 hover:text-indigo-600 transition-colors">
-                                    {isEditingCoreHours ? <Save size={12} /> : <Pencil size={11} />}
-                                </button>
-                            </div>
-
-                            {!isEditingCoreHours ? (
-                                <div className="space-y-4">
-                                    <div>
-                                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Active Days</span>
-                                        <div className="flex gap-1 flex-wrap">
-                                            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => {
-                                                const dayFull = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i];
-                                                return (
-                                                    <span key={i} className={`w-6 h-6 flex items-center justify-center rounded-full text-[9px] font-bold transition-colors ${coreHours.working_days.includes(dayFull) ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-50 text-gray-400'}`}>
-                                                        {day}
-                                                    </span>
-                                                )
-                                            })}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Schedule</span>
-                                        <div className="grid grid-cols-2 gap-1.5">
-                                            {coreHours.working_slots.map((slot, i) => (
-                                                <div key={i} className="flex justify-center items-center text-[10px] text-gray-700 bg-gray-50 py-1.5 rounded border border-gray-100 font-mono font-medium">
-                                                    {slot.start} - {slot.end}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Active Days</label>
-                                        <div className="flex gap-1 flex-wrap justify-between">
-                                            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                                                <button
-                                                    key={day}
-                                                    onClick={() => toggleDay(day)}
-                                                    className={`w-6 h-6 rounded text-[9px] font-bold transition-colors border flex items-center justify-center ${tempCoreHours.working_days.includes(day) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
-                                                >
-                                                    {day.charAt(0)}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Schedule</label>
-                                        <div className="space-y-1.5 overflow-y-auto max-h-[100px] pr-1 no-scrollbar">
-                                            {tempCoreHours.working_slots.map((slot, i) => (
-                                                <div key={i} className="flex items-center gap-1">
-                                                    <input
-                                                        type="time"
-                                                        value={slot.start}
-                                                        onChange={(e) => updateSlot(i, 'start', e.target.value)}
-                                                        className="text-[9px] p-0.5 border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 outline-none w-14 text-center"
-                                                    />
-                                                    <span className="text-gray-300 text-[9px]">-</span>
-                                                    <input
-                                                        type="time"
-                                                        value={slot.end}
-                                                        onChange={(e) => updateSlot(i, 'end', e.target.value)}
-                                                        className="text-[9px] p-0.5 border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 outline-none w-14 text-center"
-                                                    />
-                                                    <button onClick={() => removeSlot(i)} className="text-gray-300 hover:text-red-500 transition-colors p-0.5"><Trash2 size={10} /></button>
-                                                </div>
-                                            ))}
-                                            <button onClick={addSlot} className="text-[9px] text-indigo-600 font-bold hover:text-indigo-800 flex items-center gap-1 mt-1">
-                                                <Plus size={9} /> Add
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+                    {/* 1. Core Working Hours */}
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                        <div className="flex justify-between items-center mb-3">
+                            <h2 className="text-xs font-bold text-gray-900">Core Hours</h2>
+                            <button onClick={() => isEditingCoreHours ? handleSaveCoreHours() : setIsEditingCoreHours(true)} className="text-gray-400 hover:text-indigo-600 transition-colors">
+                                {isEditingCoreHours ? <Save size={12} /> : <Pencil size={11} />}
+                            </button>
                         </div>
 
-                        {/* Row 1, Col 1.5: Upcoming Leaves */}
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 h-[260px] flex flex-col">
-                            <h2 className="text-xs font-bold text-gray-900 mb-3 flex items-center gap-2">
-                                <Calendar size={14} className="text-purple-600" />
-                                Upcoming Leaves
-                            </h2>
-
-                            <div className="flex-1 overflow-y-auto no-scrollbar space-y-2">
-                                {upcomingLeaves.length === 0 ? (
-                                    <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                                        <p className="text-[10px] italic">No upcoming leaves</p>
-                                    </div>
-                                ) : (
-                                    upcomingLeaves.map((leave, i) => (
-                                        <div key={i} className="bg-purple-50 p-2 rounded-lg border border-purple-100">
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <p className="text-[10px] font-bold text-purple-900">{leave.type}</p>
-                                                    <p className="text-[10px] text-purple-700 mt-0.5">
-                                                        {new Date(leave.start_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                                                        {leave.start_date !== leave.end_date && ` - ${new Date(leave.end_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`}
-                                                    </p>
-                                                </div>
-                                                <span className="text-[9px] bg-white text-purple-600 px-1.5 py-0.5 rounded border border-purple-100 font-bold">
-                                                    {Math.ceil((new Date(leave.end_date) - new Date(leave.start_date)) / (1000 * 60 * 60 * 24)) + 1}d
+                        {!isEditingCoreHours ? (
+                            <div className="space-y-4">
+                                <div>
+                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Active Days</span>
+                                    <div className="flex gap-1 flex-wrap">
+                                        {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, i) => {
+                                            const dayFull = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i];
+                                            return (
+                                                <span key={i} className={`w-6 h-6 flex items-center justify-center rounded-full text-[9px] font-bold transition-colors ${coreHours.working_days.includes(dayFull) ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-50 text-gray-400'}`}>
+                                                    {day}
                                                 </span>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Row 1, Col 2: Framework Allocations (2/3 width = 8/12) */}
-                    <div className="col-span-8">
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[260px]">
-                            <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2">
-                                <h2 className="text-base font-bold text-gray-900">Framework</h2>
-                                {!isEditingFramework && (
-                                    <button onClick={() => setIsEditingFramework(true)} className="text-gray-400 hover:text-indigo-600 transition-colors">
-                                        <Pencil size={14} />
-                                    </button>
-                                )}
-                            </div>
-
-                            {!isEditingFramework ? (
-                                <div className="flex-1 overflow-y-auto space-y-4 no-scrollbar">
-                                    {allocations.map((item, idx) => (
-                                        <div key={idx} className="flex justify-between items-center">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${['bg-indigo-500', 'bg-blue-500', 'bg-purple-500', 'bg-pink-500'][idx % 4]}`}></div>
-                                                <span className="text-sm font-bold text-gray-700">{item.category_name}</span>
-                                            </div>
-                                            <div className="text-right">
-                                                <span className="text-sm font-bold text-gray-900">{item.percentage}%</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {frameworkTotal < 100 && (
-                                        <div className="flex justify-between items-center">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-2 h-2 rounded-full flex-shrink-0 bg-gray-300"></div>
-                                                <span className="text-sm font-bold text-gray-400">Unplanned</span>
-                                            </div>
-                                            <div className="text-right">
-                                                <span className="text-sm font-bold text-gray-400">{100 - frameworkTotal}%</span>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="flex-1 flex flex-col min-h-0 bg-white z-10">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Editing...</span>
-                                        <div className="flex gap-2">
-                                            <button onClick={() => handleSaveFramework()} className="text-green-600 hover:text-green-700" title="Save">
-                                                <Save size={16} />
-                                            </button>
-                                            <button onClick={() => { setIsEditingFramework(false); setTempAllocations(allocations); }} className="text-red-400 hover:text-red-500" title="Cancel">
-                                                <X size={16} />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                                        <SortableContext items={tempAllocations.map(i => i.id || i.tempId)} strategy={verticalListSortingStrategy}>
-                                            <div className="flex-1 overflow-y-auto pr-1">
-                                                {tempAllocations.map((item, index) => (
-                                                    <SortableItem
-                                                        key={item.id || item.tempId}
-                                                        id={item.id || item.tempId}
-                                                        item={item}
-                                                        index={index}
-                                                        onRemove={handleRemoveAllocation}
-                                                        onUpdate={handleUpdateAllocation}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </SortableContext>
-                                    </DndContext>
-
-                                    <div className="mt-2 pt-2 border-t border-gray-50 flex justify-between items-center">
-                                        <button onClick={handleAddAllocation} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
-                                            <Plus size={14} /> Add Item
-                                        </button>
-                                        <span className={`text-xs font-bold ${tempAllocations.reduce((sum, i) => sum + (parseInt(i.percentage) || 0), 0) > 100 ? "text-red-500" : "text-gray-400"}`}>
-                                            Total: {tempAllocations.reduce((sum, i) => sum + (parseInt(i.percentage) || 0), 0)}%
-                                        </span>
+                                            )
+                                        })}
                                     </div>
                                 </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Row 2: Logged Today (Full Width - Col Span 12) */}
-                    <div className="col-span-12">
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-424px)] min-h-[300px]">
-                            <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2 flex-shrink-0">
-                                <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                                    <Clock size={18} className="text-indigo-600" />
-                                    Logged Today
-                                </h2>
-                                <span className="text-sm font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-md">
-                                    {loggedEntries.reduce((acc, curr) => acc + parseFloat(curr.duration || 0), 0).toFixed(2)} hrs
-                                </span>
-                            </div>
-                            <div className="space-y-3 flex-1 overflow-y-auto overflow-x-hidden pr-1 no-scrollbar">
-                                {loggedEntries.length === 0 ? (
-                                    <div className="text-center py-6">
-                                        <Clock size={32} className="mx-auto text-gray-200 mb-2" />
-                                        <p className="text-sm text-gray-400 italic">No work logged yet.</p>
-                                    </div>
-                                ) : (
-                                    loggedEntries.map((entry, index) => {
-                                        const task = allTasksList.find(t => t.id == (entry.taskId || entry.task_id)) || allTasksList.find(t => t.task_content === entry.description);
-                                        // Use actual completion status so Green shows for completed tasks
-                                        const color = getTaskStatusColor(task?.planned_date, task?.is_completed);
-
-                                        // ETA vs Actual Calculation
-                                        let timeDiffElement = null;
-                                        if (task && task.eta) {
-                                            const etaMins = parseInt(task.eta);
-                                            const actualMins = parseFloat(entry.duration) * 60;
-                                            const diff = Math.round(actualMins - etaMins);
-
-                                            if (diff < 0) {
-                                                // Saved time (Green)
-                                                timeDiffElement = (
-                                                    <span className="text-xs font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded ml-2" title="Time Saved">
-                                                        {diff}m
-                                                    </span>
-                                                );
-                                            } else if (diff > 0) {
-                                                // Over time (Red)
-                                                timeDiffElement = (
-                                                    <span className="text-xs font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded ml-2" title="Time Overrun">
-                                                        +{diff}m
-                                                    </span>
-                                                );
-                                            }
-                                        }
-
-                                        return (
-                                            <div key={entry.id || index} className="group hover:bg-gray-50 rounded-lg -mx-2 transition-colors">
-                                                {/* Entry Row */}
-                                                <div className="flex justify-between items-start text-sm p-2">
-                                                    <div className="flex items-start gap-3 min-w-0 flex-1">
-                                                        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors mt-1.5 ${color.dot}`}></div>
-                                                        <div className="flex flex-col min-w-0">
-                                                            {/* Always show Task Content as Title if linked, else Entry Description */}
-                                                            <span className={`font-medium transition-colors whitespace-pre-wrap ${color.text}`}>
-                                                                {task?.task_content || entry.description || "Work Logged"}
-                                                            </span>
-                                                            {/* Show remarks if they exist and are different from Title */}
-                                                            {entry.description && task && entry.description !== task.task_content && (
-                                                                <span className="text-xs text-gray-400 whitespace-pre-wrap">
-                                                                    {entry.description}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-3 pl-3">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <span className="font-bold text-gray-900">{entry.duration}</span>
-                                                            <span className="text-xs text-gray-500 font-medium">hrs</span>
-                                                            {timeDiffElement}
-                                                        </div>
-                                                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            <button onClick={() => startEditingEntry(entry, task)} className="text-gray-400 hover:text-indigo-600">
-                                                                <Pencil size={14} />
-                                                            </button>
-                                                            <button onClick={() => handleDeleteEntry(index, task)} className="text-gray-400 hover:text-red-500">
-                                                                <Trash2 size={14} />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Edit Dropdown Form */}
-                                                {editingEntryId === entry.id && (
-                                                    <div className="px-4 pb-4 pt-2 bg-gray-50/50 border-t border-gray-100 mx-2 mb-2 rounded-b-md">
-                                                        <div className="space-y-3">
-                                                            <div className="grid grid-cols-2 gap-4">
-                                                                <div>
-                                                                    <label className="block text-xs font-medium text-gray-700 mb-1">Time Spent (Mins)</label>
-                                                                    <input
-                                                                        type="number"
-                                                                        required
-                                                                        placeholder="e.g. 60"
-                                                                        className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white"
-                                                                        value={editForm.duration}
-                                                                        onChange={(e) => setEditForm(prev => ({ ...prev, duration: e.target.value }))}
-                                                                    />
-                                                                </div>
-                                                                <div className="flex items-end">
-                                                                    <button
-                                                                        onClick={() => handleUpdateEntry(entry, task)}
-                                                                        className="w-full text-sm bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors font-medium shadow-sm flex justify-center items-center gap-2"
-                                                                    >
-                                                                        <Save size={14} /> Update Log
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                            <div>
-                                                                <textarea
-                                                                    placeholder="Remarks"
-                                                                    className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white h-32"
-                                                                    value={editForm.remarks}
-                                                                    onChange={(e) => setEditForm(prev => ({ ...prev, remarks: e.target.value }))}
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
+                                <div>
+                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Schedule</span>
+                                    <div className="grid grid-cols-2 gap-1.5">
+                                        {coreHours.working_slots.map((slot, i) => (
+                                            <div key={i} className="flex justify-center items-center text-[10px] text-gray-700 bg-gray-50 py-1.5 rounded border border-gray-100 font-mono font-medium">
+                                                {slot.start} - {slot.end}
                                             </div>
-                                        );
-                                    })
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right Column (7/12 width) - Tasks List */}
-                <div className="lg:col-span-7">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-140px)] min-h-[600px]">
-                        {/* Fixed height to match approx height of left column items (280 + 296 + 24 gap = 600) */}
-                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center relative">
-                            {isTodayLeave && (
-                                <div className="absolute inset-0 bg-white/90 z-20 flex items-center justify-center backdrop-blur-[1px] rounded-t-xl">
-                                    <div className="flex items-center gap-2 text-purple-600 font-bold bg-purple-50 px-4 py-2 rounded-lg border border-purple-100 shadow-sm">
-                                        <Calendar size={18} />
-                                        <span>You are on leave today ({currentLeave?.type}). Log work blocked.</span>
+                                        ))}
                                     </div>
                                 </div>
-                            )}
-                            <h2 className="text-lg font-bold text-gray-900">Your Tasks</h2>
-                            <div className="flex gap-2">
-                                {/* Red - Overdue */}
-                                <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.overdue > 0 ? 'text-red-700 bg-red-100' : 'text-gray-400 bg-gray-50'}`}>
-                                    {counts.overdue} Red
-                                </span>
-                                {/* Yellow - Due Today */}
-                                <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.dueToday > 0 ? 'text-yellow-800 bg-yellow-100 border border-yellow-200' : 'text-gray-400 bg-gray-50'}`}>
-                                    {counts.dueToday} Yellow
-                                </span>
-                                {/* Green - Future */}
-                                <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.future > 0 ? 'text-green-700 bg-green-100' : 'text-gray-400 bg-gray-50'}`}>
-                                    {counts.future} Green
-                                </span>
                             </div>
-                        </div>
-
-                        {/* Task List Header */}
-                        <div className="px-6 py-3 bg-gray-50/50 border-b border-gray-100 grid grid-cols-12 gap-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            <div className="col-span-6">Task</div>
-                            <div className="col-span-3 text-right">ETA</div>
-                            <div className="col-span-3 text-right">Due Date</div>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto no-scrollbar">
-                            {tasks.length === 0 ? (
-                                <p className="text-center text-gray-400 py-10">All caught up!</p>
-                            ) : (
-                                <div className="divide-y divide-gray-50">
-                                    {tasks.map(task => (
-                                        <div key={task.id} className="group hover:bg-gray-50 transition-colors">
-                                            {/* Task Row */}
-                                            <div
-                                                className={`grid grid-cols-12 gap-4 items-center px-6 py-3 ${isTodayLeave ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
-                                                onClick={() => !isTodayLeave && toggleTaskExpand(task)}
+                        ) : (
+                            <div className="space-y-3">
+                                <div>
+                                    <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Active Days</label>
+                                    <div className="flex gap-1 flex-wrap justify-between">
+                                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                                            <button
+                                                key={day}
+                                                onClick={() => toggleDay(day)}
+                                                className={`w-6 h-6 rounded text-[9px] font-bold transition-colors border flex items-center justify-center ${tempCoreHours.working_days.includes(day) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
                                             >
-                                                <div className="col-span-6 flex items-center gap-3 overflow-hidden">
-                                                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getTaskStatusColor(task.planned_date).dot}`}></div>
-                                                    <span className={`truncate text-sm font-bold ${getTaskStatusColor(task.planned_date).text}`}>
-                                                        {task.task_content}
-                                                    </span>
+                                                {day.charAt(0)}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Schedule</label>
+                                    <div className="space-y-1.5 overflow-y-auto max-h-[100px] pr-1 no-scrollbar">
+                                        {tempCoreHours.working_slots.map((slot, i) => (
+                                            <div key={i} className="flex items-center gap-1">
+                                                <input
+                                                    type="time"
+                                                    value={slot.start}
+                                                    onChange={(e) => updateSlot(i, 'start', e.target.value)}
+                                                    className="text-[9px] p-0.5 border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 outline-none w-14 text-center"
+                                                />
+                                                <span className="text-gray-300 text-[9px]">-</span>
+                                                <input
+                                                    type="time"
+                                                    value={slot.end}
+                                                    onChange={(e) => updateSlot(i, 'end', e.target.value)}
+                                                    className="text-[9px] p-0.5 border border-gray-200 rounded focus:ring-1 focus:ring-indigo-500 outline-none w-14 text-center"
+                                                />
+                                                <button onClick={() => removeSlot(i)} className="text-gray-300 hover:text-red-500 transition-colors p-0.5"><Trash2 size={10} /></button>
+                                            </div>
+                                        ))}
+                                        <button onClick={addSlot} className="text-[9px] text-indigo-600 font-bold hover:text-indigo-800 flex items-center gap-1 mt-1">
+                                            <Plus size={9} /> Add
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Upcoming Leaves */}
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 h-[260px] flex flex-col">
+                        <h2 className="text-xs font-bold text-gray-900 mb-3 flex items-center gap-2">
+                            <Calendar size={14} className="text-purple-600" />
+                            Upcoming Leaves
+                        </h2>
+
+                        <div className="flex-1 overflow-y-auto no-scrollbar space-y-2">
+                            {upcomingLeaves.length === 0 ? (
+                                <div className="h-full flex flex-col items-center justify-center text-gray-400">
+                                    <p className="text-[10px] italic">No upcoming leaves</p>
+                                </div>
+                            ) : (
+                                upcomingLeaves.map((leave, i) => (
+                                    <div key={i} className="bg-purple-50 p-2 rounded-lg border border-purple-100">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <p className="text-[10px] font-bold text-purple-900">{leave.type}</p>
+                                                <p className="text-[10px] text-purple-700 mt-0.5">
+                                                    {new Date(leave.start_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                                    {leave.start_date !== leave.end_date && ` - ${new Date(leave.end_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`}
+                                                </p>
+                                            </div>
+                                            <span className="text-[9px] bg-white text-purple-600 px-1.5 py-0.5 rounded border border-purple-100 font-bold">
+                                                {Math.ceil((new Date(leave.end_date) - new Date(leave.start_date)) / (1000 * 60 * 60 * 24)) + 1}d
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+
+                    {/* 2. Framework (Moved Up) */}
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[260px]">
+                        <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2">
+                            <h2 className="text-base font-bold text-gray-900">Framework</h2>
+                            {!isEditingFramework && (
+                                <button onClick={() => setIsEditingFramework(true)} className="text-gray-400 hover:text-indigo-600 transition-colors">
+                                    <Pencil size={14} />
+                                </button>
+                            )}
+                        </div>
+
+                        {!isEditingFramework ? (
+                            <div className="flex-1 overflow-y-auto space-y-4 no-scrollbar">
+                                {allocations.map((item, idx) => (
+                                    <div key={idx} className="flex justify-between items-center">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${['bg-indigo-500', 'bg-blue-500', 'bg-purple-500', 'bg-pink-500'][idx % 4]}`}></div>
+                                            <span className="text-sm font-bold text-gray-700">{item.category_name}</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-sm font-bold text-gray-900">{item.percentage}%</span>
+                                        </div>
+                                    </div>
+                                ))}
+                                {frameworkTotal < 100 && (
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-2 h-2 rounded-full flex-shrink-0 bg-gray-300"></div>
+                                            <span className="text-sm font-bold text-gray-400">Unplanned</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-sm font-bold text-gray-400">{100 - frameworkTotal}%</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex flex-col min-h-0 bg-white z-10">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Editing...</span>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => handleSaveFramework()} className="text-green-600 hover:text-green-700" title="Save">
+                                            <Save size={16} />
+                                        </button>
+                                        <button onClick={() => { setIsEditingFramework(false); setTempAllocations(allocations); }} className="text-red-400 hover:text-red-500" title="Cancel">
+                                            <X size={16} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                                    <SortableContext items={tempAllocations.map(i => i.id || i.tempId)} strategy={verticalListSortingStrategy}>
+                                        <div className="flex-1 overflow-y-auto pr-1">
+                                            {tempAllocations.map((item, index) => (
+                                                <SortableItem
+                                                    key={item.id || item.tempId}
+                                                    id={item.id || item.tempId}
+                                                    item={item}
+                                                    index={index}
+                                                    onRemove={handleRemoveAllocation}
+                                                    onUpdate={handleUpdateAllocation}
+                                                />
+                                            ))}
+                                        </div>
+                                    </SortableContext>
+                                </DndContext>
+
+                                <div className="mt-2 pt-2 border-t border-gray-50 flex justify-between items-center">
+                                    <button onClick={handleAddAllocation} className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+                                        <Plus size={14} /> Add Item
+                                    </button>
+                                    <span className={`text-xs font-bold ${tempAllocations.reduce((sum, i) => sum + (parseInt(i.percentage) || 0), 0) > 100 ? "text-red-500" : "text-gray-400"}`}>
+                                        Total: {tempAllocations.reduce((sum, i) => sum + (parseInt(i.percentage) || 0), 0)}%
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 3. Logged Today */}
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-424px)] min-h-[300px]">
+                        <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2 flex-shrink-0">
+                            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                                <Clock size={18} className="text-indigo-600" />
+                                Logged Today
+                            </h2>
+                            <span className="text-sm font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-md">
+                                {loggedEntries.reduce((acc, curr) => acc + parseFloat(curr.duration || 0), 0).toFixed(2)} hrs
+                            </span>
+                        </div>
+                        <div className="space-y-3 flex-1 overflow-y-auto overflow-x-hidden pr-1 no-scrollbar">
+                            {loggedEntries.length === 0 ? (
+                                <div className="text-center py-6">
+                                    <Clock size={32} className="mx-auto text-gray-200 mb-2" />
+                                    <p className="text-sm text-gray-400 italic">No work logged yet.</p>
+                                </div>
+                            ) : (
+                                loggedEntries.map((entry, index) => {
+                                    const task = allTasksList.find(t => t.id == (entry.taskId || entry.task_id)) || allTasksList.find(t => t.task_content === entry.description);
+                                    // Use actual completion status so Green shows for completed tasks
+                                    const color = getTaskStatusColor(task?.planned_date, task?.is_completed);
+
+                                    // ETA vs Actual Calculation
+                                    let timeDiffElement = null;
+                                    if (task && task.eta) {
+                                        const etaMins = parseInt(task.eta);
+                                        const actualMins = parseFloat(entry.duration) * 60;
+                                        const diff = Math.round(actualMins - etaMins);
+
+                                        if (diff < 0) {
+                                            // Saved time (Green)
+                                            timeDiffElement = (
+                                                <span className="text-xs font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded ml-2" title="Time Saved">
+                                                    {diff}m
+                                                </span>
+                                            );
+                                        } else if (diff > 0) {
+                                            // Over time (Red)
+                                            timeDiffElement = (
+                                                <span className="text-xs font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded ml-2" title="Time Overrun">
+                                                    +{diff}m
+                                                </span>
+                                            );
+                                        }
+                                    }
+
+                                    return (
+                                        <div key={entry.id || index} className="group hover:bg-gray-50 rounded-lg -mx-2 transition-colors">
+                                            {/* Entry Row */}
+                                            <div className="flex justify-between items-start text-sm p-2">
+                                                <div className="flex items-start gap-3 min-w-0 flex-1">
+                                                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors mt-1.5 ${color.dot}`}></div>
+                                                    <div className="flex flex-col min-w-0">
+                                                        {/* Always show Task Content as Title if linked, else Entry Description */}
+                                                        <span className={`font-medium transition-colors whitespace-pre-wrap ${color.text}`}>
+                                                            {task?.task_content || entry.description || "Work Logged"}
+                                                        </span>
+                                                        {/* Show remarks if they exist and are different from Title */}
+                                                        {entry.description && task && entry.description !== task.task_content && (
+                                                            <span className="text-xs text-gray-400 whitespace-pre-wrap">
+                                                                {entry.description}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                                <div className="col-span-3 text-right text-xs font-medium text-gray-500">
-                                                    {task.eta ? `${task.eta}m` : '-'}
-                                                </div>
-                                                <div className="col-span-3 text-right text-xs font-medium text-gray-500">
-                                                    {new Date(task.planned_date).toLocaleDateString()}
+                                                <div className="flex items-center gap-3 pl-3">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="font-bold text-gray-900">{entry.duration}</span>
+                                                        <span className="text-xs text-gray-500 font-medium">hrs</span>
+                                                        {timeDiffElement}
+                                                    </div>
+                                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button onClick={() => startEditingEntry(entry, task)} className="text-gray-400 hover:text-indigo-600">
+                                                            <Pencil size={14} />
+                                                        </button>
+                                                        <button onClick={() => handleDeleteEntry(index, task)} className="text-gray-400 hover:text-red-500">
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
 
-                                            {/* Dropdown Content */}
-                                            {expandedTaskId === task.id && (
-                                                <div className="px-6 pb-4 bg-gray-50/50 border-t border-gray-100">
-                                                    <form onSubmit={(e) => handleLogWork(e, task)} className="mt-4 space-y-3 max-w-lg">
-                                                        <div className="flex items-center justify-between">
-                                                            <h4 className="text-xs font-bold text-gray-500 uppercase">Log Task Completion</h4>
-                                                        </div>
+                                            {/* Edit Dropdown Form */}
+                                            {editingEntryId === entry.id && (
+                                                <div className="px-4 pb-4 pt-2 bg-gray-50/50 border-t border-gray-100 mx-2 mb-2 rounded-b-md">
+                                                    <div className="space-y-3">
                                                         <div className="grid grid-cols-2 gap-4">
                                                             <div>
                                                                 <label className="block text-xs font-medium text-gray-700 mb-1">Time Spent (Mins)</label>
@@ -890,40 +774,151 @@ const Dashboard = () => {
                                                                     required
                                                                     placeholder="e.g. 60"
                                                                     className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white"
-                                                                    value={logForm.duration}
-                                                                    onChange={(e) => setLogForm(prev => ({ ...prev, duration: e.target.value }))}
+                                                                    value={editForm.duration}
+                                                                    onChange={(e) => setEditForm(prev => ({ ...prev, duration: e.target.value }))}
                                                                 />
                                                             </div>
                                                             <div className="flex items-end">
                                                                 <button
-                                                                    type="submit"
-                                                                    disabled={isSubmitting}
-                                                                    className="w-full text-sm bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors font-medium shadow-sm"
+                                                                    onClick={() => handleUpdateEntry(entry, task)}
+                                                                    className="w-full text-sm bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors font-medium shadow-sm flex justify-center items-center gap-2"
                                                                 >
-                                                                    {isSubmitting ? 'Saving...' : 'Log & Complete'}
+                                                                    <Save size={14} /> Update Log
                                                                 </button>
                                                             </div>
                                                         </div>
                                                         <div>
                                                             <textarea
-                                                                placeholder="Remarks (Optional)"
+                                                                placeholder="Remarks"
                                                                 className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white h-32"
-                                                                value={logForm.remarks}
-                                                                onChange={(e) => setLogForm(prev => ({ ...prev, remarks: e.target.value }))}
+                                                                value={editForm.remarks}
+                                                                onChange={(e) => setEditForm(prev => ({ ...prev, remarks: e.target.value }))}
                                                             />
                                                         </div>
-                                                    </form>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
-                                    ))}
-                                </div>
+                                    );
+                                })
                             )}
                         </div>
                     </div>
                 </div>
             </div>
+
+            {/* Right Column (7/12 width) - Tasks List */}
+            <div className="lg:col-span-7">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-col h-[calc(100vh-140px)] min-h-[600px]">
+                    {/* Fixed height to match approx height of left column items (280 + 296 + 24 gap = 600) */}
+                    <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center relative">
+                        {isTodayLeave && (
+                            <div className="absolute inset-0 bg-white/90 z-20 flex items-center justify-center backdrop-blur-[1px] rounded-t-xl">
+                                <div className="flex items-center gap-2 text-purple-600 font-bold bg-purple-50 px-4 py-2 rounded-lg border border-purple-100 shadow-sm">
+                                    <Calendar size={18} />
+                                    <span>You are on leave today ({currentLeave?.type}). Log work blocked.</span>
+                                </div>
+                            </div>
+                        )}
+                        <h2 className="text-lg font-bold text-gray-900">Your Tasks</h2>
+                        <div className="flex gap-2">
+                            {/* Red - Overdue */}
+                            <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.overdue > 0 ? 'text-red-700 bg-red-100' : 'text-gray-400 bg-gray-50'}`}>
+                                {counts.overdue} Red
+                            </span>
+                            {/* Yellow - Due Today */}
+                            <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.dueToday > 0 ? 'text-yellow-800 bg-yellow-100 border border-yellow-200' : 'text-gray-400 bg-gray-50'}`}>
+                                {counts.dueToday} Yellow
+                            </span>
+                            {/* Green - Future */}
+                            <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.future > 0 ? 'text-green-700 bg-green-100' : 'text-gray-400 bg-gray-50'}`}>
+                                {counts.future} Green
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Task List Header */}
+                    <div className="px-6 py-3 bg-gray-50/50 border-b border-gray-100 grid grid-cols-12 gap-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        <div className="col-span-6">Task</div>
+                        <div className="col-span-3 text-right">ETA</div>
+                        <div className="col-span-3 text-right">Due Date</div>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto no-scrollbar">
+                        {tasks.length === 0 ? (
+                            <p className="text-center text-gray-400 py-10">All caught up!</p>
+                        ) : (
+                            <div className="divide-y divide-gray-50">
+                                {tasks.map(task => (
+                                    <div key={task.id} className="group hover:bg-gray-50 transition-colors">
+                                        {/* Task Row */}
+                                        <div
+                                            className={`grid grid-cols-12 gap-4 items-center px-6 py-3 ${isTodayLeave ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                                            onClick={() => !isTodayLeave && toggleTaskExpand(task)}
+                                        >
+                                            <div className="col-span-6 flex items-center gap-3 overflow-hidden">
+                                                <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getTaskStatusColor(task.planned_date).dot}`}></div>
+                                                <span className={`truncate text-sm font-bold ${getTaskStatusColor(task.planned_date).text}`}>
+                                                    {task.task_content}
+                                                </span>
+                                            </div>
+                                            <div className="col-span-3 text-right text-xs font-medium text-gray-500">
+                                                {task.eta ? `${task.eta}m` : '-'}
+                                            </div>
+                                            <div className="col-span-3 text-right text-xs font-medium text-gray-500">
+                                                {new Date(task.planned_date).toLocaleDateString()}
+                                            </div>
+                                        </div>
+
+                                        {/* Dropdown Content */}
+                                        {expandedTaskId === task.id && (
+                                            <div className="px-6 pb-4 bg-gray-50/50 border-t border-gray-100">
+                                                <form onSubmit={(e) => handleLogWork(e, task)} className="mt-4 space-y-3 max-w-lg">
+                                                    <div className="flex items-center justify-between">
+                                                        <h4 className="text-xs font-bold text-gray-500 uppercase">Log Task Completion</h4>
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-4">
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-gray-700 mb-1">Time Spent (Mins)</label>
+                                                            <input
+                                                                type="number"
+                                                                required
+                                                                placeholder="e.g. 60"
+                                                                className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white"
+                                                                value={logForm.duration}
+                                                                onChange={(e) => setLogForm(prev => ({ ...prev, duration: e.target.value }))}
+                                                            />
+                                                        </div>
+                                                        <div className="flex items-end">
+                                                            <button
+                                                                type="submit"
+                                                                disabled={isSubmitting}
+                                                                className="w-full text-sm bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors font-medium shadow-sm"
+                                                            >
+                                                                {isSubmitting ? 'Saving...' : 'Log & Complete'}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <textarea
+                                                            placeholder="Remarks (Optional)"
+                                                            className="w-full text-sm p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-indigo-500 bg-white h-32"
+                                                            value={logForm.remarks}
+                                                            onChange={(e) => setLogForm(prev => ({ ...prev, remarks: e.target.value }))}
+                                                        />
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
         </div>
+        </div >
     );
 };
 
