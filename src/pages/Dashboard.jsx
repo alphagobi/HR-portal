@@ -560,8 +560,9 @@ const Dashboard = () => {
                 <div className="lg:col-span-5 flex flex-col space-y-5">
 
                     {/* 1. Core Working Hours */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 relative">
-                        <div className="absolute top-4 right-4 flex gap-2 items-center">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+                        {/* Header Actions Row - Changed from absolute to flex to prevent overlap */}
+                        <div className="flex justify-end gap-2 items-center mb-1 h-6">
                             {coreHoursPending && (
                                 <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-full flex items-center gap-1.5 uppercase tracking-wide border border-orange-100">
                                     <Loader2 size={10} className="animate-spin" /> Pending Approval
