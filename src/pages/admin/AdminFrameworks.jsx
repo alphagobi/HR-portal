@@ -73,9 +73,15 @@ const AdminFrameworks = () => {
     const handleReject = async (user) => {
         if (!window.confirm(`Reject core hours update for ${user.name}?`)) return;
         try {
-            // 1. Clear request
+            // 1. Save Rejection Status
+            await saveUserSetting(user.id, 'core_hours_rejection', {
+                rejected_at: new Date().toISOString(),
+                rejected_by: 'admin'
+            });
+
+            // 2. Clear request
             await saveUserSetting(user.id, 'core_hours_request', null);
-            // 2. Refresh
+            // 3. Refresh
             fetchCoreHours();
         } catch (error) {
             console.error("Failed to reject", error);

@@ -4,7 +4,7 @@ import { getTasks, updateTask, createTask } from '../services/taskService';
 import { saveTimesheet, getTimesheets } from '../services/timesheetService';
 import { getFrameworkAllocations } from '../services/frameworkService';
 import { getCurrentUser } from '../services/authService';
-import { Clock, CheckCircle, ChevronDown, ChevronUp, Calendar, Plus, Pencil, X, Save, GripVertical, Trash2, Loader2 } from 'lucide-react';
+import { Clock, CheckCircle, ChevronDown, ChevronUp, Calendar, Plus, Pencil, X, Save, GripVertical, Trash2, Loader2, AlertTriangle } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -104,6 +104,7 @@ const Dashboard = () => {
 
     const [coreHours, setCoreHours] = useState({ working_days: [], working_slots: [] });
     const [coreHoursPending, setCoreHoursPending] = useState(null);
+    const [coreHoursRejection, setCoreHoursRejection] = useState(null);
     const [isEditingCoreHours, setIsEditingCoreHours] = useState(false);
     const [tempCoreHours, setTempCoreHours] = useState({ working_days: [], working_slots: [] });
 
@@ -133,16 +134,26 @@ const Dashboard = () => {
         // Fetch Pending Core Hours Request
         const pendingRequest = await getUserSetting(user.id, 'core_hours_request');
         setCoreHoursPending(pendingRequest);
+
+        // Fetch Rejection Notice
+        const rejection = await getUserSetting(user.id, 'core_hours_rejection');
+        setCoreHoursRejection(rejection);
     };
 
     const handleSaveCoreHours = async () => {
         // Save to pending request instead of direct update
         await saveUserSetting(user.id, 'core_hours_request', tempCoreHours);
+        // Clear any previous rejection
+        await saveUserSetting(user.id, 'core_hours_rejection', null);
+        setCoreHoursRejection(null);
 
         setCoreHoursPending(tempCoreHours); // Update local pending state
         setIsEditingCoreHours(false);
+    };
 
-        // alert("Schedule update requested. Waiting for admin approval."); 
+    const handleDismissRejection = async () => {
+        await saveUserSetting(user.id, 'core_hours_rejection', null);
+        setCoreHoursRejection(null);
     };
 
     const toggleDay = (day) => {
@@ -434,8 +445,6 @@ const Dashboard = () => {
             // BUT if the user wants the "Title" to stay fixed and remarks to be secondary, we might need to store them separately?
             // The request says "Give exact like remarks whihc like yours tasks". In "Your Tasks", you log "Time" and "Remarks".
             // The entry description usually stores the Task Content (or remarks). 
-            // Let's stick to saving the Remarks as the description if provided, OR keep task content if empty.
-            // Actually, usually `description` IS the log entry text.
             // If I change description to "Late work", the display shows "Late work".
             // The User wants the Title ("Task Content") to remain visible and Remarks to be editable.
             // So we should save description as: `editForm.remarks`? 
@@ -552,16 +561,25 @@ const Dashboard = () => {
 
                     {/* 1. Core Working Hours */}
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 relative">
-                        <div className="absolute top-4 right-4 flex gap-2">
+                        <div className="absolute top-4 right-4 flex gap-2 items-center">
                             {coreHoursPending && (
-                                <span className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-full font-medium flex items-center gap-1">
-                                    <Loader2 size={12} className="animate-spin" /> Pending Approval
+                                <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-full flex items-center gap-1.5 uppercase tracking-wide border border-orange-100">
+                                    <Loader2 size={10} className="animate-spin" /> Pending Approval
+                                </span>
+                            )}
+                            {coreHoursRejection && (
+                                <span
+                                    onClick={handleDismissRejection}
+                                    className="cursor-pointer text-[10px] font-bold text-red-600 bg-red-50 px-2.5 py-1 rounded-full flex items-center gap-1.5 uppercase tracking-wide border border-red-100 hover:bg-red-100 transition-colors"
+                                    title="Click to dismiss"
+                                >
+                                    <AlertTriangle size={10} /> Request Rejected
                                 </span>
                             )}
                             <button
                                 onClick={() => isEditingCoreHours ? handleSaveCoreHours() : setIsEditingCoreHours(true)}
-                                className="text-gray-400 hover:text-indigo-600 transition-colors"
-                                disabled={!!coreHoursPending && !isEditingCoreHours} // Disable edit if pending? User said "till then just show loading".
+                                className="text-gray-400 hover:text-indigo-600 transition-colors ml-1"
+                                disabled={!!coreHoursPending && !isEditingCoreHours}
                                 title={!!coreHoursPending ? "Waiting for approval" : "Edit Schedule"}
                             >
                                 {isEditingCoreHours ? <Save size={14} /> : <Pencil size={14} />}
@@ -579,18 +597,12 @@ const Dashboard = () => {
                                                 const dayLetter = format(date, 'EEEEE'); // M, T, W...
 
                                                 if (coreHoursPending) {
-                                                    // Pending State: Show Loading Circle check
-                                                    // Logic: If user requested this day, show "Loading" style? 
-                                                    // User said: "show a loading like circle in the core workin hours and days"
-                                                    // Pending data should be VISIBLE but with loading style.
-
-                                                    // Check if this day is in pending request
                                                     const dayNameShort = format(date, 'EEE');
                                                     const isRequested = coreHoursPending.working_days.includes(dayNameShort);
 
                                                     return (
-                                                        <span key={i} className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${isRequested ? 'bg-indigo-50 text-indigo-600 border border-indigo-200' : 'bg-gray-50 text-gray-300'}`}>
-                                                            {isRequested ? <Loader2 size={12} className="animate-spin" /> : dayLetter}
+                                                        <span key={i} className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold transition-all ${isRequested ? 'bg-orange-50 text-orange-600 border border-orange-200' : 'bg-gray-50 text-gray-300'}`}>
+                                                            {isRequested ? 'C' : dayLetter}
                                                         </span>
                                                     );
                                                 }
@@ -619,8 +631,8 @@ const Dashboard = () => {
                                                     const dayNameShort = format(date, 'EEE');
                                                     const isRequested = coreHoursPending.working_days.includes(dayNameShort);
                                                     return (
-                                                        <span key={i} className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${isRequested ? 'bg-indigo-50 text-indigo-600 border border-indigo-200' : 'bg-gray-50 text-gray-300'}`}>
-                                                            {isRequested ? <Loader2 size={12} className="animate-spin" /> : dayLetter}
+                                                        <span key={i} className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold transition-all ${isRequested ? 'bg-orange-50 text-orange-600 border border-orange-200' : 'bg-gray-50 text-gray-300'}`}>
+                                                            {isRequested ? 'C' : dayLetter}
                                                         </span>
                                                     );
                                                 }
@@ -649,7 +661,7 @@ const Dashboard = () => {
                                             (coreHoursPending || coreHours).working_slots.map((slot, i) => (
                                                 <div key={i} className="text-sm font-medium text-gray-900 flex items-center gap-2">
                                                     {slot.start} - {slot.end}
-                                                    {coreHoursPending && <Loader2 size={10} className="animate-spin text-orange-400" />}
+                                                    {coreHoursPending && <span className="text-[10px] font-bold text-orange-500 bg-orange-50 px-1.5 rounded-full">C</span>}
                                                 </div>
                                             ))
                                         ) : (
