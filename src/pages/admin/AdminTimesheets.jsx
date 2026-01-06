@@ -373,7 +373,7 @@ const AdminTimesheets = () => {
                                                                                     <ExpandableText
                                                                                         text={entry.description}
                                                                                         limit={100}
-                                                                                        className="text-lg text-gray-600"
+                                                                                        className="text-xs text-gray-600"
                                                                                     />
                                                                                 </div>
                                                                             )}
