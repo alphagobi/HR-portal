@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { getAllFrameworkAllocations } from '../../services/frameworkService';
 import { getAllUsers } from '../../services/authService';
-import { getUserSetting } from '../../services/userSettingsService';
+import { getAllUsers } from '../../services/authService';
+import { getUserSetting, saveUserSetting } from '../../services/userSettingsService';
 import { clsx } from 'clsx';
-import { LayoutTemplate, Clock } from 'lucide-react';
+import { LayoutTemplate, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
 const AdminFrameworks = () => {
     const [activeTab, setActiveTab] = useState('frameworks'); // 'frameworks' | 'core_hours'
@@ -38,10 +39,12 @@ const AdminFrameworks = () => {
             // Fetch core hours for each user - Optimization: Could be a bulk API, but parallel fetch is ok for small teams
             const dataPromises = users.map(async (user) => {
                 if (user.email === 'admin@company.com') return null; // Skip admin
-                const settings = await getUserSetting(user.id, 'core_hours');
+                const settings = await getUserSetting(user.id, 'core_working_hours'); // Use consistent key
+                const request = await getUserSetting(user.id, 'core_hours_request');
                 return {
                     user,
-                    settings
+                    settings,
+                    request
                 };
             });
             const results = await Promise.all(dataPromises);
@@ -50,6 +53,34 @@ const AdminFrameworks = () => {
             console.error("Failed to fetch core hours", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleApprove = async (user, requestData) => {
+        if (!window.confirm(`Approve core hours update for ${user.name}?`)) return;
+        try {
+            // 1. Move request to active
+            await saveUserSetting(user.id, 'core_working_hours', requestData); // Key matching Dashboard.jsx
+            // 2. Clear request
+            await saveUserSetting(user.id, 'core_hours_request', null);
+            // 3. Refresh
+            fetchCoreHours();
+        } catch (error) {
+            console.error("Failed to approve", error);
+            alert("Failed to approve request.");
+        }
+    };
+
+    const handleReject = async (user) => {
+        if (!window.confirm(`Reject core hours update for ${user.name}?`)) return;
+        try {
+            // 1. Clear request
+            await saveUserSetting(user.id, 'core_hours_request', null);
+            // 2. Refresh
+            fetchCoreHours();
+        } catch (error) {
+            console.error("Failed to reject", error);
+            alert("Failed to reject request.");
         }
     };
 
@@ -172,60 +203,95 @@ const AdminFrameworks = () => {
                     {activeTab === 'core_hours' && (
                         <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {coreHoursData.map(({ user, settings }) => (
-                                    <div key={user.id} className="border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div>
-                                                <h3 className="font-bold text-gray-900 text-lg">{user.name}</h3>
-                                                <p className="text-sm text-gray-500">{user.designation || user.department || 'Employee'}</p>
-                                            </div>
-                                        </div>
+                                {coreHoursData.map(({ user, settings, request }) => {
+                                    // Use request data if available (Pending Mode), else active settings
+                                    const displaySettings = request || settings;
+                                    const isPending = !!request;
 
-                                        {!settings ? (
-                                            <div className="bg-gray-50 rounded-lg p-4 text-center border border-dashed border-gray-200">
-                                                <p className="text-sm text-gray-400">No schedule set</p>
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-4">
-                                                {/* Days */}
+                                    return (
+                                        <div key={user.id} className={clsx("border rounded-lg p-5 hover:shadow-md transition-shadow relative",
+                                            isPending ? "border-orange-200 bg-orange-50/30" : "border-gray-200"
+                                        )}>
+                                            <div className="flex justify-between items-start mb-4">
                                                 <div>
-                                                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Working Days</h4>
-                                                    <div className="flex gap-1.5 flex-wrap">
-                                                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                                                            <div
-                                                                key={day}
-                                                                className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold ${settings.working_days.includes(day)
-                                                                    ? 'bg-green-100 text-green-700'
-                                                                    : 'bg-gray-100 text-gray-300'
-                                                                    }`}
-                                                            >
-                                                                {day.charAt(0)}
-                                                            </div>
-                                                        ))}
-                                                    </div>
+                                                    <h3 className="font-bold text-gray-900 text-lg">{user.name}</h3>
+                                                    <p className="text-sm text-gray-500">{user.designation || user.department || 'Employee'}</p>
                                                 </div>
+                                                {isPending && (
+                                                    <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-orange-600 bg-orange-100 px-2 py-1 rounded-full">
+                                                        <AlertCircle size={12} /> Pending Approval
+                                                    </span>
+                                                )}
+                                            </div>
 
-                                                {/* Slots */}
-                                                <div>
-                                                    <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Time Slots</h4>
-                                                    <div className="space-y-1.5">
-                                                        {settings.working_slots && settings.working_slots.length > 0 ? (
-                                                            settings.working_slots.map((slot, idx) => (
-                                                                <div key={idx} className="bg-gray-50 px-3 py-1.5 rounded text-sm text-gray-700 font-medium flex justify-between border border-gray-100">
-                                                                    <span>{slot.start}</span>
-                                                                    <span className="text-gray-400">-</span>
-                                                                    <span>{slot.end}</span>
+                                            {!displaySettings ? (
+                                                <div className="bg-gray-50 rounded-lg p-4 text-center border border-dashed border-gray-200">
+                                                    <p className="text-sm text-gray-400">No schedule set</p>
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-4">
+                                                    {/* Days */}
+                                                    <div>
+                                                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                                                            {isPending ? 'Requested Days' : 'Working Days'}
+                                                        </h4>
+                                                        <div className="flex gap-1.5 flex-wrap">
+                                                            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                                                                <div
+                                                                    key={day}
+                                                                    className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold ${displaySettings.working_days.includes(day)
+                                                                            ? (isPending ? 'bg-orange-100 text-orange-700 ring-1 ring-orange-200' : 'bg-green-100 text-green-700')
+                                                                            : 'bg-gray-100 text-gray-300'
+                                                                        }`}
+                                                                >
+                                                                    {day.charAt(0)}
                                                                 </div>
-                                                            ))
-                                                        ) : (
-                                                            <p className="text-xs text-gray-400 italic">No slots defined</p>
-                                                        )}
+                                                            ))}
+                                                        </div>
                                                     </div>
+
+                                                    {/* Slots */}
+                                                    <div>
+                                                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                                                            {isPending ? 'Requested Shifts' : 'Time Slots'}
+                                                        </h4>
+                                                        <div className="space-y-1.5">
+                                                            {displaySettings.working_slots && displaySettings.working_slots.length > 0 ? (
+                                                                displaySettings.working_slots.map((slot, idx) => (
+                                                                    <div key={idx} className="bg-gray-50 px-3 py-1.5 rounded text-sm text-gray-700 font-medium flex justify-between border border-gray-100">
+                                                                        <span>{slot.start}</span>
+                                                                        <span className="text-gray-400">-</span>
+                                                                        <span>{slot.end}</span>
+                                                                    </div>
+                                                                ))
+                                                            ) : (
+                                                                <p className="text-xs text-gray-400 italic">No slots defined</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Approval Actions */}
+                                                    {isPending && (
+                                                        <div className="pt-4 border-t border-orange-200 flex gap-2">
+                                                            <button
+                                                                onClick={() => handleApprove(user, request)}
+                                                                className="flex-1 bg-green-600 text-white py-1.5 rounded text-sm font-medium hover:bg-green-700 flex items-center justify-center gap-2"
+                                                            >
+                                                                <CheckCircle size={14} /> Approve
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleReject(user)}
+                                                                className="flex-1 bg-white border border-red-200 text-red-600 py-1.5 rounded text-sm font-medium hover:bg-red-50 flex items-center justify-center gap-2"
+                                                            >
+                                                                <XCircle size={14} /> Reject
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}

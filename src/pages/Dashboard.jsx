@@ -103,6 +103,7 @@ const Dashboard = () => {
     }, []);
 
     const [coreHours, setCoreHours] = useState({ working_days: [], working_slots: [] });
+    const [coreHoursPending, setCoreHoursPending] = useState(null);
     const [isEditingCoreHours, setIsEditingCoreHours] = useState(false);
     const [tempCoreHours, setTempCoreHours] = useState({ working_days: [], working_slots: [] });
 
@@ -114,6 +115,7 @@ const Dashboard = () => {
     }, [user?.id]);
 
     const fetchCoreHours = async () => {
+        if (!user?.id) return;
         const settings = await getUserSetting(user.id, 'core_working_hours');
         if (settings) {
             setCoreHours(settings);
@@ -127,12 +129,20 @@ const Dashboard = () => {
             setCoreHours(defaultSettings);
             setTempCoreHours(defaultSettings);
         }
+
+        // Fetch Pending Core Hours Request
+        const pendingRequest = await getUserSetting(user.id, 'core_hours_request');
+        setCoreHoursPending(pendingRequest);
     };
 
     const handleSaveCoreHours = async () => {
-        await saveUserSetting(user.id, 'core_working_hours', tempCoreHours);
-        setCoreHours(tempCoreHours);
+        // Save to pending request instead of direct update
+        await saveUserSetting(user.id, 'core_hours_request', tempCoreHours);
+
+        setCoreHoursPending(tempCoreHours); // Update local pending state
         setIsEditingCoreHours(false);
+
+        // alert("Schedule update requested. Waiting for admin approval."); 
     };
 
     const toggleDay = (day) => {
@@ -495,7 +505,7 @@ const Dashboard = () => {
         try {
             await saveFrameworkAllocations(user.id, tempAllocations);
             setAllocations(tempAllocations);
-            const total = tempAllocations.reduce((sum, item) => sum + parseInt(item.percentage || 0), 0);
+            const total = tempAllocations.reduce((sum, item) => sum + (parseInt(item.percentage) || 0), 0);
             setFrameworkTotal(total);
             setIsEditingFramework(false);
             console.log("Saved successfully");
@@ -542,8 +552,18 @@ const Dashboard = () => {
 
                     {/* 1. Core Working Hours */}
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 relative">
-                        <div className="absolute top-4 right-4">
-                            <button onClick={() => isEditingCoreHours ? handleSaveCoreHours() : setIsEditingCoreHours(true)} className="text-gray-400 hover:text-indigo-600 transition-colors">
+                        <div className="absolute top-4 right-4 flex gap-2">
+                            {coreHoursPending && (
+                                <span className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-full font-medium flex items-center gap-1">
+                                    <Loader2 size={12} className="animate-spin" /> Pending Approval
+                                </span>
+                            )}
+                            <button
+                                onClick={() => isEditingCoreHours ? handleSaveCoreHours() : setIsEditingCoreHours(true)}
+                                className="text-gray-400 hover:text-indigo-600 transition-colors"
+                                disabled={!!coreHoursPending && !isEditingCoreHours} // Disable edit if pending? User said "till then just show loading".
+                                title={!!coreHoursPending ? "Waiting for approval" : "Edit Schedule"}
+                            >
                                 {isEditingCoreHours ? <Save size={14} /> : <Pencil size={14} />}
                             </button>
                         </div>
@@ -556,8 +576,27 @@ const Dashboard = () => {
                                         {/* Row 1: M T W T */}
                                         <div className="flex gap-2">
                                             {weekDays.slice(0, 4).map((date, i) => {
-                                                const status = getDayStatus(date);
                                                 const dayLetter = format(date, 'EEEEE'); // M, T, W...
+
+                                                if (coreHoursPending) {
+                                                    // Pending State: Show Loading Circle check
+                                                    // Logic: If user requested this day, show "Loading" style? 
+                                                    // User said: "show a loading like circle in the core workin hours and days"
+                                                    // Pending data should be VISIBLE but with loading style.
+
+                                                    // Check if this day is in pending request
+                                                    const dayNameShort = format(date, 'EEE');
+                                                    const isRequested = coreHoursPending.working_days.includes(dayNameShort);
+
+                                                    return (
+                                                        <span key={i} className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${isRequested ? 'bg-indigo-50 text-indigo-600 border border-indigo-200' : 'bg-gray-50 text-gray-300'}`}>
+                                                            {isRequested ? <Loader2 size={12} className="animate-spin" /> : dayLetter}
+                                                        </span>
+                                                    );
+                                                }
+
+                                                // Normal State
+                                                const status = getDayStatus(date);
                                                 let bgClass = 'bg-gray-100 text-gray-400';
 
                                                 if (status === 'green') bgClass = 'bg-green-100 text-green-700';
@@ -571,11 +610,22 @@ const Dashboard = () => {
                                                 );
                                             })}
                                         </div>
-                                        {/* Row 2: F S S (Centered or Left Aligned?) - Left aligned to match top row visually */}
+                                        {/* Row 2: F S S */}
                                         <div className="flex gap-2">
                                             {weekDays.slice(4, 7).map((date, i) => {
-                                                const status = getDayStatus(date);
                                                 const dayLetter = format(date, 'EEEEE');
+
+                                                if (coreHoursPending) {
+                                                    const dayNameShort = format(date, 'EEE');
+                                                    const isRequested = coreHoursPending.working_days.includes(dayNameShort);
+                                                    return (
+                                                        <span key={i} className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${isRequested ? 'bg-indigo-50 text-indigo-600 border border-indigo-200' : 'bg-gray-50 text-gray-300'}`}>
+                                                            {isRequested ? <Loader2 size={12} className="animate-spin" /> : dayLetter}
+                                                        </span>
+                                                    );
+                                                }
+
+                                                const status = getDayStatus(date);
                                                 let bgClass = 'bg-gray-100 text-gray-400';
 
                                                 if (status === 'green') bgClass = 'bg-green-100 text-green-700';
@@ -594,22 +644,17 @@ const Dashboard = () => {
                                 <div>
                                     <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Core Working Hours</h3>
                                     <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                                        {/* Column 1: First 3 slots (or half) */}
-                                        <div className="space-y-1">
-                                            {coreHours.working_slots.slice(0, Math.ceil(coreHours.working_slots.length / 2)).map((slot, i) => (
-                                                <div key={i} className="text-sm font-medium text-gray-900">
+                                        {/* Display logic for Pending vs Active */}
+                                        {(coreHoursPending || coreHours).working_slots.length > 0 ? (
+                                            (coreHoursPending || coreHours).working_slots.map((slot, i) => (
+                                                <div key={i} className="text-sm font-medium text-gray-900 flex items-center gap-2">
                                                     {slot.start} - {slot.end}
+                                                    {coreHoursPending && <Loader2 size={10} className="animate-spin text-orange-400" />}
                                                 </div>
-                                            ))}
-                                        </div>
-                                        {/* Column 2: Remaining slots */}
-                                        <div className="space-y-1">
-                                            {coreHours.working_slots.slice(Math.ceil(coreHours.working_slots.length / 2)).map((slot, i) => (
-                                                <div key={i} className="text-sm font-medium text-gray-900">
-                                                    {slot.start} - {slot.end}
-                                                </div>
-                                            ))}
-                                        </div>
+                                            ))
+                                        ) : (
+                                            <span className="text-sm text-gray-400 italic">No slots set</span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
