@@ -4,7 +4,7 @@ import { getTasks, updateTask, createTask } from '../services/taskService';
 import { saveTimesheet, getTimesheets } from '../services/timesheetService';
 import { getFrameworkAllocations } from '../services/frameworkService';
 import { getCurrentUser } from '../services/authService';
-import { Clock, CheckCircle, ChevronDown, ChevronUp, Calendar, Plus, Pencil, X, Save, GripVertical, Trash2, Loader2, AlertTriangle } from 'lucide-react';
+import { Clock, CheckCircle, ChevronDown, ChevronUp, Calendar, Plus, Pencil, X, Save, GripVertical, Trash2, AlertTriangle } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -565,7 +565,7 @@ const Dashboard = () => {
                         <div className="flex justify-end gap-2 items-center mb-1 h-6">
                             {coreHoursPending && (
                                 <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-full flex items-center gap-1.5 uppercase tracking-wide border border-orange-100">
-                                    <Loader2 size={10} className="animate-spin" /> Pending Approval
+                                    <Clock size={10} /> Pending Approval
                                 </span>
                             )}
                             {coreHoursRejection && (
