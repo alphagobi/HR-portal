@@ -567,39 +567,6 @@ const Dashboard = () => {
                         )}
                     </div>
 
-                    {/* Upcoming Leaves */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 h-[260px] flex flex-col">
-                        <h2 className="text-xs font-bold text-gray-900 mb-3 flex items-center gap-2">
-                            <Calendar size={14} className="text-purple-600" />
-                            Upcoming Leaves
-                        </h2>
-
-                        <div className="flex-1 overflow-y-auto no-scrollbar space-y-2">
-                            {upcomingLeaves.length === 0 ? (
-                                <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                                    <p className="text-[10px] italic">No upcoming leaves</p>
-                                </div>
-                            ) : (
-                                upcomingLeaves.map((leave, i) => (
-                                    <div key={i} className="bg-purple-50 p-2 rounded-lg border border-purple-100">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <p className="text-[10px] font-bold text-purple-900">{leave.type}</p>
-                                                <p className="text-[10px] text-purple-700 mt-0.5">
-                                                    {new Date(leave.start_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                                                    {leave.start_date !== leave.end_date && ` - ${new Date(leave.end_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`}
-                                                </p>
-                                            </div>
-                                            <span className="text-[9px] bg-white text-purple-600 px-1.5 py-0.5 rounded border border-purple-100 font-bold">
-                                                {Math.ceil((new Date(leave.end_date) - new Date(leave.start_date)) / (1000 * 60 * 60 * 24)) + 1}d
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
-
                     {/* 2. Framework (Moved Up) */}
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col h-[260px]">
                         <div className="flex justify-between items-center mb-4 border-b border-gray-50 pb-2">
