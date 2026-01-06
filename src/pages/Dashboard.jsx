@@ -487,30 +487,29 @@ const Dashboard = () => {
                 <div className="lg:col-span-5 flex flex-col space-y-6">
 
                     {/* 1. Core Working Hours */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                        <div className="flex justify-between items-center mb-3">
-                            <h2 className="text-xs font-bold text-gray-900">Core Hours</h2>
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 relative">
+                        <div className="absolute top-4 right-4">
                             <button onClick={() => isEditingCoreHours ? handleSaveCoreHours() : setIsEditingCoreHours(true)} className="text-gray-400 hover:text-indigo-600 transition-colors">
-                                {isEditingCoreHours ? <Save size={12} /> : <Pencil size={11} />}
+                                {isEditingCoreHours ? <Save size={14} /> : <Pencil size={14} />}
                             </button>
                         </div>
 
                         {!isEditingCoreHours ? (
-                            <div className="border border-gray-200 rounded-lg overflow-hidden">
-                                <div className="grid grid-cols-2 border-b border-gray-200 bg-gray-50/50">
-                                    <div className="p-2 text-[10px] font-bold text-gray-900 border-r border-gray-200">Core Hours</div>
-                                    <div className="p-2 text-[10px] font-bold text-gray-900">Hours</div>
-                                </div>
-                                <div className="grid grid-cols-2">
-                                    <div className="p-2 text-[10px] font-medium text-gray-600 border-r border-gray-200 flex items-center">
+                            <div className="grid grid-cols-2 gap-8">
+                                <div>
+                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Core Working Days</h3>
+                                    <div className="text-sm font-bold text-gray-900">
                                         {['M', 'T', 'W', 'T', 'F', 'S', 'S'].filter((_, i) =>
                                             coreHours.working_days.includes(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i])
                                         ).join(' ')}
                                     </div>
-                                    <div className="p-2 text-[10px] text-gray-600 flex flex-col gap-0.5 justify-center">
+                                </div>
+                                <div>
+                                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Core Working Hours</h3>
+                                    <div className="space-y-1">
                                         {coreHours.working_slots.map((slot, i) => (
-                                            <div key={i}>
-                                                {slot.start} {slot.end}
+                                            <div key={i} className="text-sm font-medium text-gray-900">
+                                                {slot.start} - {slot.end}
                                             </div>
                                         ))}
                                     </div>
