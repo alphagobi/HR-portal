@@ -233,10 +233,10 @@ const Dashboard = () => {
         const dayName = format(date, 'EEE'); // Mon, Tue...
 
         // 1. Check for Leave (Highest Priority for Red)
+        // 1. Check for Leave (Highest Priority for Red)
         const isLeave = upcomingLeaves.some(leave => {
-            const start = new Date(leave.start_date);
-            const end = new Date(leave.end_date);
-            return date >= start && date <= end;
+            // Robust String Comparison (YYYY-MM-DD)
+            return dateStr >= leave.start_date && dateStr <= leave.end_date;
         });
         if (isLeave) return 'red';
 
