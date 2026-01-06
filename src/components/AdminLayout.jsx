@@ -45,6 +45,7 @@ const AdminLayout = () => {
 
     const navItems = [
         { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
+        { path: '/', icon: LayoutDashboard, label: 'Go to Employee Portal' },
         { path: '/admin/clients', icon: Users, label: 'Clients' },
         { path: '/admin/users', icon: Users, label: 'Employees' },
         { path: '/admin/timesheets', icon: Clock, label: 'Timesheets' },
@@ -52,7 +53,6 @@ const AdminLayout = () => {
         { path: '/admin/leaves', icon: CheckSquare, label: 'Leave Approvals', badge: unreadLeaves },
         { path: '/admin/calendar', icon: Calendar, label: 'Calendar' },
         { path: '/admin/reimbursements', icon: IndianRupee, label: 'Reimbursements' },
-        { path: '/', icon: LayoutDashboard, label: 'Employee Portal' },
         { path: '/admin/invoices', icon: FileText, label: 'Invoices' },
         { path: '/admin/announcements', icon: Megaphone, label: 'Announcements' },
         { path: '/admin/policies', icon: FileText, label: 'Policies' },

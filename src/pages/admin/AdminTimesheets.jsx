@@ -369,8 +369,12 @@ const AdminTimesheets = () => {
                                                                             </span>
                                                                             {/* Show remarks if they exist and are different from Title */}
                                                                             {entry.description && task && entry.description !== task.task_content && (
-                                                                                <div className="text-gray-600 text-base mt-1">
-                                                                                    <ExpandableText text={entry.description} limit={100} />
+                                                                                <div className="mt-1">
+                                                                                    <ExpandableText
+                                                                                        text={entry.description}
+                                                                                        limit={100}
+                                                                                        className="text-lg text-gray-600"
+                                                                                    />
                                                                                 </div>
                                                                             )}
                                                                         </div>
@@ -423,7 +427,7 @@ const AdminTimesheets = () => {
                                                 <input
                                                     key={day.timesheet?.id + '-' + (day.timesheet?.admin_remarks || day.timesheet?.adminRemarks || '')}
                                                     type="text"
-                                                    className="w-full text-base border-b border-transparent focus:border-indigo-500 focus:ring-0 bg-transparent outline-none transition-colors placeholder-gray-300"
+                                                    className="w-full text-lg border-b border-transparent focus:border-indigo-500 focus:ring-0 bg-transparent outline-none transition-colors placeholder-gray-300"
                                                     placeholder="Add comment..."
                                                     defaultValue={day.timesheet?.admin_remarks || day.timesheet?.adminRemarks || ''}
                                                     onBlur={(e) => handleSaveRemark(day, e.target.value)}

@@ -60,7 +60,7 @@ const Layout = () => {
     ];
 
     if (user?.role === 'admin') {
-        navItems.push({ name: 'Admin Panel', path: '/admin', icon: LayoutDashboard });
+        navItems.splice(1, 0, { name: 'Go to Admin Portal', path: '/admin', icon: LayoutDashboard });
     }
 
     const handleLogout = () => {
