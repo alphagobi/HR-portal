@@ -795,7 +795,8 @@ const Dashboard = () => {
                                 loggedEntries.map((entry, index) => {
                                     const task = allTasksList.find(t => t.id == (entry.taskId || entry.task_id)) || allTasksList.find(t => t.task_content === entry.description);
                                     // Use actual completion status so Green shows for completed tasks
-                                    const color = getTaskStatusColor(task?.planned_date, task?.is_completed);
+                                    // "today" is the completion date for entries in this widget
+                                    const color = getTaskStatusColor(task?.planned_date, task?.is_completed, today);
 
                                     // ETA vs Actual Calculation
                                     let timeDiffElement = null;
@@ -971,8 +972,8 @@ const Dashboard = () => {
                                                 onClick={() => !isTodayLeave && toggleTaskExpand(task)}
                                             >
                                                 <div className="col-span-6 flex items-center gap-3 overflow-hidden">
-                                                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getTaskStatusColor(task.planned_date).dot}`}></div>
-                                                    <span className={`truncate text-sm font-bold ${getTaskStatusColor(task.planned_date).text}`}>
+                                                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getTaskStatusColor(task.planned_date, task.is_completed, task.completed_date).dot}`}></div>
+                                                    <span className={`truncate text-sm font-bold ${getTaskStatusColor(task.planned_date, task.is_completed, task.completed_date).text}`}>
                                                         {task.task_content}
                                                     </span>
                                                 </div>

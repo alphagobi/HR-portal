@@ -336,7 +336,7 @@ const AdminTimesheets = () => {
                                                 <div className="space-y-2">
                                                     {day.timesheet.entries.filter(e => e.is_deleted != 1).map(entry => {
                                                         const task = tasks.find(t => t.id == (entry.taskId || entry.task_id));
-                                                        const color = getTaskStatusColor(task?.planned_date, task?.is_completed);
+                                                        const color = getTaskStatusColor(task?.planned_date, task?.is_completed, day.date);
 
                                                         let timeDiffElement = null;
                                                         if (task && task.eta) {

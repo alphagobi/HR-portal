@@ -301,7 +301,7 @@ const Tasks = () => {
 
                                     <div className="space-y-2 pl-6 border-l-2 border-gray-100">
                                         {daysTasks.map(task => {
-                                            const status = getTaskStatusColor(task.planned_date, task.is_completed);
+                                            const status = getTaskStatusColor(task.planned_date, task.is_completed, task.completed_date);
 
                                             return (
                                                 <div key={task.id} className="flex items-center justify-between text-sm group">

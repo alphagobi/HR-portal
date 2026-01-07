@@ -360,7 +360,7 @@ const Timesheet = () => {
                                 <div className="space-y-2 pl-6 border-l-2 border-gray-100">
                                     {sheet.entries.filter(e => e.is_deleted != 1).map(entry => {
                                         const task = tasks.find(t => t.id == (entry.taskId || entry.task_id)) || tasks.find(t => t.task_content === entry.description);
-                                        const color = getTaskStatusColor(task?.planned_date, task?.is_completed);
+                                        const color = getTaskStatusColor(task?.planned_date, task?.is_completed, sheet.date);
 
                                         return (
                                             <div key={entry.id} className="flex flex-col gap-1 text-sm mb-3">
