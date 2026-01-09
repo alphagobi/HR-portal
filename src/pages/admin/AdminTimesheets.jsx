@@ -427,20 +427,38 @@ const AdminTimesheets = () => {
                                                             </span>
                                                             {(() => {
                                                                 if (!t.is_completed) return null;
-                                                                // Find actual timesheet entry for this task
-                                                                const entry = day.timesheet?.entries?.find(e => (e.taskId || e.task_id) == t.id && e.is_deleted != 1);
+
+                                                                // Find ALL actual timesheet entries for this task across all loaded days
+                                                                // We need to look at the whole 'timesheets' array which contains all days
+                                                                let taskEntries = [];
+                                                                if (Array.isArray(timesheets)) {
+                                                                    timesheets.forEach(tsDay => {
+                                                                        if (tsDay.entries) {
+                                                                            const matching = tsDay.entries.filter(e => (e.taskId || e.task_id) == t.id && e.is_deleted != 1);
+                                                                            if (matching.length > 0) {
+                                                                                // attach date to entry for calculation
+                                                                                matching.forEach(m => taskEntries.push({ ...m, date: tsDay.date }));
+                                                                            }
+                                                                        }
+                                                                    });
+                                                                }
 
                                                                 // If no entry found, we can't calculate stats
-                                                                if (!entry) return null;
+                                                                if (taskEntries.length === 0) return null;
+
+                                                                // Use the latest entry date for date difference
+                                                                const lastEntry = taskEntries.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+                                                                // Sum duration
+                                                                const totalDuration = taskEntries.reduce((sum, e) => sum + parseFloat(e.duration || 0), 0);
 
                                                                 let diffDaysElement = null;
                                                                 let diffMinsElement = null;
 
-                                                                // Date Diff
+                                                                // Date Diff (Latest Work Date vs Planned Date)
                                                                 if (t.planned_date) {
                                                                     const plannedDate = new Date(t.planned_date);
                                                                     plannedDate.setHours(0, 0, 0, 0);
-                                                                    const actualDate = new Date(day.date);
+                                                                    const actualDate = new Date(lastEntry.date);
                                                                     actualDate.setHours(0, 0, 0, 0);
                                                                     const diffTime = actualDate - plannedDate;
                                                                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -449,10 +467,10 @@ const AdminTimesheets = () => {
                                                                     else if (diffDays < 0) diffDaysElement = <span className="text-xs font-bold text-green-600 ml-1">({diffDays}d)</span>;
                                                                 }
 
-                                                                // Time Diff
+                                                                // Time Diff (Total Actual Duration vs ETA)
                                                                 if (t.eta) {
                                                                     const etaMins = parseInt(t.eta);
-                                                                    const actualMins = parseFloat(entry.duration) * 60;
+                                                                    const actualMins = totalDuration * 60;
                                                                     const diff = Math.round(actualMins - etaMins);
 
                                                                     if (diff < 0) diffMinsElement = <span className="text-xs font-bold text-green-600 ml-1">({diff}m)</span>;
