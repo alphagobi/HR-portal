@@ -454,6 +454,26 @@ const AdminTimesheets = () => {
                                                             }
                                                         }
 
+                                                        // Calculate Date Difference (Days)
+                                                        let dateDiffElement = null;
+                                                        if (task && task.planned_date) {
+                                                            const plannedDate = new Date(task.planned_date);
+                                                            plannedDate.setHours(0, 0, 0, 0);
+                                                            const actualDate = new Date(day.date);
+                                                            actualDate.setHours(0, 0, 0, 0);
+
+                                                            // Difference in milliseconds
+                                                            const diffTime = actualDate - plannedDate;
+                                                            // Difference in days
+                                                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                                                            if (diffDays > 0) {
+                                                                dateDiffElement = <span className="text-xs font-bold text-red-600 bg-red-50 px-1 py-0.5 rounded ml-1">+{diffDays}d</span>;
+                                                            } else if (diffDays < 0) {
+                                                                dateDiffElement = <span className="text-xs font-bold text-green-600 bg-green-50 px-1 py-0.5 rounded ml-1">{diffDays}d</span>;
+                                                            }
+                                                        }
+
                                                         return (
                                                             <div key={entry.id} className="text-sm mb-3">
                                                                 <div className="flex items-start justify-between">
@@ -479,7 +499,7 @@ const AdminTimesheets = () => {
                                                                     </div>
                                                                     <div className="text-xs text-gray-400 whitespace-nowrap ml-2 flex flex-col items-end">
                                                                         <span>{entry.startTime} - {entry.endTime}</span>
-                                                                        <span className="font-medium text-gray-700">({entry.duration}h{timeDiffElement})</span>
+                                                                        <span className="font-medium text-gray-700">({entry.duration}h{timeDiffElement}{dateDiffElement})</span>
                                                                     </div>
                                                                 </div>
                                                             </div>
