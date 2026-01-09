@@ -425,6 +425,11 @@ const AdminTimesheets = () => {
                                                             )}>
                                                                 {t.is_completed ? 'Done' : 'Pending'}
                                                             </span>
+                                                            {!t.is_completed && t.eta && (
+                                                                <span className="text-xs text-gray-400 ml-2">
+                                                                    ETA: {t.eta}m
+                                                                </span>
+                                                            )}
                                                             {(() => {
                                                                 if (!t.is_completed) return null;
 
@@ -482,9 +487,22 @@ const AdminTimesheets = () => {
                                                         </li>
                                                     ))}
                                                 </ul>
-                                            ) : (
-                                                <span className="text-gray-400 text-xs italic">No plan set</span>
-                                            )}
+
+                                        {/* Total Planned Hours */}
+                                            {(() => {
+                                                const totalPlannedMins = day.tasks.reduce((sum, t) => sum + (parseInt(t.eta) || 0), 0);
+                                                if (totalPlannedMins > 0) {
+                                                    const totalPlannedHrs = (totalPlannedMins / 60).toFixed(2);
+                                                    return (
+                                                        <div className="pt-2 mt-2 border-t border-gray-100">
+                                                            <span className="text-xs font-bold text-indigo-600">
+                                                                Total: {totalPlannedHrs.replace(/[.,]00$/, "")} hrs
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                }
+                                                return null;
+                                            })()}
                                         </td>
 
                                         {/* Actual Column */}
@@ -553,7 +571,11 @@ const AdminTimesheets = () => {
                                                                     </div>
                                                                     <div className="text-xs text-gray-400 whitespace-nowrap ml-2 flex flex-col items-end">
                                                                         <span>{entry.startTime} - {entry.endTime}</span>
-                                                                        <span className="font-medium text-gray-700">({entry.duration}h{timeDiffElement}{dateDiffElement})</span>
+                                                                        <span className="font-medium text-gray-700 flex items-center">
+                                                                            {dateDiffElement}
+                                                                            {timeDiffElement}
+                                                                            <span className="ml-1">({entry.duration}h)</span>
+                                                                        </span>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -625,7 +647,7 @@ const AdminTimesheets = () => {
                     </table>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 
