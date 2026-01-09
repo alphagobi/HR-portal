@@ -416,93 +416,98 @@ const AdminTimesheets = () => {
                                         {/* Plan Column */}
                                         <td className="py-3 px-4 border-r border-gray-100 align-top">
                                             {day.tasks && day.tasks.length > 0 ? (
-                                                <ul className="list-disc list-inside space-y-1">
-                                                    {day.tasks.map(t => (
-                                                        <li key={t.id} className="text-sm text-gray-600">
-                                                            {t.task_content}
-                                                            <span className={clsx("ml-2 text-xs px-1.5 py-0.5 rounded",
-                                                                t.is_completed ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                                                            )}>
-                                                                {t.is_completed ? 'Done' : 'Pending'}
-                                                            </span>
-                                                            {!t.is_completed && t.eta && (
-                                                                <span className="text-xs text-gray-400 ml-2">
-                                                                    ETA: {t.eta}m
+                                                <>
+                                                    <ul className="list-disc list-inside space-y-1">
+                                                        {day.tasks.map(t => (
+                                                            <li key={t.id} className="text-sm text-gray-600">
+                                                                {t.task_content}
+                                                                <span className={clsx("ml-2 text-xs px-1.5 py-0.5 rounded",
+                                                                    t.is_completed ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                                                                )}>
+                                                                    {t.is_completed ? 'Done' : 'Pending'}
                                                                 </span>
-                                                            )}
-                                                            {(() => {
-                                                                if (!t.is_completed) return null;
+                                                                {!t.is_completed && t.eta && (
+                                                                    <span className="text-xs text-gray-400 ml-2">
+                                                                        ETA: {t.eta}m
+                                                                    </span>
+                                                                )}
+                                                                {(() => {
+                                                                    if (!t.is_completed) return null;
 
-                                                                // Find ALL actual timesheet entries for this task across all loaded days
-                                                                // We need to look at the whole 'timesheets' array which contains all days
-                                                                let taskEntries = [];
-                                                                if (Array.isArray(timesheets)) {
-                                                                    timesheets.forEach(tsDay => {
-                                                                        if (tsDay.entries) {
-                                                                            const matching = tsDay.entries.filter(e => (e.taskId || e.task_id) == t.id && e.is_deleted != 1);
-                                                                            if (matching.length > 0) {
-                                                                                // attach date to entry for calculation
-                                                                                matching.forEach(m => taskEntries.push({ ...m, date: tsDay.date }));
+                                                                    // Find ALL actual timesheet entries for this task across all loaded days
+                                                                    // We need to look at the whole 'timesheets' array which contains all days
+                                                                    let taskEntries = [];
+                                                                    if (Array.isArray(timesheets)) {
+                                                                        timesheets.forEach(tsDay => {
+                                                                            if (tsDay.entries) {
+                                                                                const matching = tsDay.entries.filter(e => (e.taskId || e.task_id) == t.id && e.is_deleted != 1);
+                                                                                if (matching.length > 0) {
+                                                                                    // attach date to entry for calculation
+                                                                                    matching.forEach(m => taskEntries.push({ ...m, date: tsDay.date }));
+                                                                                }
                                                                             }
-                                                                        }
-                                                                    });
-                                                                }
+                                                                        });
+                                                                    }
 
-                                                                // If no entry found, we can't calculate stats
-                                                                if (taskEntries.length === 0) return null;
+                                                                    // If no entry found, we can't calculate stats
+                                                                    if (taskEntries.length === 0) return null;
 
-                                                                // Use the latest entry date for date difference
-                                                                const lastEntry = taskEntries.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-                                                                // Sum duration
-                                                                const totalDuration = taskEntries.reduce((sum, e) => sum + parseFloat(e.duration || 0), 0);
+                                                                    // Use the latest entry date for date difference
+                                                                    const lastEntry = taskEntries.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+                                                                    // Sum duration
+                                                                    const totalDuration = taskEntries.reduce((sum, e) => sum + parseFloat(e.duration || 0), 0);
 
-                                                                let diffDaysElement = null;
-                                                                let diffMinsElement = null;
+                                                                    let diffDaysElement = null;
+                                                                    let diffMinsElement = null;
 
-                                                                // Date Diff (Latest Work Date vs Planned Date)
-                                                                if (t.planned_date) {
-                                                                    const plannedDate = new Date(t.planned_date);
-                                                                    plannedDate.setHours(0, 0, 0, 0);
-                                                                    const actualDate = new Date(lastEntry.date);
-                                                                    actualDate.setHours(0, 0, 0, 0);
-                                                                    const diffTime = actualDate - plannedDate;
-                                                                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                                                    // Date Diff (Latest Work Date vs Planned Date)
+                                                                    if (t.planned_date) {
+                                                                        const plannedDate = new Date(t.planned_date);
+                                                                        plannedDate.setHours(0, 0, 0, 0);
+                                                                        const actualDate = new Date(lastEntry.date);
+                                                                        actualDate.setHours(0, 0, 0, 0);
+                                                                        const diffTime = actualDate - plannedDate;
+                                                                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-                                                                    if (diffDays > 0) diffDaysElement = <span className="text-xs font-bold text-red-600 ml-1">(+{diffDays}d)</span>;
-                                                                    else if (diffDays < 0) diffDaysElement = <span className="text-xs font-bold text-green-600 ml-1">({diffDays}d)</span>;
-                                                                }
+                                                                        if (diffDays > 0) diffDaysElement = <span className="text-xs font-bold text-red-600 ml-1">(+{diffDays}d)</span>;
+                                                                        else if (diffDays < 0) diffDaysElement = <span className="text-xs font-bold text-green-600 ml-1">({diffDays}d)</span>;
+                                                                    }
 
-                                                                // Time Diff (Total Actual Duration vs ETA)
-                                                                if (t.eta) {
-                                                                    const etaMins = parseInt(t.eta);
-                                                                    const actualMins = totalDuration * 60;
-                                                                    const diff = Math.round(actualMins - etaMins);
+                                                                    // Time Diff (Total Actual Duration vs ETA)
+                                                                    if (t.eta) {
+                                                                        const etaMins = parseInt(t.eta);
+                                                                        const actualMins = totalDuration * 60;
+                                                                        const diff = Math.round(actualMins - etaMins);
 
-                                                                    if (diff < 0) diffMinsElement = <span className="text-xs font-bold text-green-600 ml-1">({diff}m)</span>;
-                                                                    else if (diff > 0) diffMinsElement = <span className="text-xs font-bold text-red-600 ml-1">(+{diff}m)</span>;
-                                                                }
+                                                                        if (diff < 0) diffMinsElement = <span className="text-xs font-bold text-green-600 ml-1">({diff}m)</span>;
+                                                                        else if (diff > 0) diffMinsElement = <span className="text-xs font-bold text-red-600 ml-1">(+{diff}m)</span>;
+                                                                    }
 
-                                                                return <>{diffDaysElement}{diffMinsElement}</>;
-                                                            })()}
-                                                        </li>
-                                                    ))}
-                                                </ul>
+                                                                    return <>{diffDaysElement}{diffMinsElement}</>;
+                                                                })()}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
 
-                                        {/* Total Planned Hours */}
-                                            {(() => {
-                                                const totalPlannedMins = day.tasks.reduce((sum, t) => sum + (parseInt(t.eta) || 0), 0);
-                                                if (totalPlannedMins > 0) {
-                                                    const totalPlannedHrs = (totalPlannedMins / 60).toFixed(2);
-                                                    return (
-                                                        <div className="pt-2 mt-2 border-t border-gray-100">
-                                                            <span className="text-xs font-bold text-indigo-600">
-                                                                Total: {totalPlannedHrs.replace(/[.,]00$/, "")} hrs
-                                                            </span>
-                                                        </div>
-                                                    );
-                                                }
-                                                return null;
-                                            })()}
+                                                    {/* Total Planned Hours */}
+                                                    {(() => {
+                                                        const totalPlannedMins = day.tasks.reduce((sum, t) => sum + (parseInt(t.eta) || 0), 0);
+                                                        if (totalPlannedMins > 0) {
+                                                            const totalPlannedHrs = (totalPlannedMins / 60).toFixed(2);
+                                                            return (
+                                                                <div className="pt-2 mt-2 border-t border-gray-100">
+                                                                    <span className="text-xs font-bold text-indigo-600">
+                                                                        Total: {totalPlannedHrs.replace(/[.,]00$/, "")} hrs
+                                                                    </span>
+                                                                </div>
+                                                            );
+                                                        }
+                                                        return null;
+                                                    })()}
+                                                </>
+                                            ) : (
+                                                <span className="text-gray-400 text-xs italic">No plan set</span>
+                                            )}
                                         </td>
 
                                         {/* Actual Column */}
