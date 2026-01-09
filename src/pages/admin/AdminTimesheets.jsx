@@ -34,13 +34,29 @@ const AdminTimesheets = () => {
         }
     }, [selectedEmployee, currentMonth, timesheets, tasks, events, leaves]);
 
-    // Scroll to yesterday mechanism using callback ref
+    // Scroll to yesterday mechanism
     const setYesterdayRef = React.useCallback(node => {
         if (node) {
-            // Scroll immediately when node renders (CSS scroll-margin-top handles offset)
-            node.scrollIntoView({ behavior: 'auto', block: 'start' });
+            // Delay slightly to ensure layout is stable
+            setTimeout(() => {
+                const mainContainer = document.querySelector('main');
+                if (mainContainer) {
+                    // Calculate position: Element Top - Container Top + Current Scroll - Header Offset
+                    const headerHeight = 60; // Safe buffer for 45px header
+                    const elementTop = node.getBoundingClientRect().top;
+                    const containerTop = mainContainer.getBoundingClientRect().top;
+                    const scrollTop = mainContainer.scrollTop;
+
+                    const targetScroll = elementTop - containerTop + scrollTop - headerHeight;
+
+                    mainContainer.scrollTo({
+                        top: targetScroll,
+                        behavior: 'auto' // Instant jump as requested
+                    });
+                }
+            }, 50);
         }
-    }, [currentMonth]); // Re-run if month changes (re-renders rows)
+    }, [currentMonth]);
 
     const fetchAllData = async () => {
         setLoading(true);
