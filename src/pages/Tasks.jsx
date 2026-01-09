@@ -307,9 +307,9 @@ const Tasks = () => {
                                             return (
                                                 <div key={task.id} className="flex items-center justify-between text-sm group">
                                                     <div className="flex items-center gap-3">
-                                                        <div className={`w - 2 h - 2 rounded - full ${status.dot} `}></div>
+                                                        <div className={`w-2 h-2 rounded-full ${status.dot}`}></div>
                                                         <TaskTooltip task={task}>
-                                                            <span className={clsx(`font - medium transition - colors block ${status.text} `)}>
+                                                            <span className={clsx(`font-medium transition-colors ${status.text}`)}>
                                                                 {task.task_content}
                                                             </span>
                                                         </TaskTooltip>

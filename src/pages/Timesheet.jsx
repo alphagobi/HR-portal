@@ -369,7 +369,7 @@ const Timesheet = () => {
                                                     <div className="flex items-center gap-3">
                                                         <div className={`w-2 h-2 rounded-full ${color.dot}`}></div>
                                                         <TaskTooltip task={task || { task_content: entry.description, is_completed: true, planned_date: sheet.date, created_at: sheet.date }}>
-                                                            <span className={clsx(`font-medium block truncate ${color.text}`)}>
+                                                            <span className={clsx(`font-medium ${color.text}`)}>
                                                                 {task?.task_content || entry.description}
                                                             </span>
                                                         </TaskTooltip>

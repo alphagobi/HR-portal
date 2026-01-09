@@ -831,7 +831,7 @@ const Dashboard = () => {
                                                     <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors mt-1.5 ${color.dot}`}></div>
                                                     <div className="flex flex-col min-w-0 flex-1">
                                                         <TaskTooltip task={task || { task_content: entry.description, is_completed: true, created_at: today, planned_date: today }}>
-                                                            <span className={`font-medium transition-colors whitespace-pre-wrap block truncate ${color.text}`}>
+                                                            <span className={`font-medium transition-colors ${color.text}`}>
                                                                 {task?.task_content || entry.description}
                                                             </span>
                                                         </TaskTooltip>
