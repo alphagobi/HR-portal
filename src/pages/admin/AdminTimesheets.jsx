@@ -37,27 +37,30 @@ const AdminTimesheets = () => {
     // Scroll to yesterday when data is ready
     useEffect(() => {
         if (spreadsheetData.length > 0) {
+            const hasYesterday = spreadsheetData.some(d => d.isYesterday);
+            if (!hasYesterday) return;
+
             const timer = setTimeout(() => {
                 const element = document.getElementById('yesterday-row');
-                if (element) {
-                    const mainContainer = document.querySelector('main');
-                    if (mainContainer) {
-                        const containerRect = mainContainer.getBoundingClientRect();
-                        const elementRect = element.getBoundingClientRect();
-                        const headerHeight = 45; // Height of the sticky thead
+                const mainContainer = document.querySelector('main');
 
-                        const scrollPos = (elementRect.top - containerRect.top) + mainContainer.scrollTop - headerHeight;
+                if (element && mainContainer) {
+                    // Precise calculation relative to the scrollable container
+                    const containerRect = mainContainer.getBoundingClientRect();
+                    const elementRect = element.getBoundingClientRect();
+                    const headerHeight = 45; // Height of the sticky thead
 
-                        mainContainer.scrollTo({
-                            top: scrollPos,
-                            behavior: 'auto'
-                        });
-                    }
+                    const scrollPos = (elementRect.top - containerRect.top) + mainContainer.scrollTop - headerHeight;
+
+                    mainContainer.scrollTo({
+                        top: scrollPos,
+                        behavior: 'auto'
+                    });
                 }
-            }, 100);
+            }, 300); // Slightly longer delay to ensure layout is settled
             return () => clearTimeout(timer);
         }
-    }, [spreadsheetData]);
+    }, [spreadsheetData, currentMonth]); // Re-run when month changes too
 
     const fetchAllData = async () => {
         setLoading(true);
@@ -145,7 +148,9 @@ const AdminTimesheets = () => {
         today.setHours(0, 0, 0, 0);
         const yesterday = new Date(today);
         yesterday.setDate(today.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+        // Use local date parts to avoid UTC mismatch
+        const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
 
         // Loop forwards as before (Ascending)
         for (let day = 1; day <= daysInMonth; day++) {
