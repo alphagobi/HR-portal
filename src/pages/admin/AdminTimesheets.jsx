@@ -40,14 +40,19 @@ const AdminTimesheets = () => {
             const timer = setTimeout(() => {
                 const element = document.getElementById('yesterday-row');
                 if (element) {
-                    const headerOffset = 100; // Account for the top navigation and sticky header
-                    const elementPosition = element.getBoundingClientRect().top;
-                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                    const mainContainer = document.querySelector('main');
+                    if (mainContainer) {
+                        const containerRect = mainContainer.getBoundingClientRect();
+                        const elementRect = element.getBoundingClientRect();
+                        const headerHeight = 45; // Height of the sticky thead
 
-                    window.scrollTo({
-                        top: offsetPosition,
-                        behavior: 'auto' // Instant scroll as requested
-                    });
+                        const scrollPos = (elementRect.top - containerRect.top) + mainContainer.scrollTop - headerHeight;
+
+                        mainContainer.scrollTo({
+                            top: scrollPos,
+                            behavior: 'auto'
+                        });
+                    }
                 }
             }, 100);
             return () => clearTimeout(timer);
@@ -334,10 +339,10 @@ const AdminTimesheets = () => {
                 </div>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-visible">
-                <div className="overflow-x-auto overflow-y-visible">
+            <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
+                <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
-                        <thead className="sticky top-[64px] z-20 bg-gray-50 shadow-sm border-b border-gray-200">
+                        <thead className="sticky top-0 z-20 bg-gray-50 shadow-sm border-b border-gray-200">
                             <tr className="text-left">
                                 <th className="py-3 px-4 font-semibold text-gray-700 text-sm w-32 border-r border-gray-200">Date</th>
                                 <th className="py-3 px-4 font-semibold text-gray-700 text-sm w-1/3 border-r border-gray-200">Plan (Target Deliverables)</th>
