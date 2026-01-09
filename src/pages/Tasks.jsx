@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { getTasks, createTask, deleteTask } from '../services/taskService';
 import { getCurrentUser } from '../services/authService';
 import { Plus, Calendar, Search, X } from 'lucide-react';
-import { getEmployeeProjectFrameworks } from '../services/projectService';
 import TaskTooltip from '../components/TaskTooltip';
 import clsx from 'clsx';
 import { getTaskStatusColor } from '../utils/taskUtils';
