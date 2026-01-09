@@ -10,7 +10,6 @@ import clsx from 'clsx';
 import ExpandableText from '../../components/ExpandableText';
 
 const AdminTimesheets = () => {
-    const tableContainerRef = React.useRef(null);
     const [timesheets, setTimesheets] = useState([]);
     const [tasks, setTasks] = useState([]);
     const [events, setEvents] = useState([]);
@@ -40,18 +39,17 @@ const AdminTimesheets = () => {
         if (spreadsheetData.length > 0) {
             const timer = setTimeout(() => {
                 const element = document.getElementById('yesterday-row');
-                if (element && tableContainerRef.current) {
-                    // Calculate position relative to container
-                    const containerPos = tableContainerRef.current.getBoundingClientRect().top;
-                    const elementPos = element.getBoundingClientRect().top;
-                    const offset = elementPos - containerPos;
+                if (element) {
+                    const headerOffset = 100; // Account for the top navigation and sticky header
+                    const elementPosition = element.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
 
-                    tableContainerRef.current.scrollTo({
-                        top: offset,
-                        behavior: 'smooth'
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'auto' // Instant scroll as requested
                     });
                 }
-            }, 500);
+            }, 100);
             return () => clearTimeout(timer);
         }
     }, [spreadsheetData]);
@@ -336,13 +334,10 @@ const AdminTimesheets = () => {
                 </div>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
-                <div
-                    ref={tableContainerRef}
-                    className="overflow-auto max-h-[calc(100vh-280px)] min-h-[400px]"
-                >
+            <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-visible">
+                <div className="overflow-x-auto overflow-y-visible">
                     <table className="w-full border-collapse">
-                        <thead className="sticky top-0 z-20 bg-gray-50 shadow-sm border-b border-gray-200">
+                        <thead className="sticky top-[64px] z-20 bg-gray-50 shadow-sm border-b border-gray-200">
                             <tr className="text-left">
                                 <th className="py-3 px-4 font-semibold text-gray-700 text-sm w-32 border-r border-gray-200">Date</th>
                                 <th className="py-3 px-4 font-semibold text-gray-700 text-sm w-1/3 border-r border-gray-200">Plan (Target Deliverables)</th>
