@@ -429,6 +429,8 @@ const AdminTimesheets = () => {
                                                                 if (!t.is_completed) return null;
                                                                 // Find actual timesheet entry for this task
                                                                 const entry = day.timesheet?.entries?.find(e => (e.taskId || e.task_id) == t.id && e.is_deleted != 1);
+
+                                                                // If no entry found, we can't calculate stats
                                                                 if (!entry) return null;
 
                                                                 let diffDaysElement = null;
@@ -519,8 +521,6 @@ const AdminTimesheets = () => {
                                                                                     {task?.task_content || entry.description}
                                                                                 </span>
                                                                             </TaskTooltip>
-                                                                            {dateDiffElement}
-                                                                            {timeDiffElement}
                                                                             {/* Show remarks if they exist and are different from Title */}
                                                                             {entry.description && task && entry.description !== task.task_content && (
                                                                                 <div className="mt-1">
@@ -535,7 +535,7 @@ const AdminTimesheets = () => {
                                                                     </div>
                                                                     <div className="text-xs text-gray-400 whitespace-nowrap ml-2 flex flex-col items-end">
                                                                         <span>{entry.startTime} - {entry.endTime}</span>
-                                                                        <span className="font-medium text-gray-700">({entry.duration}h)</span>
+                                                                        <span className="font-medium text-gray-700">({entry.duration}h{timeDiffElement}{dateDiffElement})</span>
                                                                     </div>
                                                                 </div>
                                                             </div>
