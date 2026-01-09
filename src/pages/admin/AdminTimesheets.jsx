@@ -10,7 +10,6 @@ import clsx from 'clsx';
 import ExpandableText from '../../components/ExpandableText';
 
 const AdminTimesheets = () => {
-    const yesterdayRef = React.useRef(null);
     const [timesheets, setTimesheets] = useState([]);
     const [tasks, setTasks] = useState([]);
     const [events, setEvents] = useState([]);
@@ -35,24 +34,19 @@ const AdminTimesheets = () => {
         }
     }, [selectedEmployee, currentMonth, timesheets, tasks, events, leaves]);
 
-    // Scroll to yesterday when data is ready
-    useEffect(() => {
-        if (spreadsheetData.length > 0) {
-            // Tiny delay to ensure DOM is ready
-            const timer = setTimeout(() => {
-                const element = yesterdayRef.current;
-                if (element) {
-                    element.scrollIntoView({ behavior: 'auto', block: 'start' });
-                    // Adjust for sticky header height (45px) + a little buffer
-                    const mainContainer = document.querySelector('main');
-                    if (mainContainer) {
-                        mainContainer.scrollBy({ top: -45, behavior: 'auto' });
-                    }
-                }
-            }, 100);
-            return () => clearTimeout(timer);
+    // Scroll to yesterday mechanism using callback ref
+    const setYesterdayRef = React.useCallback(node => {
+        if (node) {
+            // Scroll immediately when node renders
+            node.scrollIntoView({ behavior: 'auto', block: 'start' });
+
+            // Adjust for sticky header
+            const mainContainer = document.querySelector('main');
+            if (mainContainer) {
+                mainContainer.scrollBy({ top: -45, behavior: 'auto' });
+            }
         }
-    }, [spreadsheetData, currentMonth]);
+    }, [currentMonth]); // Re-run if month changes (re-renders rows)
 
     const fetchAllData = async () => {
         setLoading(true);
@@ -387,7 +381,7 @@ const AdminTimesheets = () => {
                                 return (
                                     <tr
                                         key={day.date}
-                                        ref={day.isYesterday ? yesterdayRef : null}
+                                        ref={day.isYesterday ? setYesterdayRef : null}
                                         id={day.isYesterday ? 'yesterday-row' : undefined}
                                         className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                                     >
