@@ -34,16 +34,16 @@ const AdminTimesheets = () => {
         }
     }, [selectedEmployee, currentMonth, timesheets, tasks, events, leaves]);
 
-    // Scroll to yesterday mechanism
-    const setYesterdayRef = React.useCallback(node => {
-        if (node) {
-            // Delay slightly to ensure layout is stable
-            setTimeout(() => {
+    // Scroll to yesterday when data is ready
+    useEffect(() => {
+        if (spreadsheetData.length > 0) {
+            const timer = setTimeout(() => {
+                const element = document.getElementById('yesterday-row');
                 const mainContainer = document.querySelector('main');
-                if (mainContainer) {
-                    // Calculate position: Element Top - Container Top + Current Scroll - Header Offset
-                    const headerHeight = 60; // Safe buffer for 45px header
-                    const elementTop = node.getBoundingClientRect().top;
+
+                if (element && mainContainer) {
+                    const headerHeight = 60; // 45px header + 15px buffer
+                    const elementTop = element.getBoundingClientRect().top;
                     const containerTop = mainContainer.getBoundingClientRect().top;
                     const scrollTop = mainContainer.scrollTop;
 
@@ -51,12 +51,13 @@ const AdminTimesheets = () => {
 
                     mainContainer.scrollTo({
                         top: targetScroll,
-                        behavior: 'auto' // Instant jump as requested
+                        behavior: 'instant'
                     });
                 }
-            }, 50);
+            }, 100);
+            return () => clearTimeout(timer);
         }
-    }, [currentMonth]);
+    }, [spreadsheetData]);
 
     const fetchAllData = async () => {
         setLoading(true);
@@ -391,11 +392,10 @@ const AdminTimesheets = () => {
                                 return (
                                     <tr
                                         key={day.date}
-                                        ref={day.isYesterday ? setYesterdayRef : null}
                                         id={day.isYesterday ? 'yesterday-row' : undefined}
                                         className={clsx(
                                             "border-b border-gray-100 hover:bg-gray-50 transition-colors",
-                                            day.isYesterday && "scroll-mt-[50px]" // Helper for scroll alignment
+                                            day.isYesterday && "scroll-mt-[60px]"
                                         )}
                                     >
                                         <td className="py-3 px-4 text-sm font-medium text-gray-900 border-r border-gray-100 align-top">
