@@ -34,6 +34,19 @@ const AdminTimesheets = () => {
         }
     }, [selectedEmployee, currentMonth, timesheets, tasks, events, leaves]);
 
+    // Scroll to yesterday when data is ready
+    useEffect(() => {
+        if (spreadsheetData.length > 0) {
+            const timer = setTimeout(() => {
+                const element = document.getElementById('yesterday-row');
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 300);
+            return () => clearTimeout(timer);
+        }
+    }, [spreadsheetData]);
+
     const fetchAllData = async () => {
         setLoading(true);
         try {
@@ -46,8 +59,10 @@ const AdminTimesheets = () => {
             setTimesheets(timesheetData);
             setEvents(calendarData);
 
-            // Format users for dropdown (include everyone)
-            const emps = allUsers.map(u => ({ id: u.id, name: u.name }));
+            // Format users for dropdown (exclude Admin User)
+            const emps = allUsers
+                .filter(u => u.name !== 'Admin User')
+                .map(u => ({ id: u.id, name: u.name }));
 
             setEmployees(emps);
 
@@ -91,6 +106,20 @@ const AdminTimesheets = () => {
         }
     };
 
+    const handlePrevEmployee = () => {
+        if (employees.length === 0) return;
+        const currentIndex = employees.findIndex(e => e.id === selectedEmployee?.id);
+        const prevIndex = (currentIndex - 1 + employees.length) % employees.length;
+        setSelectedEmployee(employees[prevIndex]);
+    };
+
+    const handleNextEmployee = () => {
+        if (employees.length === 0) return;
+        const currentIndex = employees.findIndex(e => e.id === selectedEmployee?.id);
+        const nextIndex = (currentIndex + 1) % employees.length;
+        setSelectedEmployee(employees[nextIndex]);
+    };
+
 
 
 
@@ -100,10 +129,22 @@ const AdminTimesheets = () => {
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const data = [];
 
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const yesterday = new Date(today);
+        yesterday.setDate(today.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+        // Loop forwards as before (Ascending)
         for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(year, month, day);
             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             const dayOfWeek = date.getDay(); // 0 = Sunday
+
+            // Skip "Today" if requested to have "Yesterday" on top? 
+            // Better to just have them at top. If the user wants Yesterday at top, 
+            // and today exists, they might want today at the bottom or hidden.
+            // But usually "Latest on top" means exactly that.
 
             // Check for Holiday
             const holiday = events.find(e => e.date === dateStr && e.is_holiday == 1);
@@ -139,7 +180,8 @@ const AdminTimesheets = () => {
                 tasks: daysTasks,
                 timesheet: daysTimesheet || null,
                 isLeave: isLeave,
-                leaveDetails: leave
+                leaveDetails: leave,
+                isYesterday: dateStr === yesterdayStr
             });
         }
         setSpreadsheetData(data);
@@ -222,33 +264,51 @@ const AdminTimesheets = () => {
 
 
                 <div className="flex flex-col md:flex-row items-center gap-4">
-                    <>
-                        {/* Employee Switcher */}
-                        <div className="relative group">
-                            <button className="flex items-center gap-2 bg-white border border-gray-200 px-4 py-2 rounded-lg shadow-sm hover:border-indigo-500 transition-colors min-w-[200px] justify-between">
-                                <span className="flex items-center gap-2">
-                                    <User size={16} className="text-indigo-600" />
-                                    <span className="font-medium text-gray-700">{selectedEmployee?.name || 'Select Employee'}</span>
-                                </span>
-                                <ChevronDown size={16} className="text-gray-400" />
+                    <div className="flex items-center gap-2">
+                        {/* Employee Switcher with Arrows */}
+                        <div className="flex items-center bg-white rounded-lg shadow-sm border border-gray-200 p-1">
+                            <button
+                                onClick={handlePrevEmployee}
+                                className="p-2 hover:bg-gray-100 rounded-md text-gray-600 transition-colors"
+                                title="Previous Employee"
+                            >
+                                <ChevronLeft size={20} />
                             </button>
 
-                            <div className="absolute top-full right-0 mt-1 w-64 bg-white border border-gray-100 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                                <div className="p-2 max-h-64 overflow-y-auto">
-                                    {employees.map(emp => (
-                                        <button
-                                            key={emp.id}
-                                            onClick={() => setSelectedEmployee(emp)}
-                                            className={clsx(
-                                                "w-full text-left px-3 py-2 rounded-lg text-sm transition-colors",
-                                                selectedEmployee?.id === emp.id ? "bg-indigo-50 text-indigo-700 font-medium" : "hover:bg-gray-50 text-gray-600"
-                                            )}
-                                        >
-                                            {emp.name}
-                                        </button>
-                                    ))}
+                            <div className="relative group">
+                                <button className="flex items-center gap-2 px-4 py-1.5 min-w-[200px] justify-between hover:bg-gray-50 rounded-md transition-colors">
+                                    <span className="flex items-center gap-2">
+                                        <User size={16} className="text-indigo-600" />
+                                        <span className="font-medium text-gray-700">{selectedEmployee?.name || 'Select Employee'}</span>
+                                    </span>
+                                    <ChevronDown size={16} className="text-gray-400" />
+                                </button>
+
+                                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-64 bg-white border border-gray-100 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                                    <div className="p-2 max-h-64 overflow-y-auto">
+                                        {employees.map(emp => (
+                                            <button
+                                                key={emp.id}
+                                                onClick={() => setSelectedEmployee(emp)}
+                                                className={clsx(
+                                                    "w-full text-left px-3 py-2 rounded-lg text-sm transition-colors",
+                                                    selectedEmployee?.id === emp.id ? "bg-indigo-50 text-indigo-700 font-medium" : "hover:bg-gray-50 text-gray-600"
+                                                )}
+                                            >
+                                                {emp.name}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
+
+                            <button
+                                onClick={handleNextEmployee}
+                                className="p-2 hover:bg-gray-100 rounded-md text-gray-600 transition-colors"
+                                title="Next Employee"
+                            >
+                                <ChevronRight size={20} />
+                            </button>
                         </div>
 
                         {/* Month Navigator */}
@@ -263,7 +323,7 @@ const AdminTimesheets = () => {
                                 <ChevronRight size={20} />
                             </button>
                         </div>
-                    </>
+                    </div>
                 </div>
             </div>
 
@@ -283,7 +343,7 @@ const AdminTimesheets = () => {
                                 // Holiday / Weekend Row
                                 if (day.isHoliday || day.isSunday) {
                                     return (
-                                        <tr key={day.date} className="bg-yellow-100 border-b border-gray-200">
+                                        <tr key={day.date} id={day.isYesterday ? 'yesterday-row' : undefined} className="bg-yellow-100 border-b border-gray-200">
                                             <td className="py-1 px-4 font-medium text-gray-800 border-r border-yellow-200 text-sm">{day.date}</td>
                                             <td colSpan="3" className="py-1 px-4 text-center font-bold text-gray-600 tracking-wider uppercase text-xs">
                                                 {day.holidayName}
@@ -295,7 +355,7 @@ const AdminTimesheets = () => {
                                 // Leave Row
                                 if (day.isLeave) {
                                     return (
-                                        <tr key={day.date} className="bg-red-50 border-b border-gray-200">
+                                        <tr key={day.date} id={day.isYesterday ? 'yesterday-row' : undefined} className="bg-red-50 border-b border-gray-200">
                                             <td className="py-1 px-4 font-medium text-gray-800 border-r border-red-100 text-sm">{day.date}</td>
                                             <td colSpan="3" className="py-1 px-4 text-center font-bold text-red-800 tracking-wider uppercase text-xs">
                                                 {day.leaveDetails?.type} {day.leaveDetails?.reason ? `- ${day.leaveDetails.reason}` : ''}
@@ -306,7 +366,7 @@ const AdminTimesheets = () => {
 
                                 // Regular Row
                                 return (
-                                    <tr key={day.date} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                    <tr key={day.date} id={day.isYesterday ? 'yesterday-row' : undefined} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                         <td className="py-3 px-4 text-sm font-medium text-gray-900 border-r border-gray-100 align-top">
                                             {day.date}
                                         </td>
