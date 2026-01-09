@@ -10,6 +10,7 @@ import clsx from 'clsx';
 import ExpandableText from '../../components/ExpandableText';
 
 const AdminTimesheets = () => {
+    const yesterdayRef = React.useRef(null);
     const [timesheets, setTimesheets] = useState([]);
     const [tasks, setTasks] = useState([]);
     const [events, setEvents] = useState([]);
@@ -37,15 +38,14 @@ const AdminTimesheets = () => {
     // Scroll to yesterday when data is ready
     useEffect(() => {
         if (spreadsheetData.length > 0) {
-            const hasYesterday = spreadsheetData.some(d => d.isYesterday);
-            if (!hasYesterday) return;
+            let attempts = 0;
+            const maxAttempts = 10;
 
-            const timer = setTimeout(() => {
-                const element = document.getElementById('yesterday-row');
+            const performScroll = () => {
+                const element = yesterdayRef.current;
                 const mainContainer = document.querySelector('main');
 
                 if (element && mainContainer) {
-                    // Precise calculation relative to the scrollable container
                     const containerRect = mainContainer.getBoundingClientRect();
                     const elementRect = element.getBoundingClientRect();
                     const headerHeight = 45; // Height of the sticky thead
@@ -56,11 +56,21 @@ const AdminTimesheets = () => {
                         top: scrollPos,
                         behavior: 'auto'
                     });
+                    return true;
                 }
-            }, 300); // Slightly longer delay to ensure layout is settled
-            return () => clearTimeout(timer);
+                return false;
+            };
+
+            const interval = setInterval(() => {
+                if (performScroll() || attempts >= maxAttempts) {
+                    clearInterval(interval);
+                }
+                attempts++;
+            }, 100);
+
+            return () => clearInterval(interval);
         }
-    }, [spreadsheetData, currentMonth]); // Re-run when month changes too
+    }, [spreadsheetData, currentMonth]);
 
     const fetchAllData = async () => {
         setLoading(true);
@@ -360,7 +370,12 @@ const AdminTimesheets = () => {
                                 // Holiday / Weekend Row
                                 if (day.isHoliday || day.isSunday) {
                                     return (
-                                        <tr key={day.date} id={day.isYesterday ? 'yesterday-row' : undefined} className="bg-yellow-100 border-b border-gray-200">
+                                        <tr
+                                            key={day.date}
+                                            ref={day.isYesterday ? yesterdayRef : null}
+                                            id={day.isYesterday ? 'yesterday-row' : undefined}
+                                            className="bg-yellow-100 border-b border-gray-200"
+                                        >
                                             <td className="py-1 px-4 font-medium text-gray-800 border-r border-yellow-200 text-sm">{day.date}</td>
                                             <td colSpan="3" className="py-1 px-4 text-center font-bold text-gray-600 tracking-wider uppercase text-xs">
                                                 {day.holidayName}
@@ -372,7 +387,12 @@ const AdminTimesheets = () => {
                                 // Leave Row
                                 if (day.isLeave) {
                                     return (
-                                        <tr key={day.date} id={day.isYesterday ? 'yesterday-row' : undefined} className="bg-red-50 border-b border-gray-200">
+                                        <tr
+                                            key={day.date}
+                                            ref={day.isYesterday ? yesterdayRef : null}
+                                            id={day.isYesterday ? 'yesterday-row' : undefined}
+                                            className="bg-red-50 border-b border-gray-200"
+                                        >
                                             <td className="py-1 px-4 font-medium text-gray-800 border-r border-red-100 text-sm">{day.date}</td>
                                             <td colSpan="3" className="py-1 px-4 text-center font-bold text-red-800 tracking-wider uppercase text-xs">
                                                 {day.leaveDetails?.type} {day.leaveDetails?.reason ? `- ${day.leaveDetails.reason}` : ''}
@@ -383,7 +403,12 @@ const AdminTimesheets = () => {
 
                                 // Regular Row
                                 return (
-                                    <tr key={day.date} id={day.isYesterday ? 'yesterday-row' : undefined} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                    <tr
+                                        key={day.date}
+                                        ref={day.isYesterday ? yesterdayRef : null}
+                                        id={day.isYesterday ? 'yesterday-row' : undefined}
+                                        className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                                    >
                                         <td className="py-3 px-4 text-sm font-medium text-gray-900 border-r border-gray-100 align-top">
                                             {day.date}
                                         </td>
