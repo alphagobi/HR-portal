@@ -38,37 +38,19 @@ const AdminTimesheets = () => {
     // Scroll to yesterday when data is ready
     useEffect(() => {
         if (spreadsheetData.length > 0) {
-            let attempts = 0;
-            const maxAttempts = 10;
-
-            const performScroll = () => {
+            // Tiny delay to ensure DOM is ready
+            const timer = setTimeout(() => {
                 const element = yesterdayRef.current;
-                const mainContainer = document.querySelector('main');
-
-                if (element && mainContainer) {
-                    const containerRect = mainContainer.getBoundingClientRect();
-                    const elementRect = element.getBoundingClientRect();
-                    const headerHeight = 45; // Height of the sticky thead
-
-                    const scrollPos = (elementRect.top - containerRect.top) + mainContainer.scrollTop - headerHeight;
-
-                    mainContainer.scrollTo({
-                        top: scrollPos,
-                        behavior: 'auto'
-                    });
-                    return true;
+                if (element) {
+                    element.scrollIntoView({ behavior: 'auto', block: 'start' });
+                    // Adjust for sticky header height (45px) + a little buffer
+                    const mainContainer = document.querySelector('main');
+                    if (mainContainer) {
+                        mainContainer.scrollBy({ top: -45, behavior: 'auto' });
+                    }
                 }
-                return false;
-            };
-
-            const interval = setInterval(() => {
-                if (performScroll() || attempts >= maxAttempts) {
-                    clearInterval(interval);
-                }
-                attempts++;
             }, 100);
-
-            return () => clearInterval(interval);
+            return () => clearTimeout(timer);
         }
     }, [spreadsheetData, currentMonth]);
 
