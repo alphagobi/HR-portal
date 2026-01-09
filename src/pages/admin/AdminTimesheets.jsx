@@ -34,30 +34,7 @@ const AdminTimesheets = () => {
         }
     }, [selectedEmployee, currentMonth, timesheets, tasks, events, leaves]);
 
-    // Scroll to yesterday when data is ready
-    useEffect(() => {
-        if (spreadsheetData.length > 0) {
-            const timer = setTimeout(() => {
-                const element = document.getElementById('yesterday-row');
-                const mainContainer = document.querySelector('main');
 
-                if (element && mainContainer) {
-                    const headerHeight = 60; // 45px header + 15px buffer
-                    const elementTop = element.getBoundingClientRect().top;
-                    const containerTop = mainContainer.getBoundingClientRect().top;
-                    const scrollTop = mainContainer.scrollTop;
-
-                    const targetScroll = elementTop - containerTop + scrollTop - headerHeight;
-
-                    mainContainer.scrollTo({
-                        top: targetScroll,
-                        behavior: 'instant'
-                    });
-                }
-            }, 100);
-            return () => clearTimeout(timer);
-        }
-    }, [spreadsheetData]);
 
     const fetchAllData = async () => {
         setLoading(true);
@@ -185,6 +162,20 @@ const AdminTimesheets = () => {
                 t.date === dateStr
             );
 
+
+            const isToday = today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
+
+            // Filter out days before yesterday ONLY if looking at current month
+            // If viewing past/future month, show all
+            const isCurrentMonth = today.getMonth() === month && today.getFullYear() === year;
+
+            if (isCurrentMonth) {
+                // strict match: show if date >= yesterday
+                if (date < yesterday) {
+                    continue;
+                }
+            }
+
             data.push({
                 date: dateStr,
                 displayDate: date.toLocaleDateString(),
@@ -195,7 +186,8 @@ const AdminTimesheets = () => {
                 timesheet: daysTimesheet || null,
                 isLeave: isLeave,
                 leaveDetails: leave,
-                isYesterday: dateStr === yesterdayStr
+                isYesterday: dateStr === yesterdayStr,
+                isToday: isToday
             });
         }
         setSpreadsheetData(data);
