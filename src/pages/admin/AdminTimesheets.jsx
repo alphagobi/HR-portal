@@ -37,14 +37,8 @@ const AdminTimesheets = () => {
     // Scroll to yesterday mechanism using callback ref
     const setYesterdayRef = React.useCallback(node => {
         if (node) {
-            // Scroll immediately when node renders
+            // Scroll immediately when node renders (CSS scroll-margin-top handles offset)
             node.scrollIntoView({ behavior: 'auto', block: 'start' });
-
-            // Adjust for sticky header
-            const mainContainer = document.querySelector('main');
-            if (mainContainer) {
-                mainContainer.scrollBy({ top: -45, behavior: 'auto' });
-            }
         }
     }, [currentMonth]); // Re-run if month changes (re-renders rows)
 
@@ -383,7 +377,10 @@ const AdminTimesheets = () => {
                                         key={day.date}
                                         ref={day.isYesterday ? setYesterdayRef : null}
                                         id={day.isYesterday ? 'yesterday-row' : undefined}
-                                        className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                                        className={clsx(
+                                            "border-b border-gray-100 hover:bg-gray-50 transition-colors",
+                                            day.isYesterday && "scroll-mt-[50px]" // Helper for scroll alignment
+                                        )}
                                     >
                                         <td className="py-3 px-4 text-sm font-medium text-gray-900 border-r border-gray-100 align-top">
                                             {day.date}
