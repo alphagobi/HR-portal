@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getTimesheets } from '../services/timesheetService';
 import { getLeaves } from '../services/leaveService';
 import { getTasks } from '../services/taskService';
+import TaskTooltip from '../components/TaskTooltip';
 import { getTaskStatusColor } from '../utils/taskUtils';
 import { getCurrentUser } from '../services/authService';
 import { Calendar, ChevronLeft, ChevronRight, Clock, Filter } from 'lucide-react';
@@ -365,18 +366,22 @@ const Timesheet = () => {
                                         return (
                                             <div key={entry.id} className="flex flex-col gap-1 text-sm mb-3">
                                                 <div className="flex items-start justify-between">
-                                                    <div className="flex items-start gap-3">
-                                                        <div className={`w-2 h-2 rounded-full mt-1.5 ${color.dot}`}></div>
-                                                        <span className={`font-medium ${color.text}`}>
-                                                            {task?.task_content || entry.description}
-                                                        </span>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-2 h-2 rounded-full ${color.dot}`}></div>
+                                                        <TaskTooltip task={task || { task_content: entry.description, is_completed: true, planned_date: sheet.date, created_at: sheet.date }}>
+                                                            <span className={clsx(`font-medium block truncate ${color.text}`)}>
+                                                                {task?.task_content || entry.description}
+                                                            </span>
+                                                        </TaskTooltip>
                                                     </div>
-                                                    <div className="flex items-center gap-3 flex-shrink-0 ml-4">
-                                                        <span className={`text-xs px-2 py-0.5 rounded-full ${entry.type === 'planned' ? 'bg-green-50 text-green-700' : 'bg-orange-50 text-orange-700'}`}>
-                                                            {entry.type === 'planned' ? 'Planned' : 'Unplanned'}
-                                                        </span>
-                                                        <span className="font-medium text-gray-900">{entry.duration} hrs</span>
-                                                    </div>
+                                                    {entry.duration && (
+                                                        <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+                                                            <span className={`text-xs px-2 py-0.5 rounded-full ${entry.type === 'planned' ? 'bg-green-50 text-green-700' : 'bg-orange-50 text-orange-700'}`}>
+                                                                {entry.type === 'planned' ? 'Planned' : 'Unplanned'}
+                                                            </span>
+                                                            <span className="font-medium text-gray-900">{entry.duration} hrs</span>
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 {/* Show remarks if they exist and are different from Title */}
                                                 {entry.description && task && entry.description !== task.task_content && (

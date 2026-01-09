@@ -15,6 +15,7 @@ import { startOfWeek, endOfWeek, eachDayOfInterval, format, parseISO, isSameDay,
 import { getUserSetting, saveUserSetting } from '../services/userSettingsService';
 import { getLeaves } from '../services/leaveService';
 import ExpandableText from '../components/ExpandableText';
+import TaskTooltip from '../components/TaskTooltip';
 
 // Moved SortableItem outside to prevent re-mounting on every render (Focus Loss Fix)
 const SortableItem = ({ id, item, index, onRemove, onUpdate }) => {
@@ -828,31 +829,12 @@ const Dashboard = () => {
                                             <div className="flex justify-between items-start text-sm p-2">
                                                 <div className="flex items-start gap-3 min-w-0 flex-1">
                                                     <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors mt-1.5 ${color.dot}`}></div>
-                                                    <div className="flex flex-col min-w-0">
-                                                        {/* Always show Task Content as Title if linked, else Entry Description */}
-                                                        {(!task || (entry.description && entry.description !== task.task_content)) ? (
-                                                            // Case: Ad-hoc entry OR Entry description differs from Task Title -> Show description as main or secondary?
-                                                            // Logic: If task exists, title is task_content. Remark is separate.
-                                                            // If NO task, entry.description IS the title.
-                                                            task ? (
-                                                                <span className={`font-medium transition-colors whitespace-pre-wrap ${color.text}`}>
-                                                                    {task.task_content}
-                                                                </span>
-                                                            ) : (
-                                                                // No task, use ExpandableText for description as title
-                                                                <ExpandableText
-                                                                    text={entry.description || "Work Logged"}
-                                                                    limit={60}
-                                                                    className={`font-medium transition-colors ${color.text}`}
-                                                                    textClassName="" // No border for main title
-                                                                />
-                                                            )
-                                                        ) : (
-                                                            <span className={`font-medium transition-colors whitespace-pre-wrap ${color.text}`}>
-                                                                {task?.task_content || "Work Logged"}
+                                                    <div className="flex flex-col min-w-0 flex-1">
+                                                        <TaskTooltip task={task || { task_content: entry.description, is_completed: true, created_at: today, planned_date: today }}>
+                                                            <span className={`font-medium transition-colors whitespace-pre-wrap block truncate ${color.text}`}>
+                                                                {task?.task_content || entry.description}
                                                             </span>
-                                                        )}
-
+                                                        </TaskTooltip>
                                                         {/* Show remarks if they exist and are different from Title */}
                                                         {entry.description && task && entry.description !== task.task_content && (
                                                             <div className="mt-0.5">
@@ -918,9 +900,9 @@ const Dashboard = () => {
                                     );
                                 })
                             )}
-                        </div >
-                    </div >
-                </div >
+                        </div>
+                    </div>
+                </div>
 
                 {/* Right Column (7/12 width) - Tasks List */}
                 <div className="lg:col-span-7 h-full">
@@ -973,9 +955,11 @@ const Dashboard = () => {
                                             >
                                                 <div className="col-span-6 flex items-center gap-3 overflow-hidden">
                                                     <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getTaskStatusColor(task.planned_date, task.is_completed, task.completed_date).dot}`}></div>
-                                                    <span className={`truncate text-sm font-bold ${getTaskStatusColor(task.planned_date, task.is_completed, task.completed_date).text}`}>
-                                                        {task.task_content}
-                                                    </span>
+                                                    <TaskTooltip task={task}>
+                                                        <span className={`truncate text-sm font-bold block ${getTaskStatusColor(task.planned_date, task.is_completed, task.completed_date).text}`}>
+                                                            {task.task_content}
+                                                        </span>
+                                                    </TaskTooltip>
                                                 </div>
                                                 <div className="col-span-3 text-right text-xs font-medium text-gray-500">
                                                     {task.eta ? `${task.eta}m` : '-'}
@@ -1031,9 +1015,9 @@ const Dashboard = () => {
                             )}
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
+                </div >
+            </div >
+        </div >
     );
 };
 

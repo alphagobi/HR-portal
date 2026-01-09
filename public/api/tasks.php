@@ -18,11 +18,12 @@ if ($method === 'GET') {
 
     // Join with work_allocations to get framework name
     $query = "
-        SELECT pt.*, t.date as completed_date, wa.category_name as framework_name, wa.percentage as framework_target
+        SELECT pt.*, t.date as completed_date, te.duration, wa.category_name as framework_name, wa.percentage as framework_target, u.name as assigner_name
         FROM planned_tasks pt
         LEFT JOIN timesheet_entries te ON pt.related_entry_id = te.id
         LEFT JOIN timesheets t ON te.timesheet_id = t.id
         LEFT JOIN work_allocations wa ON pt.framework_id = wa.id
+        LEFT JOIN users u ON pt.user_id = u.id
         WHERE pt.user_id = ? 
     ";
 

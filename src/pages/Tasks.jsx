@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { getTasks, createTask, deleteTask } from '../services/taskService';
 import { getCurrentUser } from '../services/authService';
 import { Plus, Calendar, Search, X } from 'lucide-react';
+import { getEmployeeProjectFrameworks } from '../services/projectService';
+import TaskTooltip from '../components/TaskTooltip';
 import clsx from 'clsx';
 import { getTaskStatusColor } from '../utils/taskUtils';
 import { getFrameworkAllocations } from '../services/frameworkService';
@@ -306,10 +308,12 @@ const Tasks = () => {
                                             return (
                                                 <div key={task.id} className="flex items-center justify-between text-sm group">
                                                     <div className="flex items-center gap-3">
-                                                        <div className={`w-2 h-2 rounded-full ${status.dot}`}></div>
-                                                        <span className={clsx(`font-medium ${status.text}`)}>
-                                                            {task.task_content}
-                                                        </span>
+                                                        <div className={`w - 2 h - 2 rounded - full ${status.dot} `}></div>
+                                                        <TaskTooltip task={task}>
+                                                            <span className={clsx(`font - medium transition - colors block ${status.text} `)}>
+                                                                {task.task_content}
+                                                            </span>
+                                                        </TaskTooltip>
                                                     </div>
                                                     <div className="flex items-center gap-3">
                                                         {task.is_completed && (

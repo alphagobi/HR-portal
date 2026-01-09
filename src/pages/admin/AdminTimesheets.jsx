@@ -3,6 +3,8 @@ import { getTimesheets, saveTimesheet } from '../../services/timesheetService';
 import { getLeaves } from '../../services/leaveService';
 import { getTasks } from '../../services/taskService';
 import { getAllUsers } from '../../services/authService';
+import { getEmployeeProjectFrameworks } from '../../services/projectService';
+import TaskTooltip from '../../components/TaskTooltip';
 import { getTaskStatusColor } from '../../utils/taskUtils';
 import { ChevronDown, ChevronUp, Search, Calendar, ChevronRight, ChevronLeft, Save, User, Trash2 } from 'lucide-react';
 import clsx from 'clsx';
@@ -352,35 +354,29 @@ const AdminTimesheets = () => {
                                                         }
 
                                                         return (
-                                                            <div key={entry.id} className="text-sm mb-3">
-                                                                <div className="flex items-start justify-between">
-                                                                    <div className="flex items-start gap-2">
-                                                                        <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${color.dot}`}></div>
-                                                                        <div className="flex flex-col">
-                                                                            <span className={`font-medium ${color.text}`}>
+                                                            <div key={entry.id} className="group hover:bg-gray-50/80 -mx-1 px-1 rounded transition-colors py-0.5">
+                                                                <div className="flex items-start justify-between gap-2 overflow-hidden">
+                                                                    <div className="flex items-start gap-2 min-w-0">
+                                                                        <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${color.dot}`}></div>
+                                                                        <TaskTooltip task={task || { task_content: entry.description, is_completed: true, planned_date: day.date, created_at: day.date }}>
+                                                                            <span className={`text-xs font-bold transition-colors leading-relaxed block truncate ${color.text}`}>
                                                                                 {task?.task_content || entry.description}
                                                                             </span>
-                                                                            {/* Show remarks if they exist and are different from Title */}
-                                                                            {entry.description && task && entry.description !== task.task_content && (
-                                                                                <div className="mt-1">
-                                                                                    <ExpandableText
-                                                                                        text={entry.description}
-                                                                                        limit={100}
-                                                                                        className="text-xs text-gray-600"
-                                                                                    />
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
+                                                                        </TaskTooltip>
                                                                     </div>
-
-                                                                    <div className="text-xs text-gray-400 whitespace-nowrap ml-2 flex flex-col items-end">
-                                                                        <span>{entry.startTime} - {entry.endTime}</span>
-                                                                        <span className="font-medium text-gray-700">({entry.duration}h{timeDiffElement})</span>
+                                                                    <div className="flex items-center gap-1 flex-shrink-0">
+                                                                        <span className="text-xs font-bold text-gray-900">{entry.duration}</span>
+                                                                        <span className="text-[10px] text-gray-400 font-medium">h</span>
+                                                                        {timeDiffElement}
                                                                     </div>
+                                                                </div>
+                                                                <div className="text-[10px] text-gray-400 font-medium pl-3.5 italic">
+                                                                    {entry.startTime} - {entry.endTime}
                                                                 </div>
                                                             </div>
                                                         );
                                                     })}
+
                                                     <div className="pt-1 mt-1 border-t border-gray-100 flex justify-between items-center">
                                                         <span className="text-xs font-bold text-indigo-600">
                                                             Total: {day.timesheet.entries.reduce((sum, e) => sum + (e.is_deleted == 1 ? 0 : parseFloat(e.duration || 0)), 0)} hrs
