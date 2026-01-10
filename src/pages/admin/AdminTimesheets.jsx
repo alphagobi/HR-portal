@@ -85,7 +85,11 @@ const AdminTimesheets = () => {
                     loadMorePastDates();
                 }
             },
-            { root: null, rootMargin: '100px 0px 0px 0px', threshold: 0.1 }
+            {
+                root: scrollContainerRef.current,
+                rootMargin: '100px 0px 0px 0px',
+                threshold: 0.1
+            }
         );
 
         if (topSentinelRef.current) {
@@ -97,7 +101,7 @@ const AdminTimesheets = () => {
                 observer.unobserve(topSentinelRef.current);
             }
         };
-    }, [isFetchingMore, startDate]);
+    }, [isFetchingMore, startDate, loading]);
 
     const loadMorePastDates = () => {
         setIsFetchingMore(true);
