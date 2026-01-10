@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { getTimesheets, saveTimesheet } from '../../services/timesheetService';
 import { getLeaves } from '../../services/leaveService';
 import { getTasks } from '../../services/taskService';
@@ -17,9 +17,29 @@ const AdminTimesheets = () => {
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
-    const [currentMonth, setCurrentMonth] = useState(new Date());
 
+    // Infinite Scroll State
+    const [startDate, setStartDate] = useState(() => {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        d.setDate(d.getDate() - 1); // Start from Yesterday
+        return d;
+    });
 
+    const [endDate, setEndDate] = useState(() => {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        d.setDate(d.getDate() + 9); // Show 10 days total (Yesterday + 9)
+        return d;
+    });
+
+    const scrollContainerRef = useRef(null);
+    const topSentinelRef = useRef(null);
+    const [isFetchingMore, setIsFetchingMore] = useState(false);
+
+    // Scroll Preservation Refs
+    const previousScrollHeightRef = useRef(0);
+    const previousScrollTopRef = useRef(0);
 
     // Derived state for the spreadsheet
     const [spreadsheetData, setSpreadsheetData] = useState([]);
@@ -32,9 +52,65 @@ const AdminTimesheets = () => {
         if (selectedEmployee) {
             generateSpreadsheetData();
         }
-    }, [selectedEmployee, currentMonth, timesheets, tasks, events, leaves]);
+    }, [selectedEmployee, startDate, endDate, timesheets, tasks, events, leaves]);
 
 
+
+    // Snapshot scroll position before startDate updates
+    const getSnapshotBeforeUpdate = () => {
+        if (scrollContainerRef.current) {
+            previousScrollHeightRef.current = scrollContainerRef.current.scrollHeight;
+            previousScrollTopRef.current = scrollContainerRef.current.scrollTop;
+        }
+    };
+
+    // Restore scroll position after startDate updates (and DOM updates)
+    useLayoutEffect(() => {
+        if (scrollContainerRef.current && previousScrollHeightRef.current > 0) {
+            const newScrollHeight = scrollContainerRef.current.scrollHeight;
+            const heightDifference = newScrollHeight - previousScrollHeightRef.current;
+
+            // Adjust scroll position to maintain relative view
+            if (heightDifference > 0) {
+                scrollContainerRef.current.scrollTop = previousScrollTopRef.current + heightDifference;
+            }
+        }
+    }, [startDate]);
+
+    // Scroll Observer
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && !isFetchingMore) {
+                    loadMorePastDates();
+                }
+            },
+            { root: null, rootMargin: '100px 0px 0px 0px', threshold: 0.1 }
+        );
+
+        if (topSentinelRef.current) {
+            observer.observe(topSentinelRef.current);
+        }
+
+        return () => {
+            if (topSentinelRef.current) {
+                observer.unobserve(topSentinelRef.current);
+            }
+        };
+    }, [isFetchingMore, startDate]);
+
+    const loadMorePastDates = () => {
+        setIsFetchingMore(true);
+        getSnapshotBeforeUpdate();
+
+        setStartDate(prev => {
+            const newDate = new Date(prev);
+            newDate.setDate(newDate.getDate() - 14); // Load 2 more weeks
+            return newDate;
+        });
+
+        setTimeout(() => setIsFetchingMore(false), 500);
+    };
 
     const fetchAllData = async () => {
         setLoading(true);
@@ -113,29 +189,17 @@ const AdminTimesheets = () => {
 
 
     const generateSpreadsheetData = () => {
-        const year = currentMonth.getFullYear();
-        const month = currentMonth.getMonth();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
         const data = [];
-
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const yesterday = new Date(today);
-        yesterday.setDate(today.getDate() - 1);
 
-        // Use local date parts to avoid UTC mismatch
-        const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+        // Loop from startDate to endDate
+        const currentPtr = new Date(startDate);
+        const endPtr = new Date(endDate); // inclusive
 
-        // Loop forwards as before (Ascending)
-        for (let day = 1; day <= daysInMonth; day++) {
-            const date = new Date(year, month, day);
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const dayOfWeek = date.getDay(); // 0 = Sunday
-
-            // Skip "Today" if requested to have "Yesterday" on top? 
-            // Better to just have them at top. If the user wants Yesterday at top, 
-            // and today exists, they might want today at the bottom or hidden.
-            // But usually "Latest on top" means exactly that.
+        while (currentPtr <= endPtr) {
+            const dateStr = `${currentPtr.getFullYear()}-${String(currentPtr.getMonth() + 1).padStart(2, '0')}-${String(currentPtr.getDate()).padStart(2, '0')}`;
+            const dayOfWeek = currentPtr.getDay(); // 0 = Sunday
 
             // Check for Holiday
             const holiday = events.find(e => e.date === dateStr && e.is_holiday == 1);
@@ -148,7 +212,7 @@ const AdminTimesheets = () => {
                 const end = new Date(l.end_date);
                 start.setHours(0, 0, 0, 0);
                 end.setHours(0, 0, 0, 0);
-                return date >= start && date <= end;
+                return currentPtr >= start && currentPtr <= end;
             });
 
             const isLeave = !!leave;
@@ -162,23 +226,11 @@ const AdminTimesheets = () => {
                 t.date === dateStr
             );
 
-
-            const isToday = today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
-
-            // Filter out days before yesterday ONLY if looking at current month
-            // If viewing past/future month, show all
-            const isCurrentMonth = today.getMonth() === month && today.getFullYear() === year;
-
-            if (isCurrentMonth) {
-                // strict match: show if date >= yesterday
-                if (date < yesterday) {
-                    continue;
-                }
-            }
+            const isToday = today.getDate() === currentPtr.getDate() && today.getMonth() === currentPtr.getMonth() && today.getFullYear() === currentPtr.getFullYear();
 
             data.push({
                 date: dateStr,
-                displayDate: date.toLocaleDateString(),
+                displayDate: currentPtr.toLocaleDateString(),
                 isHoliday: !!holiday,
                 isSunday: isSunday,
                 holidayName: holiday?.title || 'SUNDAY',
@@ -186,9 +238,11 @@ const AdminTimesheets = () => {
                 timesheet: daysTimesheet || null,
                 isLeave: isLeave,
                 leaveDetails: leave,
-                isYesterday: dateStr === yesterdayStr,
                 isToday: isToday
             });
+
+            // Increment day
+            currentPtr.setDate(currentPtr.getDate() + 1);
         }
         setSpreadsheetData(data);
     };
@@ -260,8 +314,8 @@ const AdminTimesheets = () => {
     if (loading) return <div className="p-8 text-center text-gray-500">Loading data...</div>;
 
     return (
-        <div className="p-6 max-w-full mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div className="p-6 max-w-full mx-auto h-[calc(100vh-80px)] overflow-hidden flex flex-col">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 flex-shrink-0">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Timesheet Management</h1>
                     <p className="text-gray-500">Review planned vs actual work.</p>
@@ -317,24 +371,13 @@ const AdminTimesheets = () => {
                             </button>
                         </div>
 
-                        {/* Month Navigator */}
-                        <div className="flex items-center bg-white rounded-lg shadow-sm border border-gray-200 p-1">
-                            <button onClick={prevMonth} className="p-2 hover:bg-gray-100 rounded-md text-gray-600">
-                                <ChevronLeft size={20} />
-                            </button>
-                            <span className="px-4 font-medium text-gray-900 min-w-[140px] text-center">
-                                {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                            </span>
-                            <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded-md text-gray-600">
-                                <ChevronRight size={20} />
-                            </button>
-                        </div>
+                        {/* Month Navigator - REMOVED */}
                     </div>
                 </div>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
-                <div className="overflow-x-auto">
+            <div className="bg-white border border-gray-200 rounded-xl shadow-sm flex-1 overflow-hidden flex flex-col">
+                <div className="overflow-x-auto flex-1 overflow-y-auto" ref={scrollContainerRef}>
                     <table className="w-full border-collapse">
                         <thead className="sticky top-0 z-20 bg-gray-50 shadow-sm border-b border-gray-200">
                             <tr className="text-left">
@@ -345,14 +388,24 @@ const AdminTimesheets = () => {
                             </tr>
                         </thead>
                         <tbody>
+                            {/* Sentinel for Infinite Scroll Up */}
+                            <tr>
+                                <td colSpan="4" className="p-0">
+                                    <div ref={topSentinelRef} className="h-4 w-full" />
+                                    {isFetchingMore && (
+                                        <div className="text-center py-2 text-xs text-gray-400 bg-gray-50">
+                                            Loading previous dates...
+                                        </div>
+                                    )}
+                                </td>
+                            </tr>
+
                             {spreadsheetData.map((day) => {
                                 // Holiday / Weekend Row
                                 if (day.isHoliday || day.isSunday) {
                                     return (
                                         <tr
                                             key={day.date}
-                                            ref={day.isYesterday ? yesterdayRef : null}
-                                            id={day.isYesterday ? 'yesterday-row' : undefined}
                                             className="bg-yellow-100 border-b border-gray-200"
                                         >
                                             <td className="py-1 px-4 font-medium text-gray-800 border-r border-yellow-200 text-sm">{day.date}</td>
@@ -368,8 +421,6 @@ const AdminTimesheets = () => {
                                     return (
                                         <tr
                                             key={day.date}
-                                            ref={day.isYesterday ? yesterdayRef : null}
-                                            id={day.isYesterday ? 'yesterday-row' : undefined}
                                             className="bg-red-50 border-b border-gray-200"
                                         >
                                             <td className="py-1 px-4 font-medium text-gray-800 border-r border-red-100 text-sm">{day.date}</td>
@@ -384,14 +435,14 @@ const AdminTimesheets = () => {
                                 return (
                                     <tr
                                         key={day.date}
-                                        id={day.isYesterday ? 'yesterday-row' : undefined}
+                                        id={day.isToday ? 'today-row' : undefined}
                                         className={clsx(
-                                            "border-b border-gray-100 hover:bg-gray-50 transition-colors",
-                                            day.isYesterday && "scroll-mt-[60px]"
+                                            "border-b border-gray-100 hover:bg-gray-50 transition-colors"
                                         )}
                                     >
                                         <td className="py-3 px-4 text-sm font-medium text-gray-900 border-r border-gray-100 align-top">
                                             {day.date}
+                                            {day.isToday && <span className="text-xs text-indigo-600 font-bold block mt-1">TODAY</span>}
                                         </td>
 
                                         {/* Plan Column */}
