@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { getTimesheets, saveTimesheet } from '../../services/timesheetService';
 import { getLeaves } from '../../services/leaveService';
 import { getTasks } from '../../services/taskService';
@@ -17,9 +17,27 @@ const AdminTimesheets = () => {
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
-    const [currentMonth, setCurrentMonth] = useState(new Date());
 
+    // Date Range State for Infinite Scroll
+    // Initial: Today - 14 days to Today + 7 days
+    const [startDate, setStartDate] = useState(() => {
+        const d = new Date();
+        d.setDate(d.getDate() - 14);
+        return d;
+    });
+    const [endDate, setEndDate] = useState(() => {
+        const d = new Date();
+        d.setDate(d.getDate() + 7); // Show a week ahead for planning
+        return d;
+    });
 
+    const scrollContainerRef = useRef(null);
+    const topSentinelRef = useRef(null);
+    const [isFetchingMore, setIsFetchingMore] = useState(false);
+
+    // Scroll Preservation Refs
+    const previousScrollHeightRef = useRef(0);
+    const previousScrollTopRef = useRef(0);
 
     // Derived state for the spreadsheet
     const [spreadsheetData, setSpreadsheetData] = useState([]);
@@ -32,9 +50,66 @@ const AdminTimesheets = () => {
         if (selectedEmployee) {
             generateSpreadsheetData();
         }
-    }, [selectedEmployee, currentMonth, timesheets, tasks, events, leaves]);
+    }, [selectedEmployee, startDate, endDate, timesheets, tasks, events, leaves]);
 
+    // Snapshot scroll position before startDate updates
+    const getSnapshotBeforeUpdate = () => {
+        if (scrollContainerRef.current) {
+            previousScrollHeightRef.current = scrollContainerRef.current.scrollHeight;
+            previousScrollTopRef.current = scrollContainerRef.current.scrollTop;
+        }
+    };
 
+    // Restore scroll position after startDate updates (and DOM updates)
+    useLayoutEffect(() => {
+        if (scrollContainerRef.current && previousScrollHeightRef.current > 0) {
+            const newScrollHeight = scrollContainerRef.current.scrollHeight;
+            const heightDifference = newScrollHeight - previousScrollHeightRef.current;
+
+            // Adjust scroll position to maintain relative view
+            if (heightDifference > 0) {
+                scrollContainerRef.current.scrollTop = previousScrollTopRef.current + heightDifference;
+            }
+        }
+    }, [startDate]); // Run this immediately after DOM update when startDate changes
+
+    // Scroll Observer to load more days when reaching top
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && !isFetchingMore) {
+                    loadMorePastDates();
+                }
+            },
+            { root: null, rootMargin: '100px 0px 0px 0px', threshold: 0.1 }
+        );
+
+        if (topSentinelRef.current) {
+            observer.observe(topSentinelRef.current);
+        }
+
+        return () => {
+            if (topSentinelRef.current) {
+                observer.unobserve(topSentinelRef.current);
+            }
+        };
+    }, [isFetchingMore, startDate]); // Re-attach when startDate changes
+
+    const loadMorePastDates = () => {
+        // Capture current scroll state strictly BEFORE state update triggers
+        setIsFetchingMore(true);
+        getSnapshotBeforeUpdate();
+
+        // Prepend 14 more days
+        setStartDate(prev => {
+            const newDate = new Date(prev);
+            newDate.setDate(newDate.getDate() - 14);
+            return newDate;
+        });
+
+        // Use timeout to allow render and prevent immediate re-trigger
+        setTimeout(() => setIsFetchingMore(false), 500);
+    };
 
     const fetchAllData = async () => {
         setLoading(true);
@@ -68,7 +143,6 @@ const AdminTimesheets = () => {
 
     const fetchEmployeeTasks = async (employeeId) => {
         try {
-            // Fetch tasks for the employee. Note: getTasks logic needs to support fetching by user_id
             const employeeTasks = await getTasks(employeeId);
             setTasks(employeeTasks || []);
         } catch (error) {
@@ -109,33 +183,18 @@ const AdminTimesheets = () => {
         setSelectedEmployee(employees[nextIndex]);
     };
 
-
-
-
     const generateSpreadsheetData = () => {
-        const year = currentMonth.getFullYear();
-        const month = currentMonth.getMonth();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
         const data = [];
-
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const yesterday = new Date(today);
-        yesterday.setDate(today.getDate() - 1);
 
-        // Use local date parts to avoid UTC mismatch
-        const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+        // Loop from startDate to endDate
+        const currentPtr = new Date(startDate);
+        const endPtr = new Date(endDate); // inclusive
 
-        // Loop forwards as before (Ascending)
-        for (let day = 1; day <= daysInMonth; day++) {
-            const date = new Date(year, month, day);
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const dayOfWeek = date.getDay(); // 0 = Sunday
-
-            // Skip "Today" if requested to have "Yesterday" on top? 
-            // Better to just have them at top. If the user wants Yesterday at top, 
-            // and today exists, they might want today at the bottom or hidden.
-            // But usually "Latest on top" means exactly that.
+        while (currentPtr <= endPtr) {
+            const dateStr = `${currentPtr.getFullYear()}-${String(currentPtr.getMonth() + 1).padStart(2, '0')}-${String(currentPtr.getDate()).padStart(2, '0')}`;
+            const dayOfWeek = currentPtr.getDay(); // 0 = Sunday
 
             // Check for Holiday
             const holiday = events.find(e => e.date === dateStr && e.is_holiday == 1);
@@ -148,7 +207,7 @@ const AdminTimesheets = () => {
                 const end = new Date(l.end_date);
                 start.setHours(0, 0, 0, 0);
                 end.setHours(0, 0, 0, 0);
-                return date >= start && date <= end;
+                return currentPtr >= start && currentPtr <= end;
             });
 
             const isLeave = !!leave;
@@ -162,23 +221,11 @@ const AdminTimesheets = () => {
                 t.date === dateStr
             );
 
-
-            const isToday = today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
-
-            // Filter out days before yesterday ONLY if looking at current month
-            // If viewing past/future month, show all
-            const isCurrentMonth = today.getMonth() === month && today.getFullYear() === year;
-
-            if (isCurrentMonth) {
-                // strict match: show if date >= yesterday
-                if (date < yesterday) {
-                    continue;
-                }
-            }
+            const isToday = today.getDate() === currentPtr.getDate() && today.getMonth() === currentPtr.getMonth() && today.getFullYear() === currentPtr.getFullYear();
 
             data.push({
                 date: dateStr,
-                displayDate: date.toLocaleDateString(),
+                displayDate: currentPtr.toLocaleDateString(),
                 isHoliday: !!holiday,
                 isSunday: isSunday,
                 holidayName: holiday?.title || 'SUNDAY',
@@ -186,33 +233,28 @@ const AdminTimesheets = () => {
                 timesheet: daysTimesheet || null,
                 isLeave: isLeave,
                 leaveDetails: leave,
-                isYesterday: dateStr === yesterdayStr,
                 isToday: isToday
             });
+
+            // Increment day
+            currentPtr.setDate(currentPtr.getDate() + 1);
         }
+
         setSpreadsheetData(data);
     };
 
     const handleSaveRemark = async (item, newRemark, isDelete = false) => {
-        // Get existing remark safely (check both snake_case from DB and camelCase from local updates)
         const currentRemark = item.timesheet?.admin_remarks || item.timesheet?.adminRemarks || "";
         const trimmedNew = newRemark ? newRemark.trim() : "";
 
-        // Validation: Ignore empty if not deleting and not clearing an existing remark
         if (!isDelete && trimmedNew === "") {
-            // If nothing exists, nothing to save
             if (!currentRemark) return;
-            // If something exists, leaving it empty means we might want to delete... 
-            // But usually safety check prevents accidental clear. 
-            // Let's assume manual clear (empty string) is intentional IF existing is present.
         }
 
-        // If strictly unchanged (and not a forced delete action)
         if (trimmedNew === currentRemark && !isDelete) {
             return;
         }
 
-        // Prepend Admin Name if not empty
         const currentUser = JSON.parse(localStorage.getItem('hr_current_user'));
         let finalRemark = newRemark;
 
@@ -226,26 +268,23 @@ const AdminTimesheets = () => {
         if (item.timesheet) {
             await saveTimesheet({
                 ...item.timesheet,
-                employeeId: item.timesheet.employee_id, // Explicitly pass ID to prevent service from using current user
+                employeeId: item.timesheet.employee_id,
                 adminRemarks: finalRemark
             });
-            // Refresh local state purely for UI responsiveness or re-fetch
             const newTimesheets = timesheets.map(t =>
                 (t.id === item.timesheet.id) ? { ...t, adminRemarks: finalRemark, admin_remarks: finalRemark } : t
             );
             setTimesheets(newTimesheets);
         } else {
-            // Create new timesheet entry for remarks
             try {
                 const payload = {
-                    employeeId: selectedEmployee.id, // Ensure this matches backend expectation (camelCase or snake_case depending on service wrapper)
-                    employee_id: selectedEmployee.id, // Send both to be safe or check service
+                    employeeId: selectedEmployee.id,
+                    employee_id: selectedEmployee.id,
                     date: item.date,
                     adminRemarks: finalRemark,
                     entries: []
                 };
                 await saveTimesheet(payload);
-                // We must re-fetch here because we don't have the new ID
                 fetchAllData();
             } catch (error) {
                 console.error("Failed to save remark for new timesheet", error);
@@ -254,24 +293,19 @@ const AdminTimesheets = () => {
         }
     };
 
-    const prevMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
-    const nextMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
-
     if (loading) return <div className="p-8 text-center text-gray-500">Loading data...</div>;
 
     return (
-        <div className="p-6 max-w-full mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div className="p-6 max-w-full mx-auto h-[calc(100vh-80px)] overflow-hidden flex flex-col">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4 flex-shrink-0">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Timesheet Management</h1>
                     <p className="text-gray-500">Review planned vs actual work.</p>
                 </div>
 
-
-
                 <div className="flex flex-col md:flex-row items-center gap-4">
                     <div className="flex items-center gap-2">
-                        {/* Employee Switcher with Arrows */}
+                        {/* Employee Switcher */}
                         <div className="flex items-center bg-white rounded-lg shadow-sm border border-gray-200 p-1">
                             <button
                                 onClick={handlePrevEmployee}
@@ -316,25 +350,12 @@ const AdminTimesheets = () => {
                                 <ChevronRight size={20} />
                             </button>
                         </div>
-
-                        {/* Month Navigator */}
-                        <div className="flex items-center bg-white rounded-lg shadow-sm border border-gray-200 p-1">
-                            <button onClick={prevMonth} className="p-2 hover:bg-gray-100 rounded-md text-gray-600">
-                                <ChevronLeft size={20} />
-                            </button>
-                            <span className="px-4 font-medium text-gray-900 min-w-[140px] text-center">
-                                {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                            </span>
-                            <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded-md text-gray-600">
-                                <ChevronRight size={20} />
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
-                <div className="overflow-x-auto">
+            <div className="bg-white border border-gray-200 rounded-xl shadow-sm flex-1 overflow-hidden flex flex-col">
+                <div className="overflow-x-auto flex-1 overflow-y-auto" ref={scrollContainerRef}>
                     <table className="w-full border-collapse">
                         <thead className="sticky top-0 z-20 bg-gray-50 shadow-sm border-b border-gray-200">
                             <tr className="text-left">
@@ -345,57 +366,43 @@ const AdminTimesheets = () => {
                             </tr>
                         </thead>
                         <tbody>
+                            {/* Sentinel for Infinite Scroll Up */}
+                            <tr>
+                                <td colSpan="4" className="p-0">
+                                    <div ref={topSentinelRef} className="h-4 w-full" />
+                                    {isFetchingMore && (
+                                        <div className="text-center py-2 text-xs text-gray-400 bg-gray-50">
+                                            Loading previous dates...
+                                        </div>
+                                    )}
+                                </td>
+                            </tr>
+
                             {spreadsheetData.map((day) => {
-                                // Holiday / Weekend Row
-                                if (day.isHoliday || day.isSunday) {
-                                    return (
-                                        <tr
-                                            key={day.date}
-                                            ref={day.isYesterday ? yesterdayRef : null}
-                                            id={day.isYesterday ? 'yesterday-row' : undefined}
-                                            className="bg-yellow-100 border-b border-gray-200"
-                                        >
-                                            <td className="py-1 px-4 font-medium text-gray-800 border-r border-yellow-200 text-sm">{day.date}</td>
-                                            <td colSpan="3" className="py-1 px-4 text-center font-bold text-gray-600 tracking-wider uppercase text-xs">
-                                                {day.holidayName}
-                                            </td>
-                                        </tr>
-                                    );
-                                }
+                                // Holiday / Weekend / Leave Styling
+                                const isSpecial = day.isHoliday || day.isSunday || day.isLeave;
+                                const rowClass = day.isLeave ? "bg-red-50" : (day.isHoliday || day.isSunday ? "bg-yellow-100" : (day.isToday ? "bg-indigo-50/30" : "hover:bg-gray-50"));
+                                const borderClass = day.isLeave ? "border-red-100" : (day.isHoliday || day.isSunday ? "border-yellow-200" : "border-gray-100");
 
-                                // Leave Row
-                                if (day.isLeave) {
-                                    return (
-                                        <tr
-                                            key={day.date}
-                                            ref={day.isYesterday ? yesterdayRef : null}
-                                            id={day.isYesterday ? 'yesterday-row' : undefined}
-                                            className="bg-red-50 border-b border-gray-200"
-                                        >
-                                            <td className="py-1 px-4 font-medium text-gray-800 border-r border-red-100 text-sm">{day.date}</td>
-                                            <td colSpan="3" className="py-1 px-4 text-center font-bold text-red-800 tracking-wider uppercase text-xs">
-                                                {day.leaveDetails?.type} {day.leaveDetails?.reason ? `- ${day.leaveDetails.reason}` : ''}
-                                            </td>
-                                        </tr>
-                                    );
-                                }
-
-                                // Regular Row
                                 return (
                                     <tr
                                         key={day.date}
-                                        id={day.isYesterday ? 'yesterday-row' : undefined}
+                                        id={day.isToday ? 'today-row' : undefined}
                                         className={clsx(
-                                            "border-b border-gray-100 hover:bg-gray-50 transition-colors",
-                                            day.isYesterday && "scroll-mt-[60px]"
+                                            "border-b transition-colors scroll-mt-[60px]",
+                                            rowClass,
+                                            borderClass
                                         )}
                                     >
-                                        <td className="py-3 px-4 text-sm font-medium text-gray-900 border-r border-gray-100 align-top">
-                                            {day.date}
+                                        <td className={`py-3 px-4 font-medium text-sm border-r ${borderClass} align-top`}>
+                                            <div className="whitespace-nowrap">{day.date}</div>
+                                            {day.isToday && <span className="text-xs text-indigo-600 font-bold block mt-1">TODAY</span>}
+                                            {(day.isHoliday || day.isSunday) && <div className="text-xs font-bold text-gray-500 mt-1 uppercase">{day.holidayName}</div>}
+                                            {day.isLeave && <div className="text-xs font-bold text-red-600 mt-1 uppercase">{day.leaveDetails?.type}</div>}
                                         </td>
 
                                         {/* Plan Column */}
-                                        <td className="py-3 px-4 border-r border-gray-100 align-top">
+                                        <td className={`py-3 px-4 border-r ${borderClass} align-top`}>
                                             {day.tasks && day.tasks.length > 0 ? (
                                                 <>
                                                     <ul className="list-disc list-inside space-y-1">
@@ -412,54 +419,47 @@ const AdminTimesheets = () => {
                                                                         ETA: {t.eta}m
                                                                     </span>
                                                                 )}
+                                                                {/* Differences Calculation (Date & Time) */}
                                                                 {(() => {
                                                                     if (!t.is_completed) return null;
 
-                                                                    // Find ALL actual timesheet entries for this task across all loaded days
-                                                                    // We need to look at the whole 'timesheets' array which contains all days
+                                                                    // Find relevant timesheet entries
                                                                     let taskEntries = [];
                                                                     if (Array.isArray(timesheets)) {
                                                                         timesheets.forEach(tsDay => {
                                                                             if (tsDay.entries) {
                                                                                 const matching = tsDay.entries.filter(e => (e.taskId || e.task_id) == t.id && e.is_deleted != 1);
                                                                                 if (matching.length > 0) {
-                                                                                    // attach date to entry for calculation
                                                                                     matching.forEach(m => taskEntries.push({ ...m, date: tsDay.date }));
                                                                                 }
                                                                             }
                                                                         });
                                                                     }
 
-                                                                    // If no entry found, we can't calculate stats
                                                                     if (taskEntries.length === 0) return null;
 
-                                                                    // Use the latest entry date for date difference
                                                                     const lastEntry = taskEntries.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-                                                                    // Sum duration
                                                                     const totalDuration = taskEntries.reduce((sum, e) => sum + parseFloat(e.duration || 0), 0);
 
                                                                     let diffDaysElement = null;
                                                                     let diffMinsElement = null;
 
-                                                                    // Date Diff (Latest Work Date vs Planned Date)
+                                                                    // Date Diff
                                                                     if (t.planned_date) {
                                                                         const plannedDate = new Date(t.planned_date);
                                                                         plannedDate.setHours(0, 0, 0, 0);
                                                                         const actualDate = new Date(lastEntry.date);
                                                                         actualDate.setHours(0, 0, 0, 0);
-                                                                        const diffTime = actualDate - plannedDate;
-                                                                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                                                        const diffDays = Math.ceil((actualDate - plannedDate) / (1000 * 60 * 60 * 24));
 
                                                                         if (diffDays > 0) diffDaysElement = <span className="text-xs font-bold text-red-600 ml-1">(+{diffDays}d)</span>;
                                                                         else if (diffDays < 0) diffDaysElement = <span className="text-xs font-bold text-green-600 ml-1">({diffDays}d)</span>;
                                                                     }
 
-                                                                    // Time Diff (Total Actual Duration vs ETA)
+                                                                    // Time Diff
                                                                     if (t.eta) {
-                                                                        const etaMins = parseInt(t.eta);
                                                                         const actualMins = totalDuration * 60;
-                                                                        const diff = Math.round(actualMins - etaMins);
-
+                                                                        const diff = Math.round(actualMins - parseInt(t.eta));
                                                                         if (diff < 0) diffMinsElement = <span className="text-xs font-bold text-green-600 ml-1">({diff}m)</span>;
                                                                         else if (diff > 0) diffMinsElement = <span className="text-xs font-bold text-red-600 ml-1">(+{diff}m)</span>;
                                                                     }
@@ -470,15 +470,14 @@ const AdminTimesheets = () => {
                                                         ))}
                                                     </ul>
 
-                                                    {/* Total Planned Hours */}
+                                                    {/* Total Planned */}
                                                     {(() => {
                                                         const totalPlannedMins = day.tasks.reduce((sum, t) => sum + (parseInt(t.eta) || 0), 0);
                                                         if (totalPlannedMins > 0) {
-                                                            const totalPlannedHrs = (totalPlannedMins / 60).toFixed(2);
                                                             return (
                                                                 <div className="pt-2 mt-2 border-t border-gray-100">
                                                                     <span className="text-xs font-bold text-indigo-600">
-                                                                        Total: {totalPlannedHrs.replace(/[.,]00$/, "")} hrs
+                                                                        Total: {(totalPlannedMins / 60).toFixed(2).replace(/[.,]00$/, "")} hrs
                                                                     </span>
                                                                 </div>
                                                             );
@@ -492,44 +491,20 @@ const AdminTimesheets = () => {
                                         </td>
 
                                         {/* Actual Column */}
-                                        <td className="py-3 px-4 border-r border-gray-100 align-top">
+                                        <td className={`py-3 px-4 border-r ${borderClass} align-top`}>
                                             {day.timesheet && day.timesheet.entries && day.timesheet.entries.length > 0 ? (
                                                 <div className="space-y-2">
                                                     {day.timesheet.entries.filter(e => e.is_deleted != 1).map(entry => {
                                                         const task = tasks.find(t => t.id == (entry.taskId || entry.task_id));
                                                         const color = getTaskStatusColor(task?.planned_date, task?.is_completed, day.date);
 
+                                                        // Diff Calculations for individual entry
                                                         let timeDiffElement = null;
                                                         if (task && task.eta) {
-                                                            const etaMins = parseInt(task.eta);
                                                             const actualMins = parseFloat(entry.duration) * 60;
-                                                            const diff = Math.round(actualMins - etaMins);
-
-                                                            if (diff < 0) {
-                                                                timeDiffElement = <span className="text-xs font-bold text-green-600 ml-1">({diff}m)</span>;
-                                                            } else if (diff > 0) {
-                                                                timeDiffElement = <span className="text-xs font-bold text-red-600 ml-1">(+{diff}m)</span>;
-                                                            }
-                                                        }
-
-                                                        // Calculate Date Difference (Days)
-                                                        let dateDiffElement = null;
-                                                        if (task && task.planned_date) {
-                                                            const plannedDate = new Date(task.planned_date);
-                                                            plannedDate.setHours(0, 0, 0, 0);
-                                                            const actualDate = new Date(day.date);
-                                                            actualDate.setHours(0, 0, 0, 0);
-
-                                                            // Difference in milliseconds
-                                                            const diffTime = actualDate - plannedDate;
-                                                            // Difference in days
-                                                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                                                            if (diffDays > 0) {
-                                                                dateDiffElement = <span className="text-xs font-bold text-red-600 ml-1">(+{diffDays}d)</span>;
-                                                            } else if (diffDays < 0) {
-                                                                dateDiffElement = <span className="text-xs font-bold text-green-600 ml-1">({diffDays}d)</span>;
-                                                            }
+                                                            const diff = Math.round(actualMins - parseInt(task.eta));
+                                                            if (diff < 0) timeDiffElement = <span className="text-xs font-bold text-green-600 ml-1">({diff}m)</span>;
+                                                            else if (diff > 0) timeDiffElement = <span className="text-xs font-bold text-red-600 ml-1">(+{diff}m)</span>;
                                                         }
 
                                                         return (
@@ -543,14 +518,9 @@ const AdminTimesheets = () => {
                                                                                     {task?.task_content || entry.description}
                                                                                 </span>
                                                                             </TaskTooltip>
-                                                                            {/* Show remarks if they exist and are different from Title */}
                                                                             {entry.description && task && entry.description !== task.task_content && (
                                                                                 <div className="mt-1">
-                                                                                    <ExpandableText
-                                                                                        text={entry.description}
-                                                                                        limit={100}
-                                                                                        className="text-xs text-gray-600"
-                                                                                    />
+                                                                                    <ExpandableText text={entry.description} limit={100} className="text-xs text-gray-600" />
                                                                                 </div>
                                                                             )}
                                                                         </div>
@@ -558,7 +528,6 @@ const AdminTimesheets = () => {
                                                                     <div className="text-xs text-gray-400 whitespace-nowrap ml-2 flex flex-col items-end">
                                                                         <span>{entry.startTime} - {entry.endTime}</span>
                                                                         <span className="font-medium text-gray-700 flex items-center">
-                                                                            {dateDiffElement}
                                                                             {timeDiffElement}
                                                                             <span className="ml-1">({entry.duration}h)</span>
                                                                         </span>
@@ -568,23 +537,20 @@ const AdminTimesheets = () => {
                                                         );
                                                     })}
 
+                                                    {/* Total Actual */}
                                                     <div className="pt-1 mt-1 border-t border-gray-100 flex justify-between items-center">
                                                         <span className="text-xs font-bold text-indigo-600">
                                                             Total: {day.timesheet.entries.reduce((sum, e) => sum + (e.is_deleted == 1 ? 0 : parseFloat(e.duration || 0)), 0)} hrs
                                                         </span>
-                                                        <span className={clsx(
-                                                            "text-xs px-2 py-0.5 rounded-full",
-                                                            (() => {
-                                                                const today = new Date();
-                                                                today.setHours(0, 0, 0, 0);
-                                                                const sheetDate = new Date(day.date);
-                                                                sheetDate.setHours(0, 0, 0, 0);
-                                                                const isPast = sheetDate < today;
-                                                                // Treat past 'draft' as 'submitted' for display
-                                                                const displayStatus = (isPast && day.timesheet.status === 'draft') ? 'submitted' : day.timesheet.status;
-                                                                return displayStatus === 'submitted' ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700";
-                                                            })()
-                                                        )}>
+                                                        <span className={clsx("text-xs px-2 py-0.5 rounded-full", (() => {
+                                                            const today = new Date();
+                                                            today.setHours(0, 0, 0, 0);
+                                                            const sheetDate = new Date(day.date);
+                                                            sheetDate.setHours(0, 0, 0, 0);
+                                                            const isPast = sheetDate < today;
+                                                            const displayStatus = (isPast && day.timesheet.status === 'draft') ? 'submitted' : day.timesheet.status;
+                                                            return displayStatus === 'submitted' ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700";
+                                                        })())}>
                                                             {(() => {
                                                                 const today = new Date();
                                                                 today.setHours(0, 0, 0, 0);
@@ -615,7 +581,7 @@ const AdminTimesheets = () => {
                                                 {(day.timesheet?.admin_remarks || day.timesheet?.adminRemarks) && (
                                                     <button
                                                         onMouseDown={(e) => {
-                                                            e.preventDefault(); // Prevent blur on input
+                                                            e.preventDefault();
                                                             handleSaveRemark(day, '', true);
                                                         }}
                                                         className="text-gray-400 hover:text-red-500 transition-colors"
@@ -633,7 +599,7 @@ const AdminTimesheets = () => {
                     </table>
                 </div>
             </div>
-        </div >
+        </div>
     );
 };
 
