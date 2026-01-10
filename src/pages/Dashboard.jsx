@@ -896,30 +896,11 @@ const Dashboard = () => {
                                                 <div className="flex items-start gap-3 min-w-0 flex-1">
                                                     <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors mt-1.5 ${color.dot}`}></div>
                                                     <div className="flex flex-col min-w-0 flex-1">
-                                                        <div className="flex items-center gap-2">
-                                                            <TaskTooltip task={task || { task_content: entry.description, is_completed: true, created_at: today, planned_date: today }}>
-                                                                <span className={`font-medium transition-colors ${color.text}`}>
-                                                                    {task?.task_content || entry.description}
-                                                                </span>
-                                                            </TaskTooltip>
-                                                            {/* Action Buttons: Visible always, near title */}
-                                                            <div className="flex gap-1">
-                                                                <button
-                                                                    onClick={(e) => { e.stopPropagation(); startEditingEntry(entry, task); }}
-                                                                    className="p-1 text-gray-300 hover:text-indigo-600 transition-colors"
-                                                                    title="Edit"
-                                                                >
-                                                                    <Pencil size={12} />
-                                                                </button>
-                                                                <button
-                                                                    onClick={(e) => { e.stopPropagation(); handleDeleteEntry(index, task); }}
-                                                                    className="p-1 text-gray-300 hover:text-red-500 transition-colors"
-                                                                    title="Delete"
-                                                                >
-                                                                    <Trash2 size={12} />
-                                                                </button>
-                                                            </div>
-                                                        </div>
+                                                        <TaskTooltip task={task || { task_content: entry.description, is_completed: true, created_at: today, planned_date: today }}>
+                                                            <span className={`font-medium transition-colors ${color.text}`}>
+                                                                {task?.task_content || entry.description}
+                                                            </span>
+                                                        </TaskTooltip>
                                                         {/* Show remarks if they exist and are different from Title */}
                                                         {entry.description && task && entry.description !== task.task_content && (
                                                             <div className="mt-0.5">
@@ -933,6 +914,23 @@ const Dashboard = () => {
                                                         <span className="font-bold text-gray-900">{entry.duration}</span>
                                                         <span className="text-xs text-gray-500 font-medium">hrs</span>
                                                         {timeDiffElement}
+                                                    </div>
+                                                    {/* Move buttons here */}
+                                                    <div className="flex gap-1">
+                                                        <button
+                                                            onClick={() => startEditingEntry(entry, task)}
+                                                            className="p-1 text-gray-300 hover:text-indigo-600 transition-colors"
+                                                            title="Edit"
+                                                        >
+                                                            <Pencil size={12} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteEntry(index, task)}
+                                                            className="p-1 text-gray-300 hover:text-red-500 transition-colors"
+                                                            title="Delete"
+                                                        >
+                                                            <Trash2 size={12} />
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1013,9 +1011,10 @@ const Dashboard = () => {
 
                         {/* Task List Header */}
                         <div className="px-6 py-3 bg-gray-50/50 border-b border-gray-100 grid grid-cols-12 gap-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                            <div className="col-span-6">Task</div>
-                            <div className="col-span-3 text-right">ETA</div>
+                            <div className="col-span-5">Task</div>
+                            <div className="col-span-2 text-right">ETA</div>
                             <div className="col-span-3 text-right">Due Date</div>
+                            <div className="col-span-2 text-center">Actions</div>
                         </div>
 
                         <div className="flex-1 overflow-y-auto no-scrollbar">
@@ -1030,39 +1029,39 @@ const Dashboard = () => {
                                                 className={`grid grid-cols-12 gap-4 items-center px-6 py-3 ${isTodayLeave ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                                                 onClick={() => !isTodayLeave && toggleTaskExpand(task)}
                                             >
-                                                <div className="col-span-6 flex items-center gap-3 overflow-hidden">
+                                                <div className="col-span-5 flex items-center gap-3 overflow-hidden">
                                                     <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getTaskStatusColor(task.planned_date, task.is_completed, task.completed_date).dot}`}></div>
-                                                    <div className="flex items-center gap-2 min-w-0">
-                                                        <TaskTooltip task={task}>
-                                                            <span className={`truncate text-sm font-bold block ${getTaskStatusColor(task.planned_date, task.is_completed, task.completed_date).text}`}>
-                                                                {task.task_content}
-                                                            </span>
-                                                        </TaskTooltip>
-                                                        {isEditable(task) && !isTodayLeave && (
-                                                            <div className="flex items-center gap-1 flex-shrink-0">
-                                                                <button
-                                                                    onClick={(e) => handleEditTaskClick(task, e)}
-                                                                    className="p-1 text-gray-300 hover:text-indigo-600 transition-colors"
-                                                                    title="Edit Task"
-                                                                >
-                                                                    <Pencil size={13} />
-                                                                </button>
-                                                                <button
-                                                                    onClick={(e) => handleDeleteTaskClick(task.id, e)}
-                                                                    className="p-1 text-gray-300 hover:text-red-600 transition-colors"
-                                                                    title="Delete Task"
-                                                                >
-                                                                    <Trash2 size={13} />
-                                                                </button>
-                                                            </div>
-                                                        )}
-                                                    </div>
+                                                    <TaskTooltip task={task}>
+                                                        <span className={`truncate text-sm font-bold block ${getTaskStatusColor(task.planned_date, task.is_completed, task.completed_date).text}`}>
+                                                            {task.task_content}
+                                                        </span>
+                                                    </TaskTooltip>
                                                 </div>
-                                                <div className="col-span-3 text-right text-xs font-medium text-gray-500">
+                                                <div className="col-span-2 text-right text-xs font-medium text-gray-500">
                                                     {task.eta ? `${task.eta}m` : '-'}
                                                 </div>
                                                 <div className="col-span-3 text-right text-xs font-medium text-gray-500">
                                                     {new Date(task.planned_date).toLocaleDateString()}
+                                                </div>
+                                                <div className="col-span-2 flex justify-center">
+                                                    {isEditable(task) && !isTodayLeave && (
+                                                        <div className="flex items-center gap-1">
+                                                            <button
+                                                                onClick={(e) => handleEditTaskClick(task, e)}
+                                                                className="p-1 text-gray-300 hover:text-indigo-600 transition-colors"
+                                                                title="Edit Task"
+                                                            >
+                                                                <Pencil size={13} />
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => handleDeleteTaskClick(task.id, e)}
+                                                                className="p-1 text-gray-300 hover:text-red-600 transition-colors"
+                                                                title="Delete Task"
+                                                            >
+                                                                <Trash2 size={13} />
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
 
