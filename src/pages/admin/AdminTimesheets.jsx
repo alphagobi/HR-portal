@@ -17,12 +17,13 @@ const AdminTimesheets = () => {
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
+    const [currentMonth, setCurrentMonth] = useState(new Date());
 
     // Infinite Scroll State
     const [startDate, setStartDate] = useState(() => {
         const d = new Date();
+        d.setDate(1); // Start from 1st of current month
         d.setHours(0, 0, 0, 0);
-        d.setDate(d.getDate() - 1); // Start from Yesterday
         return d;
     });
 
@@ -114,6 +115,32 @@ const AdminTimesheets = () => {
         });
 
         setTimeout(() => setIsFetchingMore(false), 500);
+    };
+
+    const prevMonth = () => {
+        previousScrollHeightRef.current = 0; // Disable scroll restoration
+        const newMonth = new Date(currentMonth);
+        newMonth.setMonth(newMonth.getMonth() - 1);
+        setCurrentMonth(newMonth);
+
+        // Set view to that month
+        const start = new Date(newMonth.getFullYear(), newMonth.getMonth(), 1);
+        const end = new Date(newMonth.getFullYear(), newMonth.getMonth() + 1, 0);
+        setStartDate(start);
+        setEndDate(end);
+    };
+
+    const nextMonth = () => {
+        previousScrollHeightRef.current = 0; // Disable scroll restoration
+        const newMonth = new Date(currentMonth);
+        newMonth.setMonth(newMonth.getMonth() + 1);
+        setCurrentMonth(newMonth);
+
+        // Set view to that month
+        const start = new Date(newMonth.getFullYear(), newMonth.getMonth(), 1);
+        const end = new Date(newMonth.getFullYear(), newMonth.getMonth() + 1, 0);
+        setStartDate(start);
+        setEndDate(end);
     };
 
     const fetchAllData = async () => {
@@ -312,8 +339,7 @@ const AdminTimesheets = () => {
         }
     };
 
-    const prevMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
-    const nextMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+
 
     if (loading) return <div className="p-8 text-center text-gray-500">Loading data...</div>;
 
@@ -375,7 +401,18 @@ const AdminTimesheets = () => {
                             </button>
                         </div>
 
-                        {/* Month Navigator - REMOVED */}
+                        {/* Month Navigator */}
+                        <div className="flex items-center bg-white rounded-lg shadow-sm border border-gray-200 p-1">
+                            <button onClick={prevMonth} className="p-2 hover:bg-gray-100 rounded-md text-gray-600">
+                                <ChevronLeft size={20} />
+                            </button>
+                            <span className="px-4 font-medium text-gray-900 min-w-[140px] text-center">
+                                {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                            </span>
+                            <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded-md text-gray-600">
+                                <ChevronRight size={20} />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
