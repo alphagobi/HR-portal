@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getTasks, createTask, deleteTask } from '../services/taskService';
+import { getTasks, createTask, deleteTask, updateTask } from '../services/taskService';
 import { getCurrentUser } from '../services/authService';
-import { Plus, Calendar, Search, X } from 'lucide-react';
+import { Plus, Calendar, Search, X, Pencil, Trash2 } from 'lucide-react';
 import TaskTooltip from '../components/TaskTooltip';
 import clsx from 'clsx';
 import { getTaskStatusColor } from '../utils/taskUtils';
@@ -34,6 +34,7 @@ const Tasks = () => {
         eta: '',
         frameworkId: ''
     });
+    const [editingTaskId, setEditingTaskId] = useState(null);
 
     const [frameworks, setFrameworks] = useState([]);
 
@@ -87,20 +88,63 @@ const Tasks = () => {
         if (!user) return;
 
         try {
-            await createTask({
-                user_id: user.id,
-                task_content: newTask.content,
-                planned_date: newTask.date,
-                eta: newTask.eta || null,
-                framework_id: newTask.frameworkId || null,
-                recurrence: isRecurring ? { ...recurrenceSettings, isRecurring: true } : null
-            });
+            if (editingTaskId) {
+                // Update existing task
+                await updateTask(editingTaskId, {
+                    task_content: newTask.content,
+                    planned_date: newTask.date,
+                    start_time: null, // Resetting times if content changes might be safer, but keeping simple for now
+                    end_time: null
+                });
+            } else {
+                // Create new task
+                await createTask({
+                    user_id: user.id,
+                    task_content: newTask.content,
+                    planned_date: newTask.date,
+                    eta: newTask.eta || null,
+                    framework_id: newTask.frameworkId || null,
+                    recurrence: isRecurring ? { ...recurrenceSettings, isRecurring: true } : null
+                });
+            }
+
             setNewTask({ content: '', date: new Date().toISOString().split('T')[0], eta: '', frameworkId: '' });
             setIsRecurring(false); // Reset recurrence
+            setEditingTaskId(null); // Reset edit mode
             setShowAddModal(false);
             fetchTasks();
         } catch (error) {
-            console.error("Failed to create task", error);
+            console.error("Failed to save task", error);
+        }
+    };
+
+    const isEditable = (task) => {
+        if (!task.created_at) return false;
+        const created = new Date(task.created_at).getTime();
+        const now = Date.now();
+        // 24 hours in milliseconds = 24 * 60 * 60 * 1000 = 86400000
+        return (now - created) < 86400000;
+    };
+
+    const handleEditClick = (task) => {
+        setNewTask({
+            content: task.task_content,
+            date: task.planned_date,
+            eta: task.eta || '', // Assuming backend provides this, if not might need default
+            frameworkId: task.framework_id || ''
+        });
+        setEditingTaskId(task.id);
+        setShowAddModal(true);
+    };
+
+    const handleDeleteClick = async (taskId) => {
+        if (window.confirm("Are you sure you want to delete this task?")) {
+            try {
+                await deleteTask(taskId);
+                fetchTasks();
+            } catch (error) {
+                console.error("Failed to delete task", error);
+            }
         }
     };
 
@@ -323,6 +367,24 @@ const Tasks = () => {
                                                         {task.eta && (
                                                             <span className="font-medium text-gray-900">{task.eta} mins</span>
                                                         )}
+                                                        {isEditable(task) && (
+                                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                <button
+                                                                    onClick={() => handleEditClick(task)}
+                                                                    className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
+                                                                    title="Edit Task"
+                                                                >
+                                                                    <Pencil size={14} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteClick(task.id)}
+                                                                    className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                                                    title="Delete Task"
+                                                                >
+                                                                    <Trash2 size={14} />
+                                                                </button>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             );
@@ -340,7 +402,7 @@ const Tasks = () => {
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6 m-4">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-bold text-gray-900">Add New Task</h3>
+                            <h3 className="text-lg font-bold text-gray-900">{editingTaskId ? 'Edit Task' : 'Add New Task'}</h3>
                             <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600">
                                 <X size={20} />
                             </button>
@@ -371,120 +433,123 @@ const Tasks = () => {
                                 </select>
                             </div>
 
-                            {/* Recurrence Toggle */}
-                            <div className="mb-4">
-                                <label className="flex items-center gap-2 cursor-pointer select-none">
-                                    <input
-                                        type="checkbox"
-                                        checked={isRecurring}
-                                        onChange={(e) => setIsRecurring(e.target.checked)}
-                                        className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
-                                    />
-                                    <span className="text-sm font-medium text-gray-700">Recurring Task?</span>
-                                </label>
 
-                                {/* Recurrence Settings */}
-                                {isRecurring && (
-                                    <div className="mt-3 p-4 bg-gray-50 rounded-lg border border-gray-100 space-y-4">
-                                        {/* Frequency & Interval */}
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-500 mb-1">Frequency</label>
-                                                <select
-                                                    value={recurrenceSettings.frequency}
-                                                    onChange={(e) => setRecurrenceSettings({ ...recurrenceSettings, frequency: e.target.value })}
-                                                    className="w-full p-2 text-sm border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                >
-                                                    <option value="daily">Daily</option>
-                                                    <option value="weekly">Weekly</option>
-                                                    <option value="monthly">Monthly</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-500 mb-1">Interval (Every X)</label>
-                                                <input
-                                                    type="number"
-                                                    min="1"
-                                                    value={recurrenceSettings.interval}
-                                                    onChange={(e) => setRecurrenceSettings({ ...recurrenceSettings, interval: e.target.value })}
-                                                    className="w-full p-2 text-sm border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                />
-                                            </div>
-                                        </div>
+                            {/* Recurrence Toggle - Only for New Tasks */}
+                            {!editingTaskId && (
+                                <div className="mb-4">
+                                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                                        <input
+                                            type="checkbox"
+                                            checked={isRecurring}
+                                            onChange={(e) => setIsRecurring(e.target.checked)}
+                                            className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                        />
+                                        <span className="text-sm font-medium text-gray-700">Recurring Task?</span>
+                                    </label>
 
-                                        {/* Weekdays (Only if Weekly) */}
-                                        {recurrenceSettings.frequency === 'weekly' && (
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-500 mb-1">On Days</label>
-                                                <div className="flex gap-2">
-                                                    {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
-                                                        <button
-                                                            key={i}
-                                                            type="button"
-                                                            onClick={() => {
-                                                                const days = recurrenceSettings.weekDays.includes(i)
-                                                                    ? recurrenceSettings.weekDays.filter(day => day !== i)
-                                                                    : [...recurrenceSettings.weekDays, i];
-                                                                setRecurrenceSettings({ ...recurrenceSettings, weekDays: days });
-                                                            }}
-                                                            className={clsx(
-                                                                "w-8 h-8 rounded-full text-xs font-bold transition-colors flex items-center justify-center",
-                                                                recurrenceSettings.weekDays.includes(i)
-                                                                    ? "bg-indigo-600 text-white"
-                                                                    : "bg-white border border-gray-200 text-gray-500 hover:bg-gray-50"
-                                                            )}
-                                                        >
-                                                            {d}
-                                                        </button>
-                                                    ))}
+                                    {/* Recurrence Settings */}
+                                    {isRecurring && (
+                                        <div className="mt-3 p-4 bg-gray-50 rounded-lg border border-gray-100 space-y-4">
+                                            {/* Frequency & Interval */}
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-500 mb-1">Frequency</label>
+                                                    <select
+                                                        value={recurrenceSettings.frequency}
+                                                        onChange={(e) => setRecurrenceSettings({ ...recurrenceSettings, frequency: e.target.value })}
+                                                        className="w-full p-2 text-sm border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
+                                                    >
+                                                        <option value="daily">Daily</option>
+                                                        <option value="weekly">Weekly</option>
+                                                        <option value="monthly">Monthly</option>
+                                                    </select>
                                                 </div>
-                                            </div>
-                                        )}
-
-                                        {/* End Condition */}
-                                        <div>
-                                            <label className="block text-xs font-medium text-gray-500 mb-1">Ends</label>
-                                            <div className="flex flex-col gap-2 bg-white p-2 rounded border border-gray-100">
-                                                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                                                    <input
-                                                        type="radio"
-                                                        value="date"
-                                                        checked={recurrenceSettings.endType === 'date'}
-                                                        onChange={() => setRecurrenceSettings({ ...recurrenceSettings, endType: 'date' })}
-                                                        name="endType"
-                                                    />
-                                                    <span>On Date</span>
-                                                    <input
-                                                        type="date"
-                                                        disabled={recurrenceSettings.endType !== 'date'}
-                                                        value={recurrenceSettings.endDate}
-                                                        onChange={(e) => setRecurrenceSettings({ ...recurrenceSettings, endDate: e.target.value })}
-                                                        className="ml-auto p-1 border border-gray-200 rounded text-xs w-32 outline-none disabled:bg-gray-50 disabled:text-gray-400"
-                                                    />
-                                                </label>
-                                                <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                                                    <input
-                                                        type="radio"
-                                                        value="count"
-                                                        checked={recurrenceSettings.endType === 'count'}
-                                                        onChange={() => setRecurrenceSettings({ ...recurrenceSettings, endType: 'count' })}
-                                                        name="endType"
-                                                    />
-                                                    <span>After</span>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-500 mb-1">Interval (Every X)</label>
                                                     <input
                                                         type="number"
-                                                        disabled={recurrenceSettings.endType !== 'count'}
-                                                        value={recurrenceSettings.endCount}
-                                                        onChange={(e) => setRecurrenceSettings({ ...recurrenceSettings, endCount: e.target.value })}
-                                                        className="w-16 p-1 border border-gray-200 rounded text-xs mx-1 outline-none disabled:bg-gray-50 disabled:text-gray-400 text-center"
+                                                        min="1"
+                                                        value={recurrenceSettings.interval}
+                                                        onChange={(e) => setRecurrenceSettings({ ...recurrenceSettings, interval: e.target.value })}
+                                                        className="w-full p-2 text-sm border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"
                                                     />
-                                                    <span>occurrences</span>
-                                                </label>
+                                                </div>
+                                            </div>
+
+                                            {/* Weekdays (Only if Weekly) */}
+                                            {recurrenceSettings.frequency === 'weekly' && (
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-500 mb-1">On Days</label>
+                                                    <div className="flex gap-2">
+                                                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+                                                            <button
+                                                                key={i}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const days = recurrenceSettings.weekDays.includes(i)
+                                                                        ? recurrenceSettings.weekDays.filter(day => day !== i)
+                                                                        : [...recurrenceSettings.weekDays, i];
+                                                                    setRecurrenceSettings({ ...recurrenceSettings, weekDays: days });
+                                                                }}
+                                                                className={clsx(
+                                                                    "w-8 h-8 rounded-full text-xs font-bold transition-colors flex items-center justify-center",
+                                                                    recurrenceSettings.weekDays.includes(i)
+                                                                        ? "bg-indigo-600 text-white"
+                                                                        : "bg-white border border-gray-200 text-gray-500 hover:bg-gray-50"
+                                                                )}
+                                                            >
+                                                                {d}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* End Condition */}
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-500 mb-1">Ends</label>
+                                                <div className="flex flex-col gap-2 bg-white p-2 rounded border border-gray-100">
+                                                    <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                                                        <input
+                                                            type="radio"
+                                                            value="date"
+                                                            checked={recurrenceSettings.endType === 'date'}
+                                                            onChange={() => setRecurrenceSettings({ ...recurrenceSettings, endType: 'date' })}
+                                                            name="endType"
+                                                        />
+                                                        <span>On Date</span>
+                                                        <input
+                                                            type="date"
+                                                            disabled={recurrenceSettings.endType !== 'date'}
+                                                            value={recurrenceSettings.endDate}
+                                                            onChange={(e) => setRecurrenceSettings({ ...recurrenceSettings, endDate: e.target.value })}
+                                                            className="ml-auto p-1 border border-gray-200 rounded text-xs w-32 outline-none disabled:bg-gray-50 disabled:text-gray-400"
+                                                        />
+                                                    </label>
+                                                    <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                                                        <input
+                                                            type="radio"
+                                                            value="count"
+                                                            checked={recurrenceSettings.endType === 'count'}
+                                                            onChange={() => setRecurrenceSettings({ ...recurrenceSettings, endType: 'count' })}
+                                                            name="endType"
+                                                        />
+                                                        <span>After</span>
+                                                        <input
+                                                            type="number"
+                                                            disabled={recurrenceSettings.endType !== 'count'}
+                                                            value={recurrenceSettings.endCount}
+                                                            onChange={(e) => setRecurrenceSettings({ ...recurrenceSettings, endCount: e.target.value })}
+                                                            className="w-16 p-1 border border-gray-200 rounded text-xs mx-1 outline-none disabled:bg-gray-50 disabled:text-gray-400 text-center"
+                                                        />
+                                                        <span>occurrences</span>
+                                                    </label>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                )}
-                            </div>
+                                    )}
+                                </div>
+                            )}
 
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Task Description <span className="text-red-500">*</span></label>
@@ -528,7 +593,7 @@ const Tasks = () => {
                                     type="submit"
                                     className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium"
                                 >
-                                    Add Task
+                                    {editingTaskId ? 'Save Changes' : 'Add Task'}
                                 </button>
                             </div>
                         </form>
