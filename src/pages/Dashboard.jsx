@@ -896,11 +896,30 @@ const Dashboard = () => {
                                                 <div className="flex items-start gap-3 min-w-0 flex-1">
                                                     <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors mt-1.5 ${color.dot}`}></div>
                                                     <div className="flex flex-col min-w-0 flex-1">
-                                                        <TaskTooltip task={task || { task_content: entry.description, is_completed: true, created_at: today, planned_date: today }}>
-                                                            <span className={`font-medium transition-colors ${color.text}`}>
-                                                                {task?.task_content || entry.description}
-                                                            </span>
-                                                        </TaskTooltip>
+                                                        <div className="flex items-center gap-2">
+                                                            <TaskTooltip task={task || { task_content: entry.description, is_completed: true, created_at: today, planned_date: today }}>
+                                                                <span className={`font-medium transition-colors ${color.text}`}>
+                                                                    {task?.task_content || entry.description}
+                                                                </span>
+                                                            </TaskTooltip>
+                                                            {/* Action Buttons: Visible always, near title */}
+                                                            <div className="flex gap-1">
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); startEditingEntry(entry, task); }}
+                                                                    className="p-1 text-gray-300 hover:text-indigo-600 transition-colors"
+                                                                    title="Edit"
+                                                                >
+                                                                    <Pencil size={12} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); handleDeleteEntry(index, task); }}
+                                                                    className="p-1 text-gray-300 hover:text-red-500 transition-colors"
+                                                                    title="Delete"
+                                                                >
+                                                                    <Trash2 size={12} />
+                                                                </button>
+                                                            </div>
+                                                        </div>
                                                         {/* Show remarks if they exist and are different from Title */}
                                                         {entry.description && task && entry.description !== task.task_content && (
                                                             <div className="mt-0.5">
@@ -914,14 +933,6 @@ const Dashboard = () => {
                                                         <span className="font-bold text-gray-900">{entry.duration}</span>
                                                         <span className="text-xs text-gray-500 font-medium">hrs</span>
                                                         {timeDiffElement}
-                                                    </div>
-                                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        <button onClick={() => startEditingEntry(entry, task)} className="text-gray-400 hover:text-indigo-600">
-                                                            <Pencil size={14} />
-                                                        </button>
-                                                        <button onClick={() => handleDeleteEntry(index, task)} className="text-gray-400 hover:text-red-500">
-                                                            <Trash2 size={14} />
-                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1021,11 +1032,31 @@ const Dashboard = () => {
                                             >
                                                 <div className="col-span-6 flex items-center gap-3 overflow-hidden">
                                                     <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${getTaskStatusColor(task.planned_date, task.is_completed, task.completed_date).dot}`}></div>
-                                                    <TaskTooltip task={task}>
-                                                        <span className={`truncate text-sm font-bold block ${getTaskStatusColor(task.planned_date, task.is_completed, task.completed_date).text}`}>
-                                                            {task.task_content}
-                                                        </span>
-                                                    </TaskTooltip>
+                                                    <div className="flex items-center gap-2 min-w-0">
+                                                        <TaskTooltip task={task}>
+                                                            <span className={`truncate text-sm font-bold block ${getTaskStatusColor(task.planned_date, task.is_completed, task.completed_date).text}`}>
+                                                                {task.task_content}
+                                                            </span>
+                                                        </TaskTooltip>
+                                                        {isEditable(task) && !isTodayLeave && (
+                                                            <div className="flex items-center gap-1 flex-shrink-0">
+                                                                <button
+                                                                    onClick={(e) => handleEditTaskClick(task, e)}
+                                                                    className="p-1 text-gray-300 hover:text-indigo-600 transition-colors"
+                                                                    title="Edit Task"
+                                                                >
+                                                                    <Pencil size={13} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={(e) => handleDeleteTaskClick(task.id, e)}
+                                                                    className="p-1 text-gray-300 hover:text-red-600 transition-colors"
+                                                                    title="Delete Task"
+                                                                >
+                                                                    <Trash2 size={13} />
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                                 <div className="col-span-3 text-right text-xs font-medium text-gray-500">
                                                     {task.eta ? `${task.eta}m` : '-'}
@@ -1033,25 +1064,6 @@ const Dashboard = () => {
                                                 <div className="col-span-3 text-right text-xs font-medium text-gray-500">
                                                     {new Date(task.planned_date).toLocaleDateString()}
                                                 </div>
-                                                {/* Edit/Delete Actions (Only if < 24h) */}
-                                                {isEditable(task) && !isTodayLeave && (
-                                                    <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 backdrop-blur-sm p-1 rounded-md shadow-sm">
-                                                        <button
-                                                            onClick={(e) => handleEditTaskClick(task, e)}
-                                                            className="p-1.5 text-gray-400 hover:text-indigo-600 transition-colors hover:bg-gray-100 rounded"
-                                                            title="Edit Task"
-                                                        >
-                                                            <Pencil size={14} />
-                                                        </button>
-                                                        <button
-                                                            onClick={(e) => handleDeleteTaskClick(task.id, e)}
-                                                            className="p-1.5 text-gray-400 hover:text-red-600 transition-colors hover:bg-red-50 rounded"
-                                                            title="Delete Task"
-                                                        >
-                                                            <Trash2 size={14} />
-                                                        </button>
-                                                    </div>
-                                                )}
                                             </div>
 
                                             {/* Dropdown Content */}
