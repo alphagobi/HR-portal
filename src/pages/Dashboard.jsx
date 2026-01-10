@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { getTasks, updateTask, createTask } from '../services/taskService';
+import { getTasks, updateTask, createTask, deleteTask } from '../services/taskService';
 import { saveTimesheet, getTimesheets } from '../services/timesheetService';
 import { getFrameworkAllocations } from '../services/frameworkService';
 import { getCurrentUser } from '../services/authService';
@@ -87,6 +87,72 @@ const Dashboard = () => {
     // We can use a separate state if we want to avoid conflicts, but reusing logic is fine if we are careful.
     // Let's use a separate state to be safe and clear.
     const [editForm, setEditForm] = useState({ duration: '', remarks: '' });
+
+    // Task Editing State (24h Restriction)
+    const [showEditTaskModal, setShowEditTaskModal] = useState(false);
+    const [editingTaskData, setEditingTaskData] = useState({
+        id: null,
+        content: '',
+        date: '',
+        eta: '',
+        frameworkId: ''
+    });
+
+    const isEditable = (task) => {
+        if (!task.created_at) return false;
+        const created = new Date(task.created_at).getTime();
+        const now = Date.now();
+        // 24 hours in milliseconds = 24 * 60 * 60 * 1000 = 86400000
+        return (now - created) < 86400000;
+    };
+
+    const handleEditTaskClick = (task, e) => {
+        e.stopPropagation(); // Prevent toggling expand
+        setEditingTaskData({
+            id: task.id,
+            content: task.task_content,
+            date: task.planned_date,
+            eta: task.eta || '',
+            frameworkId: task.framework_id || ''
+        });
+        setShowEditTaskModal(true);
+    };
+
+    const handleDeleteTaskClick = async (taskId, e) => {
+        e.stopPropagation(); // Prevent toggling expand
+        if (window.confirm("Are you sure you want to delete this task?")) {
+            try {
+                await deleteTask(taskId);
+                fetchDashboardData();
+            } catch (error) {
+                console.error("Failed to delete task", error);
+            }
+        }
+    };
+
+    const handleUpdateTaskSubmit = async (e) => {
+        e.preventDefault();
+        if (!editingTaskData.content) return;
+        if (!editingTaskData.eta || parseInt(editingTaskData.eta) <= 0) {
+            alert("ETA is mandatory and must be greater than 0 minutes.");
+            return;
+        }
+
+        try {
+            await updateTask(editingTaskData.id, {
+                task_content: editingTaskData.content,
+                planned_date: editingTaskData.date,
+                eta: editingTaskData.eta,
+                framework_id: editingTaskData.frameworkId || null
+            });
+            setShowEditTaskModal(false);
+            setEditingTaskData({ id: null, content: '', date: '', eta: '', frameworkId: '' });
+            fetchDashboardData();
+        } catch (error) {
+            console.error("Failed to update task", error);
+            alert("Failed to update task");
+        }
+    };
 
     // Draggable Sensor Setup
     const sensors = useSensors(
@@ -967,6 +1033,25 @@ const Dashboard = () => {
                                                 <div className="col-span-3 text-right text-xs font-medium text-gray-500">
                                                     {new Date(task.planned_date).toLocaleDateString()}
                                                 </div>
+                                                {/* Edit/Delete Actions (Only if < 24h) */}
+                                                {isEditable(task) && !isTodayLeave && (
+                                                    <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 backdrop-blur-sm p-1 rounded-md shadow-sm">
+                                                        <button
+                                                            onClick={(e) => handleEditTaskClick(task, e)}
+                                                            className="p-1.5 text-gray-400 hover:text-indigo-600 transition-colors hover:bg-gray-100 rounded"
+                                                            title="Edit Task"
+                                                        >
+                                                            <Pencil size={14} />
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => handleDeleteTaskClick(task.id, e)}
+                                                            className="p-1.5 text-gray-400 hover:text-red-600 transition-colors hover:bg-red-50 rounded"
+                                                            title="Delete Task"
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* Dropdown Content */}
@@ -1017,8 +1102,86 @@ const Dashboard = () => {
                     </div>
                 </div >
             </div >
+            {/* Edit Task Modal */}
+            {showEditTaskModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6 m-4">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold text-gray-900">Edit Task</h3>
+                            <button onClick={() => setShowEditTaskModal(false)} className="text-gray-400 hover:text-gray-600">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <form onSubmit={handleUpdateTaskSubmit}>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Date <span className="text-red-500">*</span></label>
+                                <input
+                                    type="date"
+                                    required
+                                    className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    value={editingTaskData.date}
+                                    onChange={(e) => setEditingTaskData({ ...editingTaskData, date: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Link Framework (Strategy)</label>
+                                <select
+                                    className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                                    value={editingTaskData.frameworkId}
+                                    onChange={(e) => setEditingTaskData({ ...editingTaskData, frameworkId: e.target.value })}
+                                >
+                                    <option value="">-- No Framework --</option>
+                                    {allocations.map(fw => (
+                                        <option key={fw.id} value={fw.id}>{fw.category_name} ({fw.percentage}%)</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Task Description <span className="text-red-500">*</span></label>
+                                <textarea
+                                    autoFocus
+                                    required
+                                    className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none h-24 resize-none"
+                                    value={editingTaskData.content}
+                                    onChange={(e) => setEditingTaskData({ ...editingTaskData, content: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">ETA (Minutes) <span className="text-red-500">*</span></label>
+                                <input
+                                    type="number"
+                                    className="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    value={editingTaskData.eta}
+                                    onChange={(e) => setEditingTaskData({ ...editingTaskData, eta: e.target.value })}
+                                    required
+                                />
+                            </div>
+
+                            <div className="flex justify-end gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowEditTaskModal(false)}
+                                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium"
+                                >
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div >
     );
 };
+
 
 export default Dashboard;

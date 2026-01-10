@@ -95,7 +95,8 @@ const Calendar = () => {
                                             "text-xs p-1.5 rounded border mb-1 group/event relative",
                                             event.type === 'holiday' ? "bg-red-100 text-red-800 border-red-200" :
                                                 event.type === 'meeting' ? "bg-blue-100 text-blue-800 border-blue-200" :
-                                                    "bg-green-100 text-green-800 border-green-200"
+                                                    event.type === 'leave' ? "bg-purple-100 text-purple-800 border-purple-200" :
+                                                        "bg-green-100 text-green-800 border-green-200"
                                         )}
                                     >
                                         <div className="font-semibold">{event.title}</div>
@@ -140,7 +141,9 @@ const Calendar = () => {
                         <div key={event.id} className="p-4 hover:bg-gray-50 transition-colors flex items-start gap-4">
                             <div className={clsx(
                                 "flex-shrink-0 w-16 text-center py-2 rounded-lg border",
-                                event.type === 'holiday' ? "bg-red-50 border-red-100 text-red-700" : "bg-blue-50 border-blue-100 text-blue-700"
+                                event.type === 'holiday' ? "bg-red-50 border-red-100 text-red-700" :
+                                    event.type === 'leave' ? "bg-purple-50 border-purple-100 text-purple-700" :
+                                        "bg-blue-50 border-blue-100 text-blue-700"
                             )}>
                                 <span className="block text-xs uppercase font-bold tracking-wider opacity-75">
                                     {new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}
@@ -155,7 +158,8 @@ const Calendar = () => {
                                     <span className={clsx(
                                         "px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wide",
                                         event.type === 'holiday' ? "bg-red-100 text-red-700" :
-                                            event.type === 'meeting' ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"
+                                            event.type === 'meeting' ? "bg-blue-100 text-blue-700" :
+                                                event.type === 'leave' ? "bg-purple-100 text-purple-700" : "bg-green-100 text-green-700"
                                     )}>
                                         {event.type}
                                     </span>

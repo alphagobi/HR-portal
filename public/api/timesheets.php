@@ -115,11 +115,13 @@ elseif ($method === 'POST') {
                     $stmtTask->execute([$taskId]);
                     $task = $stmtTask->fetch();
                     if ($task) {
-                        $createdAt = new DateTime($task['created_at']);
-                        $now = new DateTime();
-                        $diff = $now->diff($createdAt);
-                        $hours = $diff->h + ($diff->days * 24);
-                        if ($hours >= 8) {
+                        $createdDate = (new DateTime($task['created_at']))->format('Y-m-d');
+                        
+                        // User Request: If created date == timesheet date => Unplanned.
+                        // If created date != timesheet date => Planned.
+                        if ($createdDate === $date) { // $date is the timesheet date
+                            $type = 'unplanned';
+                        } else {
                             $type = 'planned';
                         }
                     }

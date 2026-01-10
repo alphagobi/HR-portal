@@ -164,7 +164,7 @@ const Timesheet = () => {
                     description: task.task_content,
                     project: "Task",
                     taskId: task.id,
-                    type: 'planned',
+                    type: (task.created_at && task.created_at.split('T')[0] === sheet.date) ? 'unplanned' : 'planned',
                     is_edited: 0,
                     is_deleted: 0
                 };
