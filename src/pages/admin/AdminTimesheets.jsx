@@ -36,8 +36,6 @@ const AdminTimesheets = () => {
 
     const scrollContainerRef = useRef(null);
     const topSentinelRef = useRef(null);
-    const yesterdayRef = useRef(null);
-    const [hasScrolledToYesterday, setHasScrolledToYesterday] = useState(false);
     const [isFetchingMore, setIsFetchingMore] = useState(false);
 
     // Scroll Preservation Refs
@@ -106,16 +104,63 @@ const AdminTimesheets = () => {
         };
     }, [isFetchingMore, startDate, loading]);
 
-    // Scroll to Yesterday on initial load
+
+
+    // Recalculate Start Date when Employee Changes or Data Init
     useEffect(() => {
-        if (!hasScrolledToYesterday && yesterdayRef.current && !loading) {
-            // Short timeout to ensure render is complete and layout is stable
-            setTimeout(() => {
-                yesterdayRef.current?.scrollIntoView({ block: 'center', behavior: 'auto' });
-                setHasScrolledToYesterday(true);
-            }, 100);
-        }
-    }, [spreadsheetData, loading, hasScrolledToYesterday]);
+        if (!selectedEmployee || loading || timesheets.length === 0) return;
+
+        const findLastLoggedDay = () => {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            yesterday.setHours(0, 0, 0, 0);
+
+            // Filter valid entries for this employee, excluding deleted ones
+            // Ensure we look at past dates (<= yesterday)
+            const empEntries = timesheets
+                .filter(t => t.employee_id === selectedEmployee.id && t.entries && t.entries.some(e => e.is_deleted != 1));
+
+            // If no entries, default to Yesterday
+            if (empEntries.length === 0) {
+                return yesterday;
+            }
+
+            // Sort by date descending
+            empEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            // Find first date <= Yesterday
+            // We use string comparison for safety or Date object
+            const lastEntry = empEntries.find(t => new Date(t.date) <= yesterday);
+
+            if (lastEntry) {
+                const d = new Date(lastEntry.date);
+                d.setHours(0, 0, 0, 0);
+                return d;
+            }
+
+            return yesterday;
+        };
+
+        const newStart = findLastLoggedDay();
+        // Update state
+        setStartDate(newStart);
+
+        // Also update EndDate to keep a reasonable range (e.g. +9 days from New Start or just keep relative?)
+        // The original logic kept a sliding window or fixed end?
+        // Original: Start (1st Month) -> End (Start + 9? No, End was Now+9)
+        // Let's reset EndDate to (newStart + 9) or (Today + 9) to ensure we see future too?
+        // Usually we want to see from Last Logged -> Future.
+        // Let's ensure EndDate covers at least up to Today+7
+        const newEnd = new Date();
+        newEnd.setDate(newEnd.getDate() + 9);
+        newEnd.setHours(0, 0, 0, 0);
+        setEndDate(newEnd);
+
+    }, [selectedEmployee, loading]); // Depend on selectedEmployee. 
+    // WARN: Adding timesheets to dependency might causing loops if we are not careful, but timesheets changes on save. 
+    // Ideally we want to jump to last logged ONLY when switching employee.
+
+
 
     const loadMorePastDates = () => {
         setIsFetchingMore(true);
@@ -356,9 +401,7 @@ const AdminTimesheets = () => {
 
     if (loading) return <div className="p-8 text-center text-gray-500">Loading data...</div>;
 
-    const yesterdayDate = new Date();
-    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-    const yesterdayStr = `${yesterdayDate.getFullYear()}-${String(yesterdayDate.getMonth() + 1).padStart(2, '0')}-${String(yesterdayDate.getDate()).padStart(2, '0')}`;
+    if (loading) return <div className="p-8 text-center text-gray-500">Loading data...</div>;
 
     return (
         <div className="p-6 max-w-full mx-auto h-[calc(100vh-80px)] overflow-hidden flex flex-col">
@@ -464,7 +507,6 @@ const AdminTimesheets = () => {
                                     return (
                                         <tr
                                             key={day.date}
-                                            ref={day.date === yesterdayStr ? yesterdayRef : null}
                                             className="bg-yellow-100 border-b border-gray-200"
                                         >
                                             <td className="py-1 px-4 font-medium text-gray-800 border-r border-yellow-200 text-sm">{day.date}</td>
@@ -480,7 +522,6 @@ const AdminTimesheets = () => {
                                     return (
                                         <tr
                                             key={day.date}
-                                            ref={day.date === yesterdayStr ? yesterdayRef : null}
                                             className="bg-red-50 border-b border-gray-200"
                                         >
                                             <td className="py-1 px-4 font-medium text-gray-800 border-r border-red-100 text-sm">{day.date}</td>
@@ -495,7 +536,6 @@ const AdminTimesheets = () => {
                                 return (
                                     <tr
                                         key={day.date}
-                                        ref={day.date === yesterdayStr ? yesterdayRef : null}
                                         id={day.isToday ? 'today-row' : undefined}
                                         className={clsx(
                                             "border-b border-gray-100 hover:bg-gray-50 transition-colors"
