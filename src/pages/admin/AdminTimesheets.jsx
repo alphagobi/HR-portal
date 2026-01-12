@@ -339,10 +339,17 @@ const AdminTimesheets = () => {
         }
 
         if (item.timesheet) {
+            // Fix: Map entries to ensure taskId (camelCase) is present for backend
+            const sanitizedEntries = (item.timesheet.entries || []).map(e => ({
+                ...e,
+                taskId: e.taskId || e.task_id // Backend expects 'taskId'
+            }));
+
             await saveTimesheet({
                 ...item.timesheet,
                 employeeId: item.timesheet.employee_id, // Explicitly pass ID to prevent service from using current user
-                adminRemarks: finalRemark
+                adminRemarks: finalRemark,
+                entries: sanitizedEntries
             });
 
             // Re-fetch timesheets to ensure data integrity (rendering logic depends on full object structure)
