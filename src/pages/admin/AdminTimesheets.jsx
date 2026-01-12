@@ -344,11 +344,10 @@ const AdminTimesheets = () => {
                 employeeId: item.timesheet.employee_id, // Explicitly pass ID to prevent service from using current user
                 adminRemarks: finalRemark
             });
-            // Refresh local state purely for UI responsiveness or re-fetch
-            const newTimesheets = timesheets.map(t =>
-                (t.id === item.timesheet.id) ? { ...t, adminRemarks: finalRemark, admin_remarks: finalRemark } : t
-            );
-            setTimesheets(newTimesheets);
+
+            // Re-fetch timesheets to ensure data integrity (rendering logic depends on full object structure)
+            const freshTimesheets = await getTimesheets();
+            setTimesheets(freshTimesheets);
         } else {
             // Create new timesheet entry for remarks
             try {
@@ -361,7 +360,8 @@ const AdminTimesheets = () => {
                 };
                 await saveTimesheet(payload);
                 // We must re-fetch here because we don't have the new ID
-                fetchAllData();
+                const freshTimesheets = await getTimesheets();
+                setTimesheets(freshTimesheets);
             } catch (error) {
                 console.error("Failed to save remark for new timesheet", error);
                 alert("Failed to save remark");
