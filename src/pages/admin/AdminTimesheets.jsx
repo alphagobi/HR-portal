@@ -37,6 +37,9 @@ const AdminTimesheets = () => {
     const scrollContainerRef = useRef(null);
     const [isFetchingMore, setIsFetchingMore] = useState(false);
 
+    // History Toggle State
+    const [showHistory, setShowHistory] = useState(false);
+
     // Scroll Preservation Refs
     const previousScrollHeightRef = useRef(0);
     const previousScrollTopRef = useRef(0);
@@ -116,24 +119,34 @@ const AdminTimesheets = () => {
             return yesterday;
         };
 
-        const newStart = findLastLoggedDay();
+        let newStart;
+        if (showHistory) {
+            // If History ON, start from 1st of current month
+            const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+            startOfMonth.setHours(0, 0, 0, 0);
+            newStart = startOfMonth;
+        } else {
+            // If History OFF, use strict Last Logged Day logic
+            newStart = findLastLoggedDay();
+        }
+
         // Update state
         setStartDate(newStart);
 
-        // Also update EndDate to keep a reasonable range (e.g. +9 days from New Start or just keep relative?)
-        // The original logic kept a sliding window or fixed end?
-        // Original: Start (1st Month) -> End (Start + 9? No, End was Now+9)
-        // Let's reset EndDate to (newStart + 9) or (Today + 9) to ensure we see future too?
-        // Usually we want to see from Last Logged -> Future.
-        // Let's ensure EndDate covers at least up to Today+7
+        // Ensure EndDate covers at least up to Today+7
         const newEnd = new Date();
         newEnd.setDate(newEnd.getDate() + 9);
         newEnd.setHours(0, 0, 0, 0);
         setEndDate(newEnd);
 
-    }, [selectedEmployee, loading]); // Depend on selectedEmployee. 
-    // WARN: Adding timesheets to dependency might causing loops if we are not careful, but timesheets changes on save. 
-    // Ideally we want to jump to last logged ONLY when switching employee.
+    }, [selectedEmployee, loading, showHistory, currentMonth]); // Depend on showHistory
+
+    // Reset History Toggle when Employee Changes
+    useEffect(() => {
+        if (selectedEmployee) {
+            setShowHistory(false);
+        }
+    }, [selectedEmployee]);
 
 
 
@@ -379,6 +392,25 @@ const AdminTimesheets = () => {
 
                 <div className="flex flex-col md:flex-row items-center gap-4">
                     <div className="flex items-center gap-2">
+
+                        {/* History Toggle */}
+                        <button
+                            onClick={() => setShowHistory(!showHistory)}
+                            className={clsx(
+                                "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 mr-2",
+                                showHistory ? "bg-indigo-600" : "bg-gray-200"
+                            )}
+                            title={showHistory ? "Hide History" : "Show History"}
+                        >
+                            <span
+                                className={clsx(
+                                    "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                                    showHistory ? "translate-x-6" : "translate-x-1"
+                                )}
+                            />
+                            {/* Optional Label if needed, but UI requested just the switch-like button */}
+                        </button>
+
                         {/* Employee Switcher with Arrows */}
                         <div className="flex items-center bg-white rounded-lg shadow-sm border border-gray-200 p-1">
                             <button
