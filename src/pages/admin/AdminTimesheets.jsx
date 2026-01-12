@@ -84,62 +84,54 @@ const AdminTimesheets = () => {
 
 
 
-    // Recalculate Start Date when Employee Changes or Data Init
     useEffect(() => {
-        if (!selectedEmployee || loading || timesheets.length === 0) return;
+        if (!selectedEmployee || loading) return; // Don't block on valid 0 timesheets if we want to show empty month
 
-        const findLastLoggedDay = () => {
+        const now = new Date();
+        const isCurrentMonth = currentMonth.getMonth() === now.getMonth() && currentMonth.getFullYear() === now.getFullYear();
+
+        // 1. Calculate Start Date
+        let newStart;
+        if (!isCurrentMonth) {
+            // Not current month -> Always start from 1st
+            newStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+        } else if (showHistory) {
+            // Current Month + History ON -> Start from 1st
+            newStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+        } else {
+            // Current Month + History OFF -> Start from Last Logged Day (or Yesterday)
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
             yesterday.setHours(0, 0, 0, 0);
 
-            // Filter valid entries for this employee, excluding deleted ones
-            // Ensure we look at past dates (<= yesterday)
+            // Filter valid entries for this employee
             const empEntries = timesheets
                 .filter(t => t.employee_id === selectedEmployee.id && t.entries && t.entries.some(e => e.is_deleted != 1));
 
             // If no entries, default to Yesterday
             if (empEntries.length === 0) {
-                return yesterday;
+                newStart = yesterday;
+            } else {
+                // Find first date <= Yesterday
+                empEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+                const lastEntry = empEntries.find(t => new Date(t.date) <= yesterday);
+
+                if (lastEntry) {
+                    newStart = new Date(lastEntry.date);
+                } else {
+                    newStart = yesterday;
+                }
             }
-
-            // Sort by date descending
-            empEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-            // Find first date <= Yesterday
-            // We use string comparison for safety or Date object
-            const lastEntry = empEntries.find(t => new Date(t.date) <= yesterday);
-
-            if (lastEntry) {
-                const d = new Date(lastEntry.date);
-                d.setHours(0, 0, 0, 0);
-                return d;
-            }
-
-            return yesterday;
-        };
-
-        let newStart;
-        if (showHistory) {
-            // If History ON, start from 1st of current month
-            const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-            startOfMonth.setHours(0, 0, 0, 0);
-            newStart = startOfMonth;
-        } else {
-            // If History OFF, use strict Last Logged Day logic
-            newStart = findLastLoggedDay();
         }
-
-        // Update state
+        newStart.setHours(0, 0, 0, 0);
         setStartDate(newStart);
 
-        // Ensure EndDate covers at least up to Today+7
-        const newEnd = new Date();
-        newEnd.setDate(newEnd.getDate() + 9);
+        // 2. Calculate End Date -> ALWAYS End of the selected 'currentMonth'
+        const newEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0); // Last day of month
         newEnd.setHours(0, 0, 0, 0);
         setEndDate(newEnd);
 
-    }, [selectedEmployee, loading, showHistory, currentMonth]); // Depend on showHistory
+    }, [selectedEmployee, loading, showHistory, currentMonth, timesheets]); // Added timesheets to dep to react to data load
 
     // Reset History Toggle when Employee Changes
     useEffect(() => {
@@ -394,22 +386,24 @@ const AdminTimesheets = () => {
                     <div className="flex items-center gap-2">
 
                         {/* History Toggle */}
-                        <button
-                            onClick={() => setShowHistory(!showHistory)}
-                            className={clsx(
-                                "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 mr-2",
-                                showHistory ? "bg-indigo-600" : "bg-gray-200"
-                            )}
-                            title={showHistory ? "Hide History" : "Show History"}
-                        >
-                            <span
+                        <div className="flex items-center gap-2 mr-2">
+                            <span className="text-sm font-medium text-gray-700">Show History</span>
+                            <button
+                                onClick={() => setShowHistory(!showHistory)}
                                 className={clsx(
-                                    "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                                    showHistory ? "translate-x-6" : "translate-x-1"
+                                    "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2",
+                                    showHistory ? "bg-indigo-600" : "bg-gray-200"
                                 )}
-                            />
-                            {/* Optional Label if needed, but UI requested just the switch-like button */}
-                        </button>
+                                title={showHistory ? "Hide History" : "Show History"}
+                            >
+                                <span
+                                    className={clsx(
+                                        "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                                        showHistory ? "translate-x-6" : "translate-x-1"
+                                    )}
+                                />
+                            </button>
+                        </div>
 
                         {/* Employee Switcher with Arrows */}
                         <div className="flex items-center bg-white rounded-lg shadow-sm border border-gray-200 p-1">
