@@ -133,10 +133,13 @@ const AdminTimesheets = () => {
 
     }, [selectedEmployee, loading, showHistory, currentMonth, timesheets]); // Added timesheets to dep to react to data load
 
-    // Reset History Toggle when Employee Changes
+    // Reset History Toggle and Scroll when Employee Changes
     useEffect(() => {
         if (selectedEmployee) {
             setShowHistory(false);
+            if (scrollContainerRef.current) {
+                scrollContainerRef.current.scrollTop = 0;
+            }
         }
     }, [selectedEmployee]);
 
