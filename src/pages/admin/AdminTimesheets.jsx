@@ -36,6 +36,8 @@ const AdminTimesheets = () => {
 
     const scrollContainerRef = useRef(null);
     const topSentinelRef = useRef(null);
+    const yesterdayRef = useRef(null);
+    const [hasScrolledToYesterday, setHasScrolledToYesterday] = useState(false);
     const [isFetchingMore, setIsFetchingMore] = useState(false);
 
     // Scroll Preservation Refs
@@ -103,6 +105,17 @@ const AdminTimesheets = () => {
             }
         };
     }, [isFetchingMore, startDate, loading]);
+
+    // Scroll to Yesterday on initial load
+    useEffect(() => {
+        if (!hasScrolledToYesterday && yesterdayRef.current && !loading) {
+            // Short timeout to ensure render is complete and layout is stable
+            setTimeout(() => {
+                yesterdayRef.current?.scrollIntoView({ block: 'center', behavior: 'auto' });
+                setHasScrolledToYesterday(true);
+            }, 100);
+        }
+    }, [spreadsheetData, loading, hasScrolledToYesterday]);
 
     const loadMorePastDates = () => {
         setIsFetchingMore(true);
@@ -343,6 +356,10 @@ const AdminTimesheets = () => {
 
     if (loading) return <div className="p-8 text-center text-gray-500">Loading data...</div>;
 
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayStr = `${yesterdayDate.getFullYear()}-${String(yesterdayDate.getMonth() + 1).padStart(2, '0')}-${String(yesterdayDate.getDate()).padStart(2, '0')}`;
+
     return (
         <div className="p-6 max-w-full mx-auto h-[calc(100vh-80px)] overflow-hidden flex flex-col">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 flex-shrink-0">
@@ -476,6 +493,7 @@ const AdminTimesheets = () => {
                                 return (
                                     <tr
                                         key={day.date}
+                                        ref={day.date === yesterdayStr ? yesterdayRef : null}
                                         id={day.isToday ? 'today-row' : undefined}
                                         className={clsx(
                                             "border-b border-gray-100 hover:bg-gray-50 transition-colors"
