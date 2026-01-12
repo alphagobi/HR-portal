@@ -464,6 +464,7 @@ const AdminTimesheets = () => {
                                     return (
                                         <tr
                                             key={day.date}
+                                            ref={day.date === yesterdayStr ? yesterdayRef : null}
                                             className="bg-yellow-100 border-b border-gray-200"
                                         >
                                             <td className="py-1 px-4 font-medium text-gray-800 border-r border-yellow-200 text-sm">{day.date}</td>
@@ -479,6 +480,7 @@ const AdminTimesheets = () => {
                                     return (
                                         <tr
                                             key={day.date}
+                                            ref={day.date === yesterdayStr ? yesterdayRef : null}
                                             className="bg-red-50 border-b border-gray-200"
                                         >
                                             <td className="py-1 px-4 font-medium text-gray-800 border-r border-red-100 text-sm">{day.date}</td>
