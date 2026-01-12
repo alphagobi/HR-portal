@@ -35,7 +35,6 @@ const AdminTimesheets = () => {
     });
 
     const scrollContainerRef = useRef(null);
-    const topSentinelRef = useRef(null);
     const [isFetchingMore, setIsFetchingMore] = useState(false);
 
     // Scroll Preservation Refs
@@ -78,31 +77,7 @@ const AdminTimesheets = () => {
         }
     }, [startDate]);
 
-    // Scroll Observer
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries[0].isIntersecting && !isFetchingMore) {
-                    loadMorePastDates();
-                }
-            },
-            {
-                root: scrollContainerRef.current,
-                rootMargin: '100px 0px 0px 0px',
-                threshold: 0.1
-            }
-        );
 
-        if (topSentinelRef.current) {
-            observer.observe(topSentinelRef.current);
-        }
-
-        return () => {
-            if (topSentinelRef.current) {
-                observer.unobserve(topSentinelRef.current);
-            }
-        };
-    }, [isFetchingMore, startDate, loading]);
 
 
 
@@ -162,18 +137,7 @@ const AdminTimesheets = () => {
 
 
 
-    const loadMorePastDates = () => {
-        setIsFetchingMore(true);
-        getSnapshotBeforeUpdate();
 
-        setStartDate(prev => {
-            const newDate = new Date(prev);
-            newDate.setDate(newDate.getDate() - 14); // Load 2 more weeks
-            return newDate;
-        });
-
-        setTimeout(() => setIsFetchingMore(false), 500);
-    };
 
     const prevMonth = () => {
         previousScrollHeightRef.current = 0; // Disable scroll restoration
@@ -489,18 +453,6 @@ const AdminTimesheets = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {/* Sentinel for Infinite Scroll Up */}
-                            <tr>
-                                <td colSpan="4" className="p-0">
-                                    <div ref={topSentinelRef} className="h-4 w-full" />
-                                    {isFetchingMore && (
-                                        <div className="text-center py-2 text-xs text-gray-400 bg-gray-50">
-                                            Loading previous dates...
-                                        </div>
-                                    )}
-                                </td>
-                            </tr>
-
                             {spreadsheetData.map((day) => {
                                 // Holiday / Weekend Row
                                 if (day.isHoliday || day.isSunday) {
