@@ -602,7 +602,46 @@ const AdminTimesheets = () => {
 
                                                     {/* Total Planned Hours */}
                                                     {(() => {
-                                                        const totalPlannedMins = day.tasks.reduce((sum, t) => sum + (parseInt(t.eta) || 0), 0);
+                                                        const totalPlannedMins = day.tasks.reduce((sum, t) => {
+                                                            let shouldInclude = true;
+
+                                                            if (t.is_completed) {
+                                                                // Check if completed IN ADVANCE (before this day)
+                                                                // We rely on timesheet entries to determine "completion date" or "last worked date"
+                                                                // Since we don't have explicit completed_at in task object often, we use max(entry.date)
+
+                                                                let taskEntries = [];
+                                                                if (Array.isArray(timesheets)) {
+                                                                    timesheets.forEach(tsDay => {
+                                                                        if (tsDay.entries) {
+                                                                            const matching = tsDay.entries.filter(e => (e.taskId || e.task_id) == t.id && e.is_deleted != 1);
+                                                                            if (matching.length > 0) {
+                                                                                matching.forEach(m => taskEntries.push({ ...m, date: tsDay.date }));
+                                                                            }
+                                                                        }
+                                                                    });
+                                                                }
+
+                                                                if (taskEntries.length > 0) {
+                                                                    // Sort descending
+                                                                    taskEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
+                                                                    const lastEntryDate = new Date(taskEntries[0].date);
+                                                                    lastEntryDate.setHours(0, 0, 0, 0);
+
+                                                                    const currentRowDate = new Date(day.date);
+                                                                    currentRowDate.setHours(0, 0, 0, 0);
+
+                                                                    // If last work was BEFORE this row's date, then it was done in advance.
+                                                                    if (lastEntryDate < currentRowDate) {
+                                                                        shouldInclude = false;
+                                                                    }
+                                                                }
+                                                                // If no entries, we assume it's relevant (or maybe irrelevant? safer to include)
+                                                            }
+
+                                                            return shouldInclude ? sum + (parseInt(t.eta) || 0) : sum;
+                                                        }, 0);
+
                                                         if (totalPlannedMins > 0) {
                                                             const totalPlannedHrs = (totalPlannedMins / 60).toFixed(2);
                                                             return (
