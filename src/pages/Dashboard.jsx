@@ -662,7 +662,7 @@ const Dashboard = () => {
                                         {/* Row 1: M T W T */}
                                         <div className="flex gap-2">
                                             {weekDays.slice(0, 4).map((date, i) => {
-                                                const dayLetter = format(date, 'EEEEE'); // M, T, W...
+                                                const dayLetter = format(date, 'EEE').slice(0, 2); // Mo, Tu, We...
 
                                                 // Normal State
                                                 const status = getDayStatus(date);
@@ -682,7 +682,7 @@ const Dashboard = () => {
                                         {/* Row 2: F S S */}
                                         <div className="flex gap-2">
                                             {weekDays.slice(4, 7).map((date, i) => {
-                                                const dayLetter = format(date, 'EEEEE');
+                                                const dayLetter = format(date, 'EEE').slice(0, 2);
 
                                                 const status = getDayStatus(date);
                                                 let bgClass = 'bg-gray-100 text-gray-400';
@@ -727,7 +727,7 @@ const Dashboard = () => {
                                                 onClick={() => toggleDay(day)}
                                                 className={`w-6 h-6 rounded text-[9px] font-bold transition-colors border flex items-center justify-center ${tempCoreHours.working_days.includes(day) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
                                             >
-                                                {day.charAt(0)}
+                                                {day.slice(0, 2)}
                                             </button>
                                         ))}
                                     </div>

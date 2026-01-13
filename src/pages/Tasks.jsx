@@ -481,7 +481,7 @@ const Tasks = () => {
                                                 <div>
                                                     <label className="block text-xs font-medium text-gray-500 mb-1">On Days</label>
                                                     <div className="flex gap-2">
-                                                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+                                                        {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d, i) => (
                                                             <button
                                                                 key={i}
                                                                 type="button"
