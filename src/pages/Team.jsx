@@ -42,13 +42,36 @@ const Team = () => {
         }
     }, [activeTab, teamUsers]);
 
+    const checkVisibility = (user, Type, currentUserId) => {
+        if (!user || !currentUserId) return false;
+        if (user.id === currentUserId) return true; // Always see self
+
+        let visibleList = [];
+        const key = Type === 'frameworks' ? 'visible_to' : 'visible_to_core_hours';
+
+        if (user[key]) {
+            try {
+                visibleList = Array.isArray(user[key]) ? user[key] : JSON.parse(user[key]);
+            } catch (e) {
+                console.error(`Failed to parse ${key}`, e);
+            }
+        }
+        return Array.isArray(visibleList) && visibleList.includes(currentUserId);
+    };
+
     const fetchFrameworks = async () => {
         setLoading(true);
         try {
             const allAllocations = await getAllFrameworkAllocations();
-            // Filter allocations for only users in teamUsers
-            const allowedIds = teamUsers.map(u => u.id);
-            const filtered = allAllocations.filter(a => allowedIds.includes(parseInt(a.user_id)) || parseInt(a.user_id) === currentUser.id);
+
+            // Filter allocations:
+            // 1. Must be in teamUsers (already filtered by backend for *any* visibility).
+            // 2. Must specifically have 'visible_to' permission for frameworks.
+            const allowedIds = teamUsers
+                .filter(u => checkVisibility(u, 'frameworks', currentUser.id))
+                .map(u => u.id);
+
+            const filtered = allAllocations.filter(a => allowedIds.includes(parseInt(a.user_id)));
             setFrameworks(filtered);
         } catch (error) {
             console.error("Failed to fetch frameworks", error);
@@ -60,11 +83,10 @@ const Team = () => {
     const fetchCoreHours = async () => {
         setLoading(true);
         try {
-            // Fetch core hours only for team users
-            // Include SELF in the view? Usually "Team" implies others + self.
-            // teamUsers API returns self + others.
+            // Filter users who allow 'visible_to_core_hours'
+            const visibleUsers = teamUsers.filter(u => checkVisibility(u, 'core_hours', currentUser.id));
 
-            const dataPromises = teamUsers.map(async (user) => {
+            const dataPromises = visibleUsers.map(async (user) => {
                 if (user.role === 'admin' && user.email === 'admin@company.com') return null;
 
                 const settings = await getUserSetting(user.id, 'core_working_hours');

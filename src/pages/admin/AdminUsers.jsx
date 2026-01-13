@@ -19,7 +19,8 @@ const AdminUsers = () => {
         informed_leave_limit: 6,
         emergency_leave_limit: 6,
         working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-        visible_to: []
+        visible_to: [],
+        visible_to_core_hours: []
     });
 
 
@@ -70,6 +71,15 @@ const AdminUsers = () => {
             }
         }
 
+        let parsedVisibleToCore = [];
+        if (user.visible_to_core_hours) {
+            try {
+                parsedVisibleToCore = Array.isArray(user.visible_to_core_hours) ? user.visible_to_core_hours : JSON.parse(user.visible_to_core_hours);
+            } catch (e) {
+                console.error("Failed to parse visible_to_core_hours", e);
+            }
+        }
+
         setNewUser({
             employee_code: user.employee_code,
             name: user.name,
@@ -81,7 +91,8 @@ const AdminUsers = () => {
             informed_leave_limit: user.informed_leave_limit || 6,
             emergency_leave_limit: user.emergency_leave_limit || 6,
             working_days: parsedWorkingDays,
-            visible_to: parsedVisibleTo
+            visible_to: parsedVisibleTo,
+            visible_to_core_hours: parsedVisibleToCore
         });
         setEditingId(user.id);
         setShowModal(true);
@@ -101,7 +112,7 @@ const AdminUsers = () => {
     const closeModal = () => {
         setShowModal(false);
         setEditingId(null);
-        setNewUser({ name: '', email: '', password: '', role: 'employee', department: '', designation: '', informed_leave_limit: 6, emergency_leave_limit: 6, working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'], visible_to: [] });
+        setNewUser({ name: '', email: '', password: '', role: 'employee', department: '', designation: '', informed_leave_limit: 6, emergency_leave_limit: 6, working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'], visible_to: [], visible_to_core_hours: [] });
     };
 
     return (
@@ -299,37 +310,7 @@ const AdminUsers = () => {
                                     />
                                 </div>
                             </div>
-                            {/* Visibility Selector */}
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Visible To (Who can see this user?)</label>
-                                <div className="border border-gray-200 rounded-lg p-3 max-h-40 overflow-y-auto bg-gray-50">
-                                    {(users || [])
-                                        .filter(u => u.id !== editingId) // Exclude self
-                                        .map(user => (
-                                            <div key={user.id} className="flex items-center gap-2 mb-2 last:mb-0">
-                                                <input
-                                                    type="checkbox"
-                                                    id={`vis-${user.id}`}
-                                                    checked={newUser.visible_to && newUser.visible_to.includes(user.id)}
-                                                    onChange={(e) => {
-                                                        const isChecked = e.target.checked;
-                                                        const current = newUser.visible_to || [];
-                                                        const updated = isChecked
-                                                            ? [...current, user.id]
-                                                            : current.filter(id => id !== user.id);
-                                                        setNewUser({ ...newUser, visible_to: updated });
-                                                    }}
-                                                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                                />
-                                                <label htmlFor={`vis-${user.id}`} className="text-sm text-gray-700 cursor-pointer select-none">
-                                                    {user.name} <span className="text-xs text-gray-400">({user.role})</span>
-                                                </label>
-                                            </div>
-                                        ))}
-                                    {users.length <= 1 && <p className="text-xs text-gray-400 text-center">No other users available</p>}
-                                </div>
-                                <p className="text-xs text-gray-500 mt-1">Select employees who should be able to view {newUser.name ? newUser.name + "'s" : "this user's"} details in the Team page.</p>
-                            </div>
+                            {/* Visibility selector removed as moved to Framework/Team page */}
 
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-2">Working Days</label>

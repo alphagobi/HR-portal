@@ -1,15 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { getAllFrameworkAllocations } from '../../services/frameworkService';
-import { getAllUsers } from '../../services/authService';
+import { getAllUsers, updateUser } from '../../services/authService';
 import { getUserSetting, saveUserSetting } from '../../services/userSettingsService';
 import { clsx } from 'clsx';
-import { LayoutTemplate, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { LayoutTemplate, Clock, CheckCircle, XCircle, AlertCircle, Eye } from 'lucide-react';
 
 const AdminFrameworks = () => {
     const [activeTab, setActiveTab] = useState('frameworks'); // 'frameworks' | 'core_hours'
     const [frameworks, setFrameworks] = useState([]);
     const [coreHoursData, setCoreHoursData] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [allUsers, setAllUsers] = useState([]);
+    const [visibilityModal, setVisibilityModal] = useState({ open: false, user: null, type: null }); // type: 'frameworks' | 'core_hours'
+
+    useEffect(() => {
+        const loadUsers = async () => {
+            const users = await getAllUsers();
+            setAllUsers(users);
+        };
+        loadUsers();
+    }, []);
 
     useEffect(() => {
         if (activeTab === 'frameworks') {
@@ -89,8 +99,62 @@ const AdminFrameworks = () => {
         }
     };
 
+    const handleVisibilitySave = async (selectedIds, applySame) => {
+        if (!visibilityModal.user) return;
+
+        const userId = visibilityModal.user.id;
+        // Construct update payload
+        // We need to preserve other fields? updateUser in authService uses partial update if backend supports it?
+        // employees.php PUT updates specific fields but requires most to be present or it might overwrite with nulls if not careful?
+        // Wait, employees.php PUT implementation (Step 1032) updates ALL fields.
+        // It reads from input. If I send only { visible_to: [...] }, other fields like `name` might become blank if not provided?
+        // Yes, the SQL `UPDATE ... SET name=?, ...` expects values.
+        // So I must send the FULL user object with the modified visibility field.
+
+        try {
+            const userToUpdate = allUsers.find(u => u.id === userId);
+            if (!userToUpdate) return;
+
+            // Prepare payload with all existing fields
+            let payload = {
+                employee_code: userToUpdate.employee_code,
+                name: userToUpdate.name,
+                email: userToUpdate.email,
+                role: userToUpdate.role,
+                department: userToUpdate.department,
+                designation: userToUpdate.designation,
+                informed_leave_limit: userToUpdate.informed_leave_limit,
+                emergency_leave_limit: userToUpdate.emergency_leave_limit,
+                working_days: JSON.parse(userToUpdate.working_days || '[]'),
+                visible_to: userToUpdate.visible_to ? (Array.isArray(userToUpdate.visible_to) ? userToUpdate.visible_to : JSON.parse(userToUpdate.visible_to)) : [],
+                visible_to_core_hours: userToUpdate.visible_to_core_hours ? (Array.isArray(userToUpdate.visible_to_core_hours) ? userToUpdate.visible_to_core_hours : JSON.parse(userToUpdate.visible_to_core_hours)) : []
+            };
+
+            // key to update
+            const targetKey = visibilityModal.type === 'frameworks' ? 'visible_to' : 'visible_to_core_hours';
+            payload[targetKey] = selectedIds;
+
+            if (applySame) {
+                const otherKey = visibilityModal.type === 'frameworks' ? 'visible_to_core_hours' : 'visible_to';
+                payload[otherKey] = selectedIds;
+            }
+
+            await updateUser(userId, payload);
+
+            // Refresh Data
+            const updatedUsers = await getAllUsers();
+            setAllUsers(updatedUsers);
+            if (activeTab === 'frameworks') fetchFrameworks(); else fetchCoreHours();
+
+            setVisibilityModal({ open: false, user: null, type: null });
+        } catch (error) {
+            console.error("Failed to update visibility", error);
+            alert("Failed to update visibility settings.");
+        }
+    };
+
     return (
-        <div className="p-6 max-w-full mx-auto">
+        <div className="p-6 max-w-full mx-auto relative">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">
@@ -143,8 +207,12 @@ const AdminFrameworks = () => {
                                     if (item.email === 'admin@company.com') return acc;
 
                                     if (!acc[item.user_id]) {
+                                        // Need full user object for visibility modal - find in allUsers
+                                        const fullUser = allUsers.find(u => u.id === item.user_id) || { id: item.user_id, name: item.employee_name };
+
                                         acc[item.user_id] = {
                                             id: item.user_id,
+                                            user: fullUser, // Store full user
                                             name: item.employee_name,
                                             department: item.department,
                                             allocations: [],
@@ -161,11 +229,20 @@ const AdminFrameworks = () => {
                                                 <h3 className="font-bold text-gray-900 text-lg">{emp.name}</h3>
                                                 {emp.department && <p className="text-sm text-gray-500">{emp.department}</p>}
                                             </div>
-                                            <div className={clsx("text-xs font-bold px-2 py-1 rounded-full",
-                                                emp.total > 100 ? "bg-red-100 text-red-700" :
-                                                    emp.total === 100 ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
-                                            )}>
-                                                {emp.total}% Allocated
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => setVisibilityModal({ open: true, user: emp.user, type: 'frameworks' })}
+                                                    className="p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded"
+                                                    title="Manage Visibility"
+                                                >
+                                                    <Eye size={16} />
+                                                </button>
+                                                <div className={clsx("text-xs font-bold px-2 py-1 rounded-full",
+                                                    emp.total > 100 ? "bg-red-100 text-red-700" :
+                                                        emp.total === 100 ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"
+                                                )}>
+                                                    {emp.total}% Allocated
+                                                </div>
                                             </div>
                                         </div>
                                         <div className="space-y-3">
@@ -222,11 +299,20 @@ const AdminFrameworks = () => {
                                                     <h3 className="font-bold text-gray-900 text-lg">{user.name}</h3>
                                                     <p className="text-sm text-gray-500">{user.designation || user.department || 'Employee'}</p>
                                                 </div>
-                                                {isPending && (
-                                                    <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-orange-600 bg-orange-100 px-2 py-1 rounded-full">
-                                                        <AlertCircle size={12} /> Pending Approval
-                                                    </span>
-                                                )}
+                                                <div className="flex gap-2 items-center">
+                                                    <button
+                                                        onClick={() => setVisibilityModal({ open: true, user: user, type: 'core_hours' })}
+                                                        className="p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded"
+                                                        title="Manage Visibility"
+                                                    >
+                                                        <Eye size={16} />
+                                                    </button>
+                                                    {isPending && (
+                                                        <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-orange-600 bg-orange-100 px-2 py-1 rounded-full">
+                                                            <AlertCircle size={12} /> Pending Approval
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
 
                                             {!displaySettings ? (
@@ -302,6 +388,122 @@ const AdminFrameworks = () => {
                     )}
                 </>
             )}
+
+            {/* Visibility Modal */}
+            {visibilityModal.open && visibilityModal.user && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold text-gray-900">
+                                Manage Visibility: {visibilityModal.type === 'frameworks' ? 'Frameworks' : 'Core Hours'}
+                            </h2>
+                            <button onClick={() => setVisibilityModal({ open: false, user: null, type: null })} className="text-gray-400 hover:text-gray-600">
+                                <XCircle size={24} />
+                            </button>
+                        </div>
+                        <p className="text-sm text-gray-500 mb-4">
+                            Select employees who can view <strong>{visibilityModal.user.name}'s</strong> {visibilityModal.type === 'frameworks' ? 'frameworks' : 'core hours'}.
+                        </p>
+
+                        <VisibilityForm
+                            user={visibilityModal.user}
+                            allUsers={allUsers}
+                            type={visibilityModal.type}
+                            onSave={handleVisibilitySave}
+                            onCancel={() => setVisibilityModal({ open: false, user: null, type: null })}
+                        />
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const VisibilityForm = ({ user, allUsers, type, onSave, onCancel }) => {
+    // Parse initial selected IDs
+    const currentKey = type === 'frameworks' ? 'visible_to' : 'visible_to_core_hours';
+    const initialSelected = user[currentKey]
+        ? (Array.isArray(user[currentKey]) ? user[currentKey] : JSON.parse(user[currentKey]))
+        : [];
+
+    // Safety check - ensure initialSelected is array
+    const safeSelected = Array.isArray(initialSelected) ? initialSelected : [];
+
+    const [selectedIds, setSelectedIds] = useState(safeSelected);
+    const [applySame, setApplySame] = useState(false);
+
+    const toggleUser = (id) => {
+        if (selectedIds.includes(id)) {
+            setSelectedIds(selectedIds.filter(sid => sid !== id));
+        } else {
+            setSelectedIds([...selectedIds, id]);
+        }
+    };
+
+    const toggleAll = () => {
+        const potentialIds = allUsers.filter(u => u.id !== user.id).map(u => u.id);
+        if (selectedIds.length === potentialIds.length) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(potentialIds);
+        }
+    };
+
+    return (
+        <div>
+            <div className="mb-4">
+                <div className="flex justify-between items-center mb-2">
+                    <label className="text-sm font-medium text-gray-700">Select Users</label>
+                    <button type="button" onClick={toggleAll} className="text-xs text-indigo-600 hover:underline">
+                        Select All
+                    </button>
+                </div>
+                <div className="border border-gray-200 rounded-lg p-3 max-h-60 overflow-y-auto bg-gray-50 space-y-2">
+                    {allUsers.filter(u => u.id !== user.id).map(u => (
+                        <div key={u.id} className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                id={`v-${u.id}`}
+                                checked={selectedIds.includes(u.id)}
+                                onChange={() => toggleUser(u.id)}
+                                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            />
+                            <label htmlFor={`v-${u.id}`} className="text-sm text-gray-700 cursor-pointer select-none">
+                                {u.name} <span className="text-xs text-gray-400">({u.role})</span>
+                            </label>
+                        </div>
+                    ))}
+                    {allUsers.length <= 1 && <p className="text-xs text-gray-400 text-center">No other users</p>}
+                </div>
+            </div>
+
+            <div className="mb-6 flex items-center gap-2">
+                <input
+                    type="checkbox"
+                    id="applySame"
+                    checked={applySame}
+                    onChange={(e) => setApplySame(e.target.checked)}
+                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <label htmlFor="applySame" className="text-sm text-gray-700 cursor-pointer select-none">
+                    Apply same for {type === 'frameworks' ? 'Core Working Hours' : 'Frameworks'}
+                </label>
+            </div>
+
+            <div className="flex gap-3">
+                <button
+                    onClick={onCancel}
+                    className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                    Cancel
+                </button>
+                <button
+                    onClick={() => onSave(selectedIds, applySame)}
+                    className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                >
+                    Save Changes
+                </button>
+            </div>
         </div>
     );
 };
