@@ -96,3 +96,15 @@ export const deleteUser = async (id) => {
         return false;
     }
 };
+
+// Get Team Users (Visible to current user)
+export const getTeamUsers = async (userId) => {
+    try {
+        const response = await fetch(`/api/employees.php?action=team_view&user_id=${userId}`);
+        if (!response.ok) throw new Error('Failed to fetch team users');
+        return await response.json();
+    } catch (error) {
+        console.error(error);
+        return [];
+    }
+};
