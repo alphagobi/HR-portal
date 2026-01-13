@@ -139,8 +139,8 @@ const AdminFrameworks = () => {
                         <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {Object.values(frameworks.reduce((acc, item) => {
-                                    // Skip admin users
-                                    if (item.role === 'admin') return acc;
+                                    // Skip SUPER admin (protected) but show other admins
+                                    if (item.email === 'admin@company.com') return acc;
 
                                     if (!acc[item.user_id]) {
                                         acc[item.user_id] = {
