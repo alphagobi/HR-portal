@@ -648,7 +648,7 @@ const Dashboard = () => {
                                 onClick={() => isEditingCoreHours ? handleSaveCoreHours() : setIsEditingCoreHours(true)}
                                 className="text-gray-400 hover:text-indigo-600 transition-colors ml-1"
                                 disabled={!!coreHoursPending && !isEditingCoreHours}
-                                title={!!coreHoursPending ? "Waiting for approval" : "Edit Schedule"}
+                                title={coreHoursPending ? "Waiting for approval" : "Edit Schedule"}
                             >
                                 {isEditingCoreHours ? <Save size={14} /> : <Pencil size={14} />}
                             </button>

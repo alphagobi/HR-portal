@@ -218,7 +218,7 @@ const AdminFrameworks = () => {
                                     <div key={emp.id} className="border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow relative overflow-hidden group">
                                         {/* Overlay for Visibility Editing */}
                                         {editingVisibility.id === emp.id && editingVisibility.type === 'frameworks' ? (
-                                            <div className="absolute inset-0 bg-white z-20 p-4 flex flex-col h-full animate-in fade-in duration-200">
+                                            <div className="relative z-20 bg-white flex flex-col h-full min-h-[350px] animate-in fade-in duration-200">
                                                 <h3 className="font-bold text-gray-900 mb-2 text-sm flex justify-between items-center">
                                                     Visibility: {emp.name}
                                                     <button onClick={() => setEditingVisibility({ id: null, type: null })} className="text-gray-400 hover:text-gray-600">

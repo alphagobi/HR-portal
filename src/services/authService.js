@@ -3,24 +3,20 @@
 const API_URL = '/api/auth.php';
 
 export const login = async (email, password) => {
-    try {
-        const response = await fetch(`${API_URL}?action=login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
+    const response = await fetch(`${API_URL}?action=login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+    });
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Login failed');
-        }
-
-        const user = await response.json();
-        localStorage.setItem('hr_current_user', JSON.stringify(user));
-        return user;
-    } catch (error) {
-        throw error;
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Login failed');
     }
+
+    const user = await response.json();
+    localStorage.setItem('hr_current_user', JSON.stringify(user));
+    return user;
 };
 
 export const logout = () => {

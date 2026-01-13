@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getAllUsers, createUser, updateUser, deleteUser } from '../../services/authService';
 
 import { UserPlus, Search, Mail, Briefcase, Shield, Edit, Trash2, X } from 'lucide-react';
@@ -25,15 +25,15 @@ const AdminUsers = () => {
 
 
 
-    useEffect(() => {
-        fetchUsers();
-    }, []);
-
-    const fetchUsers = async () => {
+    const fetchUsers = useCallback(async () => {
         const data = await getAllUsers();
         setUsers(data);
         setLoading(false);
-    };
+    }, []);
+
+    useEffect(() => {
+        fetchUsers();
+    }, [fetchUsers]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

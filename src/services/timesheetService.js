@@ -41,14 +41,14 @@ export const saveTimesheet = async (timesheetData) => {
 };
 
 // Deprecated: Use saveTimesheet instead
-export const saveTimesheetEntry = async (entry) => {
+export const saveTimesheetEntry = async (_entry) => {
     console.warn("saveTimesheetEntry is deprecated. Use saveTimesheet with full data.");
 };
 
-export const deleteTimesheetEntry = async (date, entryId) => {
+export const deleteTimesheetEntry = async (_date, _entryId) => {
     console.warn("deleteTimesheetEntry is deprecated. Use saveTimesheet with full data.");
 };
 
-export const saveDailySummary = async (date, summaryData) => {
+export const saveDailySummary = async (_date, _summaryData) => {
     console.warn("saveDailySummary is deprecated. Use saveTimesheet with full data.");
 };
