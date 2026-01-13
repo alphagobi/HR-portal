@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { format } from 'date-fns';
 import { getTimesheets, saveTimesheet } from '../../services/timesheetService';
 import { getLeaves } from '../../services/leaveService';
 import { getTasks } from '../../services/taskService';
@@ -213,7 +214,7 @@ const AdminTimesheets = () => {
             // Format users for dropdown (exclude Admin User)
             const emps = allUsers
                 .filter(u => u.name !== 'Admin User')
-                .map(u => ({ id: u.id, name: u.name }));
+                .map(u => ({ id: u.id, name: u.name, working_days: u.working_days }));
 
             setEmployees(emps);
 
@@ -291,6 +292,32 @@ const AdminTimesheets = () => {
             const holiday = events.find(e => e.date === dateStr && e.is_holiday == 1);
             const isSunday = dayOfWeek === 0;
 
+            // Check for Working Day
+            const dayName = format(currentPtr, 'EEE'); // Mon, Tue...
+            let workingDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+            if (selectedEmployee?.working_days) {
+                try {
+                    workingDays = Array.isArray(selectedEmployee.working_days)
+                        ? selectedEmployee.working_days
+                        : JSON.parse(selectedEmployee.working_days);
+                } catch (e) {
+                    console.error("Error parsing working days", e);
+                }
+            }
+            // Get Plan (Tasks)
+            const daysTasks = tasks.filter(t => t.planned_date === dateStr);
+
+            // Get Actual (Timesheets)
+            const daysTimesheet = timesheets.find(t =>
+                t.employee_id === selectedEmployee?.id &&
+                t.date === dateStr
+            );
+
+            // Determine if effectively working (Configured OR Has Activity)
+            // This ensures past days with logs are not hidden even if schedule changed
+            const hasActivity = daysTimesheet && daysTimesheet.entries && daysTimesheet.entries.length > 0;
+            const isWorkingDay = workingDays.includes(dayName) || hasActivity;
+
             // Check for Leave
             const leave = leaves.find(l => {
                 if (l.status !== 'Approved') return false;
@@ -303,15 +330,6 @@ const AdminTimesheets = () => {
 
             const isLeave = !!leave;
 
-            // Get Plan (Tasks)
-            const daysTasks = tasks.filter(t => t.planned_date === dateStr);
-
-            // Get Actual (Timesheets)
-            const daysTimesheet = timesheets.find(t =>
-                t.employee_id === selectedEmployee?.id &&
-                t.date === dateStr
-            );
-
             const isToday = today.getDate() === currentPtr.getDate() && today.getMonth() === currentPtr.getMonth() && today.getFullYear() === currentPtr.getFullYear();
 
             data.push({
@@ -319,7 +337,8 @@ const AdminTimesheets = () => {
                 displayDate: currentPtr.toLocaleDateString(),
                 isHoliday: !!holiday,
                 isSunday: isSunday,
-                holidayName: holiday?.title || 'SUNDAY',
+                isNonWorkingDay: !isWorkingDay,
+                holidayName: holiday ? holiday.title : (isSunday ? 'SUNDAY' : (!isWorkingDay ? 'NON-WORKING' : null)),
                 tasks: daysTasks,
                 timesheet: daysTimesheet || null,
                 isLeave: isLeave,
@@ -516,7 +535,7 @@ const AdminTimesheets = () => {
                         <tbody>
                             {spreadsheetData.map((day) => {
                                 // Holiday / Weekend Row
-                                if (day.isHoliday || day.isSunday) {
+                                if (day.isHoliday || day.isNonWorkingDay) {
                                     return (
                                         <tr
                                             key={day.date}

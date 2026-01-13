@@ -17,7 +17,8 @@ const AdminUsers = () => {
         department: '',
         designation: '',
         informed_leave_limit: 6,
-        emergency_leave_limit: 6
+        emergency_leave_limit: 6,
+        working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
     });
 
 
@@ -57,7 +58,8 @@ const AdminUsers = () => {
             department: user.department || '',
             designation: user.designation || '',
             informed_leave_limit: user.informed_leave_limit || 6,
-            emergency_leave_limit: user.emergency_leave_limit || 6
+            emergency_leave_limit: user.emergency_leave_limit || 6,
+            working_days: user.working_days ? JSON.parse(user.working_days) : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
         });
         setEditingId(user.id);
         setShowModal(true);
@@ -77,7 +79,7 @@ const AdminUsers = () => {
     const closeModal = () => {
         setShowModal(false);
         setEditingId(null);
-        setNewUser({ name: '', email: '', password: '', role: 'employee', department: '', designation: '', informed_leave_limit: 6, emergency_leave_limit: 6 });
+        setNewUser({ name: '', email: '', password: '', role: 'employee', department: '', designation: '', informed_leave_limit: 6, emergency_leave_limit: 6, working_days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] });
     };
 
     return (
@@ -273,6 +275,26 @@ const AdminUsers = () => {
                                         onChange={(e) => setNewUser({ ...newUser, emergency_leave_limit: parseInt(e.target.value) })}
                                         required
                                     />
+                                </div>
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Working Days</label>
+                                <div className="flex gap-2 flex-wrap">
+                                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                                        <button
+                                            key={day}
+                                            type="button"
+                                            onClick={() => {
+                                                const days = newUser.working_days.includes(day)
+                                                    ? newUser.working_days.filter(d => d !== day)
+                                                    : [...newUser.working_days, day];
+                                                setNewUser({ ...newUser, working_days: days });
+                                            }}
+                                            className={`w-8 h-8 rounded text-xs font-bold transition-colors border flex items-center justify-center ${newUser.working_days.includes(day) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
+                                        >
+                                            {day.slice(0, 2)}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
                             <div>

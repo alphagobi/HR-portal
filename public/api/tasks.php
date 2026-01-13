@@ -62,6 +62,29 @@ if ($method === 'GET') {
 
         $tasksToInsert = [];
 
+        // Fetch Company Holidays
+        $stmt = $pdo->query("SELECT start_date, end_date FROM company_calendar");
+        $holidayRanges = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $holidays = [];
+        foreach ($holidayRanges as $range) {
+            $period = new DatePeriod(
+                new DateTime($range['start_date']),
+                new DateInterval('P1D'),
+                (new DateTime($range['end_date']))->modify('+1 day')
+            );
+            foreach ($period as $dt) {
+                $holidays[] = $dt->format('Y-m-d');
+            }
+        }
+
+        // Fetch User Working Days
+        $stmt = $pdo->prepare("SELECT working_days FROM users WHERE id = ?");
+        $stmt->execute([$user_id]);
+        $userRow = $stmt->fetch(PDO::FETCH_ASSOC);
+        // Default to Mon-Fri if not set
+        $userWorkingDays = $userRow['working_days'] ? json_decode($userRow['working_days'], true) : ["Mon","Tue","Wed","Thu","Fri"];
+        // Ensure standard casing just in case (Mon, Tue...) in DB matches PHP 'D' format
+
         if ($recurrence && $recurrence['isRecurring']) {
             // Generate multiple tasks
             $freq = $recurrence['frequency'] ?? 'daily';
@@ -82,9 +105,23 @@ if ($method === 'GET') {
                     break;
                 }
 
-                // For weekly with specific days, check if current day matches
+                $currentDateStr = $currentDate->format('Y-m-d');
+                $currentDayName = $currentDate->format('D'); // Mon, Tue, Wed...
+
                 $shouldInsert = true;
-                if ($freq === 'weekly' && !empty($weekDays)) {
+
+                // 1. Check Company Holidays
+                if (in_array($currentDateStr, $holidays)) {
+                    $shouldInsert = false;
+                }
+
+                // 2. Check User Working Days
+                if (!in_array($currentDayName, $userWorkingDays)) {
+                    $shouldInsert = false;
+                }
+
+                // 3. Check Weekly Specific Days (if applicable)
+                if ($shouldInsert && $freq === 'weekly' && !empty($weekDays)) {
                     // PHP 'w' returns 0 (Sun) - 6 (Sat)
                     $dayOfWeek = intval($currentDate->format('w'));
                     if (!in_array($dayOfWeek, $weekDays)) {

@@ -5,14 +5,14 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
     // Get all users but hide passwords
-    $stmt = $pdo->query("SELECT id, employee_code, name, email, role, department, designation, informed_leave_limit, emergency_leave_limit, created_at FROM users ORDER BY name ASC");
+    $stmt = $pdo->query("SELECT id, employee_code, name, email, role, department, designation, informed_leave_limit, emergency_leave_limit, working_days, created_at FROM users ORDER BY name ASC");
     echo json_encode($stmt->fetchAll());
 } 
 elseif ($method === 'POST') {
     // Admin creating a user
     $data = json_decode(file_get_contents("php://input"), true);
     
-    $stmt = $pdo->prepare("INSERT INTO users (employee_code, name, email, password, role, department, designation) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $pdo->prepare("INSERT INTO users (employee_code, name, email, password, role, department, designation, working_days) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     
     try {
         $stmt->execute([
@@ -22,7 +22,8 @@ elseif ($method === 'POST') {
             $data['password'], // Should be hashed in real app
             $data['role'],
             $data['department'],
-            $data['designation']
+            $data['designation'],
+            $data['working_days'] ?? json_encode(["Mon","Tue","Wed","Thu","Fri"])
         ]);
         echo json_encode(["message" => "Employee added successfully", "id" => $pdo->lastInsertId()]);
     } catch (PDOException $e) {
@@ -35,7 +36,7 @@ elseif ($method === 'PUT') {
     $data = json_decode(file_get_contents("php://input"), true);
     $id = $_GET['id'];
 
-    $sql = "UPDATE users SET employee_code=?, name=?, email=?, role=?, department=?, designation=?, informed_leave_limit=?, emergency_leave_limit=? WHERE id=?";
+    $sql = "UPDATE users SET employee_code=?, name=?, email=?, role=?, department=?, designation=?, informed_leave_limit=?, emergency_leave_limit=?, working_days=? WHERE id=?";
     $params = [
         $data['employee_code'] ?? null,
         $data['name'],
@@ -45,12 +46,13 @@ elseif ($method === 'PUT') {
         $data['designation'],
         $data['informed_leave_limit'] ?? 6,
         $data['emergency_leave_limit'] ?? 6,
+        $data['working_days'] ?? json_encode(["Mon","Tue","Wed","Thu","Fri"]),
         $id
     ];
 
     // Only update password if provided
     if (!empty($data['password'])) {
-        $sql = "UPDATE users SET employee_code=?, name=?, email=?, password=?, role=?, department=?, designation=?, informed_leave_limit=?, emergency_leave_limit=? WHERE id=?";
+        $sql = "UPDATE users SET employee_code=?, name=?, email=?, password=?, role=?, department=?, designation=?, informed_leave_limit=?, emergency_leave_limit=?, working_days=? WHERE id=?";
         $params = [
             $data['employee_code'] ?? null,
             $data['name'],
@@ -61,6 +63,7 @@ elseif ($method === 'PUT') {
             $data['designation'],
             $data['informed_leave_limit'] ?? 6,
             $data['emergency_leave_limit'] ?? 6,
+            $data['working_days'] ?? json_encode(["Mon","Tue","Wed","Thu","Fri"]),
             $id
         ];
     }
