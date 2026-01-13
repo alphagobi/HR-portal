@@ -160,7 +160,7 @@ if ($method === 'GET') {
             $tasksToInsert[] = $baseDate;
         }
 
-        $stmt = $pdo->prepare("INSERT INTO planned_tasks (user_id, task_content, planned_date, start_time, end_time, eta, framework_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO planned_tasks (user_id, task_content, planned_date, eta, framework_id) VALUES (?, ?, ?, ?, ?)");
         
         $insertedCount = 0;
         foreach ($tasksToInsert as $dateStr) {
@@ -169,8 +169,6 @@ if ($method === 'GET') {
                     $user_id, 
                     $content, 
                     $dateStr, 
-                    $startTime, 
-                    $endTime, 
                     $eta,
                     $frameworkId // Insert framework_id
                 ]);
