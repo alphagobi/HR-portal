@@ -35,6 +35,7 @@ const AdminTimesheets = () => {
     });
 
     const scrollContainerRef = useRef(null);
+    const topSentinelRef = useRef(null);
     const [isFetchingMore, setIsFetchingMore] = useState(false);
 
     // History Toggle State
