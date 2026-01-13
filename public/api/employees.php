@@ -14,6 +14,11 @@ elseif ($method === 'POST') {
     
     $stmt = $pdo->prepare("INSERT INTO users (employee_code, name, email, password, role, department, designation, working_days) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     
+    // Handle working_days serialization
+    $working_days = isset($data['working_days']) && is_array($data['working_days']) 
+        ? json_encode($data['working_days']) 
+        : ($data['working_days'] ?? json_encode(["Mon","Tue","Wed","Thu","Fri"]));
+
     try {
         $stmt->execute([
             $data['employee_code'] ?? null,
@@ -23,7 +28,7 @@ elseif ($method === 'POST') {
             $data['role'],
             $data['department'],
             $data['designation'],
-            $data['working_days'] ?? json_encode(["Mon","Tue","Wed","Thu","Fri"])
+            $working_days
         ]);
         echo json_encode(["message" => "Employee added successfully", "id" => $pdo->lastInsertId()]);
     } catch (PDOException $e) {
@@ -36,6 +41,11 @@ elseif ($method === 'PUT') {
     $data = json_decode(file_get_contents("php://input"), true);
     $id = $_GET['id'];
 
+    // Handle working_days serialization
+    $working_days = isset($data['working_days']) && is_array($data['working_days']) 
+        ? json_encode($data['working_days']) 
+        : ($data['working_days'] ?? json_encode(["Mon","Tue","Wed","Thu","Fri"]));
+
     $sql = "UPDATE users SET employee_code=?, name=?, email=?, role=?, department=?, designation=?, informed_leave_limit=?, emergency_leave_limit=?, working_days=? WHERE id=?";
     $params = [
         $data['employee_code'] ?? null,
@@ -46,7 +56,7 @@ elseif ($method === 'PUT') {
         $data['designation'],
         $data['informed_leave_limit'] ?? 6,
         $data['emergency_leave_limit'] ?? 6,
-        $data['working_days'] ?? json_encode(["Mon","Tue","Wed","Thu","Fri"]),
+        $working_days,
         $id
     ];
 
@@ -63,7 +73,7 @@ elseif ($method === 'PUT') {
             $data['designation'],
             $data['informed_leave_limit'] ?? 6,
             $data['emergency_leave_limit'] ?? 6,
-            $data['working_days'] ?? json_encode(["Mon","Tue","Wed","Thu","Fri"]),
+            $working_days,
             $id
         ];
     }

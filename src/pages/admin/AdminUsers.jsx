@@ -49,6 +49,15 @@ const AdminUsers = () => {
     };
 
     const handleEdit = (user) => {
+        let parsedWorkingDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+        if (user.working_days) {
+            try {
+                parsedWorkingDays = JSON.parse(user.working_days);
+            } catch (e) {
+                console.error("Failed to parse working_days", e);
+            }
+        }
+
         setNewUser({
             employee_code: user.employee_code,
             name: user.name,
@@ -59,7 +68,7 @@ const AdminUsers = () => {
             designation: user.designation || '',
             informed_leave_limit: user.informed_leave_limit || 6,
             emergency_leave_limit: user.emergency_leave_limit || 6,
-            working_days: user.working_days ? JSON.parse(user.working_days) : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+            working_days: parsedWorkingDays
         });
         setEditingId(user.id);
         setShowModal(true);
