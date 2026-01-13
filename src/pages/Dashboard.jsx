@@ -118,6 +118,17 @@ const Dashboard = () => {
         setShowEditTaskModal(true);
     };
 
+    const handleAddTaskButton = () => {
+        setEditingTaskData({
+            id: null,
+            content: '',
+            date: new Date().toISOString().split('T')[0], // Default to today
+            eta: '',
+            frameworkId: ''
+        });
+        setShowEditTaskModal(true);
+    };
+
     const handleDeleteTaskClick = async (taskId, e) => {
         e.stopPropagation(); // Prevent toggling expand
         if (window.confirm("Are you sure you want to delete this task?")) {
@@ -139,18 +150,33 @@ const Dashboard = () => {
         }
 
         try {
-            await updateTask(editingTaskData.id, {
-                task_content: editingTaskData.content,
-                planned_date: editingTaskData.date,
-                eta: editingTaskData.eta,
-                framework_id: editingTaskData.frameworkId || null
-            });
+            if (editingTaskData.id) {
+                // Update
+                await updateTask(editingTaskData.id, {
+                    task_content: editingTaskData.content,
+                    planned_date: editingTaskData.date,
+                    eta: editingTaskData.eta,
+                    framework_id: editingTaskData.frameworkId || null
+                });
+            } else {
+                // Create
+                await createTask({
+                    user_id: user.id,
+                    task_content: editingTaskData.content,
+                    planned_date: editingTaskData.date,
+                    eta: editingTaskData.eta,
+                    framework_id: editingTaskData.frameworkId || null,
+                    start_time: null,
+                    end_time: null
+                });
+            }
+
             setShowEditTaskModal(false);
             setEditingTaskData({ id: null, content: '', date: '', eta: '', frameworkId: '' });
             fetchDashboardData();
         } catch (error) {
-            console.error("Failed to update task", error);
-            alert("Failed to update task");
+            console.error("Failed to save task", error);
+            alert("Failed to save task");
         }
     };
 
@@ -993,7 +1019,14 @@ const Dashboard = () => {
                                 </div>
                             )}
                             <h2 className="text-lg font-bold text-gray-900">Your Tasks</h2>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 items-center">
+                                <button
+                                    onClick={handleAddTaskButton}
+                                    className="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-2.5 py-1 rounded-md flex items-center gap-1 transition-colors mr-1"
+                                >
+                                    <Plus size={12} /> Add Task
+                                </button>
+
                                 {/* Red - Overdue */}
                                 <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.overdue > 0 ? 'text-red-700 bg-red-100' : 'text-gray-400 bg-gray-50'}`}>
                                     {counts.overdue} Red
@@ -1118,7 +1151,7 @@ const Dashboard = () => {
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6 m-4">
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-bold text-gray-900">Edit Task</h3>
+                            <h3 className="text-lg font-bold text-gray-900">{editingTaskData.id ? 'Edit Task' : 'Create Task'}</h3>
                             <button onClick={() => setShowEditTaskModal(false)} className="text-gray-400 hover:text-gray-600">
                                 <X size={20} />
                             </button>
