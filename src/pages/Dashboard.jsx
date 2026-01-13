@@ -673,7 +673,7 @@ const Dashboard = () => {
                                                 else if (status === 'red') bgClass = 'bg-red-100 text-red-700';
 
                                                 return (
-                                                    <span key={i} className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${bgClass}`}>
+                                                    <span key={i} className={`w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full text-xs font-bold ${bgClass}`}>
                                                         {dayLetter}
                                                     </span>
                                                 );
@@ -692,7 +692,7 @@ const Dashboard = () => {
                                                 else if (status === 'red') bgClass = 'bg-red-100 text-red-700';
 
                                                 return (
-                                                    <span key={i} className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${bgClass}`}>
+                                                    <span key={i} className={`w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full text-xs font-bold ${bgClass}`}>
                                                         {dayLetter}
                                                     </span>
                                                 );
@@ -725,7 +725,7 @@ const Dashboard = () => {
                                             <button
                                                 key={day}
                                                 onClick={() => toggleDay(day)}
-                                                className={`w-6 h-6 rounded text-[9px] font-bold transition-colors border flex items-center justify-center ${tempCoreHours.working_days.includes(day) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
+                                                className={`w-8 h-8 rounded text-[10px] font-bold transition-colors border flex items-center justify-center ${tempCoreHours.working_days.includes(day) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
                                             >
                                                 {day.slice(0, 2)}
                                             </button>
