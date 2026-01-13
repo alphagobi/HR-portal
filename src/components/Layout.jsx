@@ -3,7 +3,7 @@ import { Link, useLocation, Outlet } from 'react-router-dom';
 import { getAnnouncements } from '../services/announcementService';
 import { getLeaves } from '../services/leaveService';
 import { getCurrentUser } from '../services/authService';
-import { LayoutDashboard, FileText, Clock, Calendar, IndianRupee, Menu, X, LogOut, CheckSquare, Megaphone, HelpCircle } from 'lucide-react';
+import { LayoutDashboard, FileText, Clock, Calendar, IndianRupee, Menu, X, LogOut, CheckSquare, Megaphone, HelpCircle, LayoutTemplate } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { logout } from '../services/authService';
 import clsx from 'clsx';
@@ -51,6 +51,7 @@ const Layout = () => {
         { name: 'Dashboard', path: '/', icon: LayoutDashboard },
         { name: 'Tasks', path: '/tasks', icon: CheckSquare },
         { name: 'Timesheet', path: '/timesheet', icon: Clock },
+        { name: 'Team', path: '/team', icon: LayoutTemplate },
         { name: 'Leaves', path: '/leaves', icon: Calendar, badge: unreadLeaves },
         { name: 'Calendar', path: '/calendar', icon: Calendar },
         { name: 'Reimbursements', path: '/reimbursements', icon: IndianRupee },

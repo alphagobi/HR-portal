@@ -13,6 +13,7 @@ import Calendar from './pages/Calendar';
 import Reimbursements from './pages/Reimbursements';
 import Announcements from './pages/Announcements';
 import Guide from './pages/Guide';
+import Team from './pages/Team';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminLeaves from './pages/admin/AdminLeaves';
 import AdminTimesheets from './pages/admin/AdminTimesheets';
@@ -41,6 +42,7 @@ function App() {
           <Route path="policies" element={<Policies />} />
           <Route path="tasks" element={<Tasks />} />
           <Route path="timesheet" element={<Timesheet />} />
+          <Route path="team" element={<Team />} />
           <Route path="leaves" element={<Leaves />} />
           <Route path="calendar" element={<Calendar />} />
           <Route path="reimbursements" element={<Reimbursements />} />
