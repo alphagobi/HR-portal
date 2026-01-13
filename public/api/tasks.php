@@ -220,12 +220,14 @@ elseif ($method === 'PUT') {
         $stmt->execute($params);
         echo json_encode(["message" => "Task status updated"]);
     } else {
-        // Update content and times
-        $stmt = $pdo->prepare("UPDATE planned_tasks SET task_content = ?, start_time = ?, end_time = ? WHERE id = ?");
+        // Update content, times, eta, and date
+        $stmt = $pdo->prepare("UPDATE planned_tasks SET task_content = ?, start_time = ?, end_time = ?, eta = ?, planned_date = ? WHERE id = ?");
         $stmt->execute([
             $data['task_content'], 
             $data['start_time'] ?? null, 
             $data['end_time'] ?? null, 
+            $data['eta'] ?? null,
+            $data['planned_date'], // Should be present
             $id
         ]);
         echo json_encode(["message" => "Task updated"]);
@@ -240,8 +242,13 @@ elseif ($method === 'DELETE') {
         exit;
     }
 
-    $stmt = $pdo->prepare("DELETE FROM planned_tasks WHERE id = ?");
-    $stmt->execute([$id]);
-    echo json_encode(["message" => "Task deleted"]);
+    try {
+        $stmt = $pdo->prepare("DELETE FROM planned_tasks WHERE id = ?");
+        $stmt->execute([$id]);
+        echo json_encode(["message" => "Task deleted"]);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(["error" => "Database error: " . $e->getMessage()]);
+    }
 }
 ?>
