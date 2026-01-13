@@ -40,6 +40,8 @@ const AdminTimesheets = () => {
     // History Toggle State
     const [showHistory, setShowHistory] = useState(false);
 
+
+
     // Scroll Preservation Refs
     const previousScrollHeightRef = useRef(0);
     const previousScrollTopRef = useRef(0);
@@ -84,59 +86,81 @@ const AdminTimesheets = () => {
 
 
 
+    // Calculate Start Date based on History/Month/Working Days
     useEffect(() => {
-        if (!selectedEmployee || loading) return; // Don't block on valid 0 timesheets if we want to show empty month
+        if (!selectedEmployee || loading) return;
 
         const now = new Date();
         const isCurrentMonth = currentMonth.getMonth() === now.getMonth() && currentMonth.getFullYear() === now.getFullYear();
 
-        // 1. Calculate Start Date
         let newStart;
-        if (!isCurrentMonth) {
-            // Not current month -> Always start from 1st
-            newStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-        } else if (showHistory) {
-            // Current Month + History ON -> Start from 1st
+
+        if (!isCurrentMonth || showHistory) {
+            // Not current month OR History requested -> Start from 1st
             newStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
         } else {
-            // Current Month + History OFF -> Start from Last Logged Day (or Yesterday)
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            yesterday.setHours(0, 0, 0, 0);
+            // Current Month + History OFF -> Start from Last Working Day
+            // "if today is monday, it should saturday. if saturday holiday, friday."
+            let d = new Date();
+            d.setDate(d.getDate() - 1); // Start checking from Yesterday
 
-            // Filter valid entries for this employee
-            const empEntries = timesheets
-                .filter(t => t.employee_id === selectedEmployee.id && t.entries && t.entries.some(e => e.is_deleted != 1));
+            // Backtrack to find last working day
+            while (true) {
+                const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                const dayOfWeek = d.getDay(); // 0 = Sunday
+                const isHoliday = events.some(e => e.date === dateStr && e.is_holiday == 1);
 
-            // If no entries, default to Yesterday
-            if (empEntries.length === 0) {
-                newStart = yesterday;
-            } else {
-                // Find first date <= Yesterday
-                empEntries.sort((a, b) => new Date(b.date) - new Date(a.date));
-                const lastEntry = empEntries.find(t => new Date(t.date) <= yesterday);
-
-                if (lastEntry) {
-                    newStart = new Date(lastEntry.date);
+                if (dayOfWeek === 0 || isHoliday) {
+                    // Skip Sunday or Holiday
+                    d.setDate(d.getDate() - 1);
                 } else {
-                    newStart = yesterday;
+                    // Found working day
+                    break;
                 }
             }
+            newStart = d;
         }
+
         newStart.setHours(0, 0, 0, 0);
         setStartDate(newStart);
 
-        // 2. Calculate End Date -> ALWAYS End of the selected 'currentMonth'
-        const newEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0); // Last day of month
+        // End Date -> ALWAYS End of the selected 'currentMonth'
+        const newEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
         newEnd.setHours(0, 0, 0, 0);
         setEndDate(newEnd);
 
-    }, [selectedEmployee, loading, showHistory, currentMonth, timesheets]); // Added timesheets to dep to react to data load
+    }, [selectedEmployee, loading, showHistory, currentMonth, events]);
+
+    // Scroll Observer
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && !isFetchingMore) {
+                    loadMorePastDates();
+                }
+            },
+            {
+                root: scrollContainerRef.current,
+                rootMargin: '100px 0px 0px 0px',
+                threshold: 0.1
+            }
+        );
+
+        if (topSentinelRef.current) {
+            observer.observe(topSentinelRef.current);
+        }
+
+        return () => {
+            if (topSentinelRef.current) {
+                observer.unobserve(topSentinelRef.current);
+            }
+        };
+    }, [isFetchingMore, startDate, loading]);
 
     // Reset History Toggle and Scroll when Employee Changes
+    // Reset Scroll when Employee Changes
     useEffect(() => {
         if (selectedEmployee) {
-            setShowHistory(false);
             if (scrollContainerRef.current) {
                 scrollContainerRef.current.scrollTop = 0;
             }
@@ -380,7 +404,7 @@ const AdminTimesheets = () => {
 
     if (loading) return <div className="p-8 text-center text-gray-500">Loading data...</div>;
 
-    if (loading) return <div className="p-8 text-center text-gray-500">Loading data...</div>;
+
 
     return (
         <div className="p-6 max-w-full mx-auto h-[calc(100vh-80px)] overflow-hidden flex flex-col">
