@@ -60,10 +60,6 @@ if ($method === 'GET') {
         $frameworkId = $data['framework_id'] ?? null; // Capture framework_id
         $recurrence = $data['recurrence'] ?? null;
 
-        // DEBUG LOGGING
-        file_put_contents('debug_tasks.txt', "--- New Request ---\n", FILE_APPEND);
-        file_put_contents('debug_tasks.txt', "Payload: " . print_r($data, true) . "\n", FILE_APPEND);
-
         $tasksToInsert = [];
 
         // Fetch Company Holidays
@@ -87,9 +83,6 @@ if ($method === 'GET') {
         $userRow = $stmt->fetch(PDO::FETCH_ASSOC);
         // Default to Mon-Fri if not set
         $userWorkingDays = $userRow['working_days'] ? json_decode($userRow['working_days'], true) : ["Mon","Tue","Wed","Thu","Fri"];
-        
-        file_put_contents('debug_tasks.txt', "User Working Days: " . print_r($userWorkingDays, true) . "\n", FILE_APPEND);
-        
         // Ensure standard casing just in case (Mon, Tue...) in DB matches PHP 'D' format
 
         if ($recurrence && $recurrence['isRecurring']) {
@@ -143,9 +136,6 @@ if ($method === 'GET') {
                 if ($shouldInsert) {
                     $tasksToInsert[] = $currentDate->format('Y-m-d');
                     $count++;
-                    file_put_contents('debug_tasks.txt', "Adding date: $currentDateStr\n", FILE_APPEND);
-                } else {
-                     file_put_contents('debug_tasks.txt', "Skipping date: $currentDateStr - Reason: $rejectReason\n", FILE_APPEND);
                 }
 
                 // Advance Date
@@ -167,17 +157,7 @@ if ($method === 'GET') {
 
         } else {
             // Single Task
-            $baseDateObj = new DateTime($baseDate);
-            $dayName = $baseDateObj->format('D');
-            
-            // Should we enforce working days/holidays for single tasks too? 
-            // The original logic didn't seem to explicitly filter single tasks, but let's see.
-            // The Original code in Step 1283 had lines 154-157:
-            // } else { $tasksToInsert[] = $baseDate; }
-            // So Single Tasks were ALWAYS inserted regardless of holidays/working days.
-            
             $tasksToInsert[] = $baseDate;
-            file_put_contents('debug_tasks.txt', "Adding single task date: $baseDate\n", FILE_APPEND);
         }
 
         $stmt = $pdo->prepare("INSERT INTO planned_tasks (user_id, task_content, planned_date, start_time, end_time, eta, framework_id) VALUES (?, ?, ?, ?, ?, ?, ?)");
@@ -196,7 +176,6 @@ if ($method === 'GET') {
                 ]);
                 $insertedCount++;
             } catch (Exception $e) {
-                 file_put_contents('debug_tasks.txt', "Insert Error: " . $e->getMessage() . "\n", FILE_APPEND);
                  throw $e;
             }
         }
@@ -208,7 +187,6 @@ if ($method === 'GET') {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
         }
-        file_put_contents('debug_tasks.txt', "Transaction Error: " . $e->getMessage() . "\n", FILE_APPEND);
         http_response_code(500);
         echo json_encode(["error" => $e->getMessage()]);
     }
