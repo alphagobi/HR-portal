@@ -77,6 +77,11 @@ if ($method === 'GET') {
         // Default to Mon-Fri if not set
         $userWorkingDays = $userRow['working_days'] ? json_decode($userRow['working_days'], true) : ["Mon","Tue","Wed","Thu","Fri"];
         // Ensure standard casing just in case (Mon, Tue...) in DB matches PHP 'D' format
+        
+        // Fetch User Approved Leaves
+        $stmt = $pdo->prepare("SELECT start_date, end_date FROM leaves WHERE employee_id = ? AND status = 'Approved' AND end_date >= ?");
+        $stmt->execute([$user_id, $baseDate]);
+        $leaves = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         if ($recurrence && $recurrence['isRecurring']) {
             // Generate multiple tasks
@@ -114,6 +119,17 @@ if ($method === 'GET') {
                 if ($shouldInsert && !in_array($currentDayName, $userWorkingDays)) {
                     $shouldInsert = false;
                     $rejectReason = "Non-working day ($currentDayName)";
+                }
+
+                // 2.5 Check Leaves
+                if ($shouldInsert) {
+                    foreach ($leaves as $leave) {
+                        if ($currentDateStr >= $leave['start_date'] && $currentDateStr <= $leave['end_date']) {
+                            $shouldInsert = false;
+                            $rejectReason = "On Leave";
+                            break;
+                        }
+                    }
                 }
 
                 // 3. Check Weekly Specific Days (if applicable)
