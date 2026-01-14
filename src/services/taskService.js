@@ -16,7 +16,16 @@ export const createTask = async (task) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(task)
     });
-    if (!response.ok) throw new Error('Failed to create task');
+    if (!response.ok) {
+        let errorMessage = 'Failed to create task';
+        try {
+            const errorData = await response.json();
+            if (errorData.error) errorMessage = errorData.error;
+        } catch (e) {
+            // If JSON parse fails, use default message
+        }
+        throw new Error(errorMessage);
+    }
     return await response.json();
 };
 

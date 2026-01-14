@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
 import Policies from './pages/Policies';
+import Debug from './pages/Debug';
 import Tasks from './pages/Tasks';
 import Timesheet from './pages/Timesheet';
 import Leaves from './pages/Leaves';
@@ -48,6 +49,7 @@ function App() {
           <Route path="reimbursements" element={<Reimbursements />} />
           <Route path="announcements" element={<Announcements />} />
           <Route path="guide" element={<Guide />} />
+          <Route path="/debug" element={<Debug />} />
         </Route>
 
         {/* Admin Routes - Protected & Admin Only */}

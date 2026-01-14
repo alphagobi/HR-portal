@@ -115,6 +115,7 @@ const Tasks = () => {
             fetchTasks();
         } catch (error) {
             console.error("Failed to save task", error);
+            alert(`Failed to save task: ${error.message}`);
         }
     };
 

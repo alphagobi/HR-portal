@@ -176,7 +176,7 @@ const Dashboard = () => {
             fetchDashboardData();
         } catch (error) {
             console.error("Failed to save task", error);
-            alert("Failed to save task");
+            alert(`Failed to save task: ${error.message}`);
         }
     };
 
