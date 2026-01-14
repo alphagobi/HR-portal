@@ -1089,74 +1089,70 @@ const Dashboard = () => {
                                     <Plus size={16} /> Add Task
                                 </button>
                             ) : (
-                                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mt-2 mb-2">
-                                    <form onSubmit={handleQuickAddTask}>
-                                        <div className="space-y-3">
-                                            {/* Row 1: Content */}
-                                            <div>
-                                                <input
-                                                    type="text"
-                                                    autoFocus
-                                                    placeholder="What do you need to do?"
-                                                    className="w-full p-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                    value={quickTask.content}
-                                                    onChange={(e) => setQuickTask({ ...quickTask, content: e.target.value })}
-                                                    required
-                                                />
-                                            </div>
-                                            {/* Row 2: Metadata */}
-                                            <div className="grid grid-cols-12 gap-3">
-                                                <div className="col-span-4">
-                                                    <select
-                                                        className="w-full p-2 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
-                                                        value={quickTask.frameworkId}
-                                                        onChange={(e) => setQuickTask({ ...quickTask, frameworkId: e.target.value })}
-                                                    >
-                                                        <option value="">-- Framework --</option>
-                                                        {allocations.map(fw => (
-                                                            <option key={fw.id} value={fw.id}>{fw.category_name}</option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                                <div className="col-span-4">
-                                                    <input
-                                                        type="date"
-                                                        required
-                                                        className="w-full p-2 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                        value={quickTask.date}
-                                                        onChange={(e) => setQuickTask({ ...quickTask, date: e.target.value })}
-                                                    />
-                                                </div>
-                                                <div className="col-span-4 flex items-center gap-2">
-                                                    <input
-                                                        type="number"
-                                                        placeholder="ETA (min)"
-                                                        required
-                                                        className="w-full p-2 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                        value={quickTask.eta}
-                                                        onChange={(e) => setQuickTask({ ...quickTask, eta: e.target.value })}
-                                                    />
-                                                </div>
-                                            </div>
-                                            {/* Row 3: Actions */}
-                                            <div className="flex justify-end gap-2 pt-1">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setIsAddingTask(false)}
-                                                    className="px-3 py-1.5 text-xs font-bold text-gray-500 hover:bg-gray-200 rounded transition-colors"
-                                                >
-                                                    Cancel
-                                                </button>
-                                                <button
-                                                    type="submit"
-                                                    className="px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded transition-colors"
-                                                >
-                                                    Save Task
-                                                </button>
-                                            </div>
+                                <form onSubmit={handleQuickAddTask} className="bg-gray-50/50 py-2 border-b border-gray-100">
+                                    <div className="grid grid-cols-12 gap-4 items-center px-0">
+                                        <div className="col-span-5 space-y-2">
+                                            <input
+                                                type="text"
+                                                autoFocus
+                                                placeholder="What do you need to do?"
+                                                className="w-full p-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none"
+                                                value={quickTask.content}
+                                                onChange={(e) => setQuickTask({ ...quickTask, content: e.target.value })}
+                                                required
+                                            />
+                                            <select
+                                                className="w-full p-1.5 text-xs border border-gray-200 rounded text-gray-500 focus:ring-1 focus:ring-indigo-500 outline-none bg-white"
+                                                value={quickTask.frameworkId}
+                                                onChange={(e) => setQuickTask({ ...quickTask, frameworkId: e.target.value })}
+                                            >
+                                                <option value="">-- Framework --</option>
+                                                {allocations.map(fw => (
+                                                    <option key={fw.id} value={fw.id}>{fw.category_name}</option>
+                                                ))}
+                                            </select>
                                         </div>
-                                    </form>
-                                </div>
+
+                                        <div className="col-span-2 text-right">
+                                            <input
+                                                type="number"
+                                                placeholder="min"
+                                                required
+                                                className="w-full p-2 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-right"
+                                                value={quickTask.eta}
+                                                onChange={(e) => setQuickTask({ ...quickTask, eta: e.target.value })}
+                                            />
+                                        </div>
+
+                                        <div className="col-span-3 text-right">
+                                            <input
+                                                type="date"
+                                                required
+                                                className="w-full p-2 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-right"
+                                                value={quickTask.date}
+                                                onChange={(e) => setQuickTask({ ...quickTask, date: e.target.value })}
+                                            />
+                                        </div>
+
+                                        <div className="col-span-2 flex justify-end gap-2">
+                                            <button
+                                                type="submit"
+                                                title="Save Task"
+                                                className="p-2 text-white bg-indigo-600 hover:bg-indigo-700 rounded transition-colors shadow-sm"
+                                            >
+                                                <CheckCircle size={16} />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsAddingTask(false)}
+                                                title="Cancel"
+                                                className="p-2 text-gray-500 hover:bg-gray-200 rounded transition-colors"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
                             )}
                         </div>
 
