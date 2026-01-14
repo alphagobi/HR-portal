@@ -104,7 +104,8 @@ const Dashboard = () => {
         content: '',
         date: new Date().toISOString().split('T')[0],
         eta: '',
-        frameworkId: ''
+        frameworkId: '',
+        recurrence: { isRecurring: false, frequency: 'daily', interval: 1, endDate: '' }
     });
 
     const handleQuickAddTask = async (e) => {
@@ -123,6 +124,8 @@ const Dashboard = () => {
                 planned_date: quickTask.date,
                 eta: quickTask.eta,
                 framework_id: quickTask.frameworkId || null,
+                framework_id: quickTask.frameworkId || null,
+                recurrence: quickTask.recurrence,
                 start_time: null,
                 end_time: null
             });
@@ -132,7 +135,8 @@ const Dashboard = () => {
                 content: '',
                 date: new Date().toISOString().split('T')[0],
                 eta: '',
-                frameworkId: ''
+                frameworkId: '',
+                recurrence: { isRecurring: false, frequency: 'daily', interval: 1, endDate: '' }
             });
             fetchDashboardData();
         } catch (error) {
@@ -1151,6 +1155,75 @@ const Dashboard = () => {
                                                         />
                                                     </div>
                                                 </div>
+                                            </div>
+
+                                            {/* Recurrence Options */}
+                                            <div className="pt-1">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="isRecurring"
+                                                        checked={quickTask.recurrence.isRecurring}
+                                                        onChange={(e) => setQuickTask({
+                                                            ...quickTask,
+                                                            recurrence: { ...quickTask.recurrence, isRecurring: e.target.checked }
+                                                        })}
+                                                        className="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+                                                    />
+                                                    <label htmlFor="isRecurring" className="text-xs font-bold text-gray-700 select-none cursor-pointer">Recurring Task</label>
+                                                </div>
+
+                                                {quickTask.recurrence.isRecurring && (
+                                                    <div className="grid grid-cols-3 gap-3 p-3 bg-gray-100 rounded-md border border-gray-200">
+                                                        <div>
+                                                            <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Frequency</label>
+                                                            <select
+                                                                className="w-full text-xs p-1.5 border border-gray-300 rounded bg-white outline-none"
+                                                                value={quickTask.recurrence.frequency}
+                                                                onChange={(e) => setQuickTask({
+                                                                    ...quickTask,
+                                                                    recurrence: { ...quickTask.recurrence, frequency: e.target.value }
+                                                                })}
+                                                            >
+                                                                <option value="daily">Daily</option>
+                                                                <option value="weekly">Weekly</option>
+                                                                <option value="monthly">Monthly</option>
+                                                            </select>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Repeat Every</label>
+                                                            <div className="flex items-center gap-1">
+                                                                <input
+                                                                    type="number"
+                                                                    min="1"
+                                                                    className="w-full text-xs p-1.5 border border-gray-300 rounded bg-white outline-none"
+                                                                    value={quickTask.recurrence.interval}
+                                                                    onChange={(e) => setQuickTask({
+                                                                        ...quickTask,
+                                                                        recurrence: { ...quickTask.recurrence, interval: e.target.value }
+                                                                    })}
+                                                                />
+                                                                <span className="text-[10px] text-gray-500">
+                                                                    {quickTask.recurrence.frequency === 'daily' ? 'days' :
+                                                                        quickTask.recurrence.frequency === 'weekly' ? 'wks' : 'mths'}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">End Date</label>
+                                                            <input
+                                                                type="date"
+                                                                required={quickTask.recurrence.isRecurring}
+                                                                className="w-full text-xs p-1.5 border border-gray-300 rounded bg-white outline-none"
+                                                                value={quickTask.recurrence.endDate}
+                                                                onChange={(e) => setQuickTask({
+                                                                    ...quickTask,
+                                                                    recurrence: { ...quickTask.recurrence, endDate: e.target.value }
+                                                                })}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* Actions */}
