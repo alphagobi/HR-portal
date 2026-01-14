@@ -86,6 +86,37 @@ const Debug = () => {
                         </div>
                     </div>
 
+                    {/* Company Calendar Schema */}
+                    <div className="bg-white p-4 rounded shadow border border-gray-200">
+                        <h2 className="font-bold text-lg mb-2">Company Calendar Table Schema</h2>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead className="bg-gray-50 border-b">
+                                    <tr>
+                                        <th className="p-2">Field</th>
+                                        <th className="p-2">Type</th>
+                                        <th className="p-2">Null</th>
+                                        <th className="p-2">Key</th>
+                                        <th className="p-2">Default</th>
+                                        <th className="p-2">Extra</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.company_calendar_schema?.map((col, i) => (
+                                        <tr key={i} className="border-b">
+                                            <td className="p-2 font-medium">{col.Field}</td>
+                                            <td className="p-2">{col.Type}</td>
+                                            <td className="p-2">{col.Null}</td>
+                                            <td className="p-2">{col.Key}</td>
+                                            <td className="p-2">{col.Default}</td>
+                                            <td className="p-2">{col.Extra}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                     {/* Tables */}
                     <div className="bg-white p-4 rounded shadow border border-gray-200">
                         <h2 className="font-bold text-lg mb-2">All Tables</h2>

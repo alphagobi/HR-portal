@@ -63,18 +63,11 @@ if ($method === 'GET') {
         $tasksToInsert = [];
 
         // Fetch Company Holidays
-        $stmt = $pdo->query("SELECT start_date, end_date FROM company_calendar");
-        $holidayRanges = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $pdo->query("SELECT date FROM company_calendar WHERE is_holiday = 1");
+        $holidayRows = $stmt->fetchAll(PDO::FETCH_ASSOC);
         $holidays = [];
-        foreach ($holidayRanges as $range) {
-            $period = new DatePeriod(
-                new DateTime($range['start_date']),
-                new DateInterval('P1D'),
-                (new DateTime($range['end_date']))->modify('+1 day')
-            );
-            foreach ($period as $dt) {
-                $holidays[] = $dt->format('Y-m-d');
-            }
+        foreach ($holidayRows as $row) {
+            $holidays[] = $row['date'];
         }
 
         // Fetch User Working Days

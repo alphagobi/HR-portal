@@ -8,6 +8,7 @@ $response = [
     'db_connection' => null,
     'tables' => [],
     'planned_tasks_schema' => [],
+    'company_calendar_schema' => [],
     'framework_id_check' => null,
     'errors' => []
 ];
@@ -36,6 +37,9 @@ try {
 try {
     $stmt = $pdo->query("DESCRIBE planned_tasks");
     $response['planned_tasks_schema'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $stmt = $pdo->query("DESCRIBE company_calendar");
+    $response['company_calendar_schema'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     $response['errors'][] = "planned_tasks schema check failed: " . $e->getMessage();
 }
