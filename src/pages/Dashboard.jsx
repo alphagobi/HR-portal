@@ -98,6 +98,49 @@ const Dashboard = () => {
         frameworkId: ''
     });
 
+    // Quick Add State
+    const [isAddingTask, setIsAddingTask] = useState(false);
+    const [quickTask, setQuickTask] = useState({
+        content: '',
+        date: new Date().toISOString().split('T')[0],
+        eta: '',
+        frameworkId: ''
+    });
+
+    const handleQuickAddTask = async (e) => {
+        e.preventDefault();
+        const user = getCurrentUser();
+        if (!quickTask.content) return;
+        if (!quickTask.eta || parseInt(quickTask.eta) <= 0) {
+            alert("ETA is mandatory and must be greater than 0 minutes.");
+            return;
+        }
+
+        try {
+            await createTask({
+                user_id: user.id,
+                task_content: quickTask.content,
+                planned_date: quickTask.date,
+                eta: quickTask.eta,
+                framework_id: quickTask.frameworkId || null,
+                start_time: null,
+                end_time: null
+            });
+
+            setIsAddingTask(false);
+            setQuickTask({
+                content: '',
+                date: new Date().toISOString().split('T')[0],
+                eta: '',
+                frameworkId: ''
+            });
+            fetchDashboardData();
+        } catch (error) {
+            console.error("Failed to save task", error);
+            alert(`Failed to save task: ${error.message}`);
+        }
+    };
+
     const isEditable = (task) => {
         if (!task.created_at) return false;
         const created = new Date(task.created_at).getTime();
@@ -118,16 +161,7 @@ const Dashboard = () => {
         setShowEditTaskModal(true);
     };
 
-    const handleAddTaskButton = () => {
-        setEditingTaskData({
-            id: null,
-            content: '',
-            date: new Date().toISOString().split('T')[0], // Default to today
-            eta: '',
-            frameworkId: ''
-        });
-        setShowEditTaskModal(true);
-    };
+
 
     const handleDeleteTaskClick = async (taskId, e) => {
         e.stopPropagation(); // Prevent toggling expand
@@ -1020,12 +1054,7 @@ const Dashboard = () => {
                             )}
                             <h2 className="text-lg font-bold text-gray-900">Your Tasks</h2>
                             <div className="flex gap-2 items-center">
-                                <button
-                                    onClick={handleAddTaskButton}
-                                    className="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-2.5 py-1 rounded-md flex items-center gap-1 transition-colors mr-1"
-                                >
-                                    <Plus size={12} /> Add Task
-                                </button>
+
 
                                 {/* Red - Overdue */}
                                 <span className={`text-xs font-bold px-2.5 py-1 rounded-md ${counts.overdue > 0 ? 'text-red-700 bg-red-100' : 'text-gray-400 bg-gray-50'}`}>
@@ -1049,6 +1078,88 @@ const Dashboard = () => {
                             <div className="col-span-3 text-right">Due Date</div>
                             <div className="col-span-2 text-center">Actions</div>
                         </div>
+
+                        {/* Inline Add Task Form */}
+                        <div className="px-6 py-2 border-b border-gray-50">
+                            {!isAddingTask ? (
+                                <button
+                                    onClick={() => setIsAddingTask(true)}
+                                    className="text-sm font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-2 py-2 w-full transition-colors"
+                                >
+                                    <Plus size={16} /> Add Task
+                                </button>
+                            ) : (
+                                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 mt-2 mb-2">
+                                    <form onSubmit={handleQuickAddTask}>
+                                        <div className="space-y-3">
+                                            {/* Row 1: Content */}
+                                            <div>
+                                                <input
+                                                    type="text"
+                                                    autoFocus
+                                                    placeholder="What do you need to do?"
+                                                    className="w-full p-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none"
+                                                    value={quickTask.content}
+                                                    onChange={(e) => setQuickTask({ ...quickTask, content: e.target.value })}
+                                                    required
+                                                />
+                                            </div>
+                                            {/* Row 2: Metadata */}
+                                            <div className="grid grid-cols-12 gap-3">
+                                                <div className="col-span-4">
+                                                    <select
+                                                        className="w-full p-2 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                                                        value={quickTask.frameworkId}
+                                                        onChange={(e) => setQuickTask({ ...quickTask, frameworkId: e.target.value })}
+                                                    >
+                                                        <option value="">-- Framework --</option>
+                                                        {allocations.map(fw => (
+                                                            <option key={fw.id} value={fw.id}>{fw.category_name}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div className="col-span-4">
+                                                    <input
+                                                        type="date"
+                                                        required
+                                                        className="w-full p-2 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none"
+                                                        value={quickTask.date}
+                                                        onChange={(e) => setQuickTask({ ...quickTask, date: e.target.value })}
+                                                    />
+                                                </div>
+                                                <div className="col-span-4 flex items-center gap-2">
+                                                    <input
+                                                        type="number"
+                                                        placeholder="ETA (min)"
+                                                        required
+                                                        className="w-full p-2 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none"
+                                                        value={quickTask.eta}
+                                                        onChange={(e) => setQuickTask({ ...quickTask, eta: e.target.value })}
+                                                    />
+                                                </div>
+                                            </div>
+                                            {/* Row 3: Actions */}
+                                            <div className="flex justify-end gap-2 pt-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setIsAddingTask(false)}
+                                                    className="px-3 py-1.5 text-xs font-bold text-gray-500 hover:bg-gray-200 rounded transition-colors"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    type="submit"
+                                                    className="px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded transition-colors"
+                                                >
+                                                    Save Task
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            )}
+                        </div>
+
 
                         <div className="flex-1 overflow-y-auto no-scrollbar">
                             {tasks.length === 0 ? (
